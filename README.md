@@ -96,7 +96,7 @@ A collaborative study group platform that connects students, enables real-time c
    npm start
    ```
 
-   Open [http://localhost:3000](http://localhost:5173) in your browser.
+   Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 🗄️ Database Setup
 
