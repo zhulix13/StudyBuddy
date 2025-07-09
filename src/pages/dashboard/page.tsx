@@ -4,7 +4,7 @@ import Profile from "./profile";
 import SettingsPage from "./settings";
 import Sidebar from "./sidebar";
 import type { User as Usertype } from "@supabase/supabase-js";
-import Dashboard from "./dasboard";
+import Dashboard from "./dashboard";
 
 import {
   BookOpen,
