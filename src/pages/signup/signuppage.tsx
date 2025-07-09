@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BookOpen, Mail, Lock, Eye, EyeOff, Github, User } from "lucide-react";
 import { auth } from "../../services/supabase";
+import { Link } from "react-router-dom";
 
 const SignupPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,12 +48,16 @@ const SignupPage: React.FC = () => {
   const handleGoogleAuth = async () => {
     try {
       // Supabase Google OAuth
-      // const { data, error } = await auth.signInWithOAuth({
-      //   provider: 'google',
-      //   options: {
-      //     redirectTo: `${window.location.origin}/dashboard`
-      //   }
-      // });
+      const { data, error } = await auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+        if (!error && data) {
+        alert("Check your email to confirm your account before logging in.");
+      }
 
       console.log("Google auth clicked");
     } catch (error) {
@@ -61,22 +66,25 @@ const SignupPage: React.FC = () => {
   };
 
   const handleGithubAuth = async () => {
-    //  try {
-    //    // Supabase GitHub OAuth
-    //    const { data, error } = await auth.signInWithOAuth({
-    //      provider: 'github',
-    //      options: {
-    //        redirectTo: `${window.location.origin}/dashboard`
-    //      }
-    //    });
-    //    console.log('GitHub auth clicked');
-    //  } catch (error) {
-    //    console.error('GitHub auth error:', error);
-    //  }
+      try {
+        // Supabase GitHub OAuth
+       const { data, error } = await auth.signInWithOAuth({
+         provider: 'github',
+         options: {
+           redirectTo: `${window.location.origin}/dashboard`
+         }
+       });
+         if (!error && data) {
+            alert("Check your email to confirm your account before logging in.");
+         }
+       console.log('GitHub auth clicked');
+     } catch (error) {
+       console.error('GitHub auth error:', error);
+     }
   };
 
   return (
-    <div className="min-h-screen  bg-gradient-to-br from-slate-50 to-blue-50 flex">
+    <div className="min-h-screen z-60  bg-gradient-to-br from-slate-50 to-blue-50 flex">
       {/* Left Side - Sign Up Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
         <div className="w-full max-w-md space-y-8">
@@ -89,12 +97,12 @@ const SignupPage: React.FC = () => {
             </h2>
             <p className="text-slate-600 mt-2">
               Already have an account?{" "}
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
               >
                 Sign In
-              </a>
+              </Link>
             </p>
           </div>
 

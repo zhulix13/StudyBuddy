@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Mail, Lock, Eye, EyeOff, Github } from 'lucide-react';
+import { auth } from '../../services/supabase'; 
+import { Link } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,12 +23,14 @@ const LoginPage: React.FC = () => {
     
     try {
       // Supabase auth logic here
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email: formData.email,
-      //   password: formData.password
-      // });
-      
-      console.log('Email login:', formData);
+      const { data, error } = await auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+
+      });
+      `${window.location.origin}/dashboard`;
+
+      console.log({data, error});
       
     } catch (error) {
       console.error('Login error:', error);
@@ -38,15 +42,15 @@ const LoginPage: React.FC = () => {
   const handleGoogleAuth = async () => {
     try {
       // Supabase Google OAuth
-      // const { data, error } = await supabase.auth.signInWithOAuth({
-      //   provider: 'google',
-      //   options: {
-      //     redirectTo: `${window.location.origin}/dashboard`
-      //   }
-      // });
-      
-      console.log('Google auth clicked');
-      
+      const { data, error } = await auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      console.log({data, error});
+
     } catch (error) {
       console.error('Google auth error:', error);
     }
@@ -55,22 +59,22 @@ const LoginPage: React.FC = () => {
   const handleGithubAuth = async () => {
     try {
       // Supabase GitHub OAuth
-      // const { data, error } = await supabase.auth.signInWithOAuth({
-      //   provider: 'github',
-      //   options: {
-      //     redirectTo: `${window.location.origin}/dashboard`
-      //   }
-      // });
-      
-      console.log('GitHub auth clicked');
-      
+      const { data, error } = await auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      console.log({data, error});
+
     } catch (error) {
       console.error('GitHub auth error:', error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex">
+    <div className="min-h-screen z-60  bg-gradient-to-br from-slate-50 to-blue-50 flex">
       {/* Left Side - Hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-12 flex-col justify-center items-center text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-indigo-700/90"></div>
@@ -105,12 +109,12 @@ const LoginPage: React.FC = () => {
             <h2 className="text-3xl font-bold text-slate-800">Sign in to your account</h2>
             <p className="text-slate-600 mt-2">
               Don't have an account?{' '}
-              <a
-                href="/signup"
+              <Link
+                to="/signup"
                 className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
               >
                 Sign Up
-              </a>
+              </Link>
             </p>
           </div>
 

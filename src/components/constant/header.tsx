@@ -1,21 +1,23 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen} from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { useAuth } from "../../context/Authcontext"; // Adjust the import path as necessary
-import { auth } from "../../services/supabase";
+import { supabase } from "../../services/supabase";
+import { NavLink } from "react-router-dom";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
 
   const { user } = useAuth(); // Get user from Auth context
- const fullName = user?.user_metadata?.full_name;
+  const fullName = user?.user_metadata?.full_name;
 
   async function handleSignOut() {
-    await auth.signOut().then(() => {
+    try {
+      await supabase.auth.signOut();
       navigate("/");
-    }).catch((error) => {
+    } catch (error) {
       console.error("Logout error:", error);
-    });
+    }
   }
 
   return (
@@ -30,43 +32,77 @@ const Header: React.FC = () => {
             StudyBuddy
           </span>
         </Link>
-
         {/* Navigation */}
+       
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/dashboard" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `font-medium transition-colors ${
+                isActive
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`
+            }
+          >
+            Home
+          </NavLink>
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `font-medium transition-colors ${
+                isActive
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`
+            }
+          >
             Dashboard
-          </Link>
-          <Link to="/groups" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+          </NavLink>
+          <NavLink
+            to="/groups"
+            className={({ isActive }) =>
+              `font-medium transition-colors ${
+                isActive
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`
+            }
+          >
             Groups
-          </Link>
-          <Link to="/discover" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+          </NavLink>
+          <NavLink
+            to="/discover"
+            className={({ isActive }) =>
+              `font-medium transition-colors ${
+                isActive
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`
+            }
+          >
             Discover
-          </Link>
+          </NavLink>
         </nav>
-
         {/* Auth/Profile */}
         <div className="flex items-center gap-3">
           {user ? (
             <>
-            <div className="flex items-center gap-2 text-slate-700 font-semibold">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm">
-                {fullName?.charAt(0).toUpperCase()}
+              <div className="flex items-center gap-2 text-slate-700 font-semibold">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm">
+                  {fullName?.charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden sm:block">{fullName}</span>
               </div>
-              <span className="hidden sm:block">{fullName}</span>
-            </div>
-            <div className="flex items-center gap-4">
-          
-          <button
-            onClick={handleSignOut}
-            className="px-4 py-2 ml-4 text-white bg-red-500 hover:bg-red-600 rounded-lg"
-          >
-            Sign Out
-          </button>
-        </div>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2  cursor-pointer text-white bg-red-500 hover:bg-red-600 rounded-full"
+                >
+                  Sign Out
+                </button>
+              </div>
             </>
-            
-            
-
           ) : (
             <>
               <button

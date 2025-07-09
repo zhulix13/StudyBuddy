@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Listen for changes
     const { data: listener } = auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      console.log("Auth state changed:", session);
       setUser(session?.user ?? null);
     });
 
