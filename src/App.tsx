@@ -6,11 +6,11 @@ import Signup from "./pages/signup";
 import { AuthProvider } from "./context/Authcontext";
 import StudyBuddyApp from "./pages/dashboard/page";
 import Home from "./pages/home";
+import Groups from "./pages/groups";
 
 
 
 
-const Groups = () => <div className="p-6 text-xl">👥 Groups</div>;
 const Discover = () => <div className="p-6 text-xl">🔎 Discover</div>;
 
  // replace with user from auth state later
