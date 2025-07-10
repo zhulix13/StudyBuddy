@@ -4,79 +4,82 @@ import type {
   CreateGroupData,
   UpdateGroupData,
 } from "@/types/groups";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabase";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
+// GET groups where user is creator or public
 export async function getUserGroups(): Promise<StudyGroup[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw authError ?? new Error("Not authenticated");
 
-  const { data, error } = await supabase
+  const { data: groups, error } = await supabase
     .from("study_groups")
-    .select(
-      `
-      *,
-      group_members!inner (
-        role,
-        user_id
-      ),
-      member_count:group_members(count)
-    `
-    )
-    .eq("group_members.user_id", user.id)
+    .select("*")
+    .or(`created_by.eq.${user.id},is_private.eq.false`)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
 
-  return data.map((group) => ({
+  const groupIds = groups.map((g) => g.id);
+
+  const { data: memberships } = await supabase
+    .from("group_members")
+    .select("group_id, role")
+    .eq("user_id", user.id)
+    .in("group_id", groupIds);
+
+  const membershipMap = memberships?.reduce((acc, cur) => {
+    acc[cur.group_id] = cur.role;
+    return acc;
+  }, {} as Record<string, string>) ?? {};
+
+  const { data: memberCounts } = await supabase
+    .from("group_members")
+    .select("group_id")
+    .in("group_id", groupIds);
+
+  const countMap = memberCounts?.reduce((acc, cur) => {
+    acc[cur.group_id] = (acc[cur.group_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) ?? {};
+
+  return groups.map((group) => ({
     ...group,
-    member_count: group.member_count?.[0]?.count || 0,
-    user_role: group.group_members[0]?.role,
+    user_role: membershipMap[group.id] ?? null,
+    member_count: countMap[group.id] ?? 0,
   }));
 }
+
+
+
+// Create a new group
+// Requires user to be authenticated
 
 export async function createGroup(
   groupData: CreateGroupData
 ): Promise<StudyGroup> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  // Create the group
-  const { data: group, error: groupError } = await supabase
+  const { data: group, error } = await supabase
     .from("study_groups")
-    .insert({
-      ...groupData,
-      created_by: user.id,
-    })
+    .insert({ ...groupData, created_by: user.id })
     .select()
     .single();
 
-  if (groupError) throw groupError;
+  if (error) throw error;
 
-  // Add creator as admin member
-  const { error: memberError } = await supabase.from("group_members").insert({
-    group_id: group.id,
-    user_id: user.id,
-    role: "admin",
-  });
+  const { error: memberError } = await supabase
+    .from("group_members")
+    .insert({ group_id: group.id, user_id: user.id, role: "admin" });
 
   if (memberError) throw memberError;
 
   return { ...group, member_count: 1, user_role: "admin" };
 }
 
-export async function updateGroup(
-  groupId: string,
-  updates: UpdateGroupData
-): Promise<void> {
+// Update group details
+// Only allow updates to name, subject, description, and privacy status
+export async function updateGroup(groupId: string, updates: UpdateGroupData) {
   const { error } = await supabase
     .from("study_groups")
     .update(updates)
@@ -85,18 +88,121 @@ export async function updateGroup(
   if (error) throw error;
 }
 
+// Join a group
+// Requires user to be authenticated
+export async function joinGroup(groupId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, message: "Not authenticated" };
+    }
+
+    // Check if user is already a member
+    const { data: existingMember } = await supabase
+      .from("group_members")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (existingMember) {
+      return { success: false, message: "You are already a member of this group" };
+    }
+
+    // Check if group exists and is not private
+    const { data: group } = await supabase
+      .from("study_groups")
+      .select("is_private")
+      .eq("id", groupId)
+      .single();
+
+    if (!group) {
+      return { success: false, message: "Group not found" };
+    }
+
+    if (group.is_private) {
+      return { success: false, message: "Cannot join private group" };
+    }
+
+    // Insert new member
+    const { error } = await supabase.from("group_members").insert({
+      group_id: groupId,
+      user_id: user.id,
+      role: "member",
+    });
+
+    if (error) {
+      console.error("Error joining group:", error);
+      return { success: false, message: "Failed to join group" };
+    }
+
+    return { success: true, message: "Successfully joined group" };
+  } catch (error) {
+    console.error("Error in joinGroup:", error);
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function leaveGroup(groupId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, message: "Not authenticated" };
+    }
+
+    // Check if user is actually a member
+    const { data: membership } = await supabase
+      .from("group_members")
+      .select("role")
+      .eq("group_id", groupId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!membership) {
+      return { success: false, message: "You are not a member of this group" };
+    }
+
+    // Check if user is the only admin
+    if (membership.role === "admin") {
+      const { data: adminCount } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("group_id", groupId)
+        .eq("role", "admin");
+
+      if (adminCount && adminCount.length <= 1) {
+        return { success: false, message: "Cannot leave: You are the only admin. Please assign another admin first." };
+      }
+    }
+
+    // Remove member from group
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_id", groupId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error leaving group:", error);
+      return { success: false, message: "Failed to leave group" };
+    }
+
+    return { success: true, message: "Successfully left the group" };
+  } catch (error) {
+    console.error("Error in leaveGroup:", error);
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
 export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
   const { data, error } = await supabase
     .from("group_members")
-    .select(
-      `
+    .select(`
       *,
       profiles (
         username,
         full_name
       )
-    `
-    )
+    `)
     .eq("group_id", groupId)
     .order("joined_at", { ascending: true });
 
@@ -104,17 +210,105 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
   return data || [];
 }
 
-export async function leaveGroup(groupId: string): Promise<void> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("group_members")
-    .delete()
-    .eq("group_id", groupId)
-    .eq("user_id", user.id);
+// Get public groups (not private)
+// This is used to display groups that anyone can join without being invited
+export async function getPublicGroups(): Promise<StudyGroup[]> {
+  const { data, error } = await supabase
+    .from("study_groups")
+    .select("*")
+    .eq("is_private", false)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
+
+  const groupIds = data.map((g) => g.id);
+
+  const { data: memberCounts } = await supabase
+    .from("group_members")
+    .select("group_id");
+
+  const countMap = memberCounts?.reduce((acc, cur) => {
+    acc[cur.group_id] = (acc[cur.group_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) ?? {};
+
+  return data.map((group) => ({
+    ...group,
+    member_count: countMap[group.id] ?? 0,
+  }));
 }
+
+
+
+// Delete a group (admin)
+
+export async function deleteOwnGroup(groupId: string): Promise< { success: boolean; message: string; data?: any; error?: string }> {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return {
+        success: false,
+        message: 'User not authenticated'
+      };
+    }
+
+    // Optional: Get group details before deletion (for confirmation/logging)
+    const { data: groupData, error: groupError } = await supabase
+      .from('study_groups')
+      .select('id, name, created_by')
+      .eq('id', groupId)
+      .single();
+
+    if (groupError) {
+      return {
+        success: false,
+        message: 'Group not found or access denied',
+        error: groupError.message
+      };
+    }
+
+    // Verify user is the creator (optional check, RLS will handle this too)
+    if (groupData.created_by !== user.id) {
+      return {
+        success: false,
+        message: 'You can only delete groups you created'
+      };
+    }
+
+    // Delete the group - RLS policy will handle permission check
+    // CASCADE DELETE will automatically remove group_members
+    const { error: deleteError } = await supabase
+      .from('study_groups')
+      .delete()
+      .eq('id', groupId);
+
+    if (deleteError) {
+      return {
+        success: false,
+        message: 'Failed to delete group',
+        error: deleteError.message
+      };
+    }
+
+    return {
+      success: true,
+      message: `Group "${groupData.name}" deleted successfully`,
+      data: {
+        deletedGroupId: groupId,
+        deletedGroupName: groupData.name
+      }
+    };
+
+  } catch (error) {
+    console.error('Delete group error:', error);
+    return {
+      success: false,
+      message: 'Internal server error',
+      error: typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : String(error)
+    };
+  }
+}
+

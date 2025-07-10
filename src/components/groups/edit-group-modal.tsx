@@ -1,9 +1,10 @@
+// Modified EditGroupModal with Delete functionality
 "use client"
 
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Settings } from "lucide-react"
+import { Settings, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,11 +14,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { updateGroup } from "@/services/supabase-groups"
+import { updateGroup, deleteOwnGroup } from "@/services/supabase-groups"
 import type { StudyGroup, UpdateGroupData } from "@/types/groups"
 
 interface EditGroupModalProps {
@@ -28,6 +40,7 @@ interface EditGroupModalProps {
 export function EditGroupModal({ group, onGroupUpdated }: EditGroupModalProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [formData, setFormData] = useState<UpdateGroupData>({
     name: group.name,
     subject: group.subject || "",
@@ -62,6 +75,25 @@ export function EditGroupModal({ group, onGroupUpdated }: EditGroupModalProps) {
       console.error("Error updating group:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Handle group deletion
+  const handleDelete = async () => {
+    setDeleteLoading(true)
+    try {
+      const result = await deleteOwnGroup(group.id)
+      if (result.success) {
+        setOpen(false)
+        onGroupUpdated()
+      } else {
+        alert(`Failed to delete group: ${result.message}`)
+      }
+    } catch (error) {
+      console.error("Error deleting group:", error)
+      alert("An error occurred while deleting the group")
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -127,13 +159,45 @@ export function EditGroupModal({ group, onGroupUpdated }: EditGroupModalProps) {
             </Label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || !formData.name?.trim()}>
-              {loading ? "Updating..." : "Update Group"}
-            </Button>
+          <div className="flex justify-between gap-2 pt-4">
+            {/* Delete Button */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="destructive" size="sm" className="gap-2">
+                  <Trash2 className="h-4 w-4" />
+                  Delete Group
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the group "{group.name}" 
+                    and remove all members from the group.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    disabled={deleteLoading}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleteLoading ? "Deleting..." : "Delete Group"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Update/Cancel Buttons */}
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading || !formData.name?.trim()}>
+                {loading ? "Updating..." : "Update Group"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

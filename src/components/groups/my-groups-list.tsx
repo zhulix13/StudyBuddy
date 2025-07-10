@@ -65,7 +65,9 @@ export function MyGroupsList({ refreshTrigger }: MyGroupsListProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {groups.map((group) => (
-        <GroupCard key={group.id} group={group} onGroupUpdated={fetchGroups} />
+        <GroupCard key={group.id} group={group} onGroupUpdated={fetchGroups} 
+        showJoinButton={!group.is_private}
+        />
       ))}
     </div>
   )
