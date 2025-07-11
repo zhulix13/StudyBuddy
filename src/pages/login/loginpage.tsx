@@ -1,80 +1,242 @@
-import React, { useState } from 'react';
-import { BookOpen, Mail, Lock, Eye, EyeOff, Github } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Mail, Lock, Eye, EyeOff, Github, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { auth } from '../../services/supabase'; 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+
+interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
+}
 
 const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  // Handle messages from signup redirect
+  useEffect(() => {
+    if (location.state?.message) {
+      addNotification('info', location.state.message);
+    }
+    if (location.state?.email) {
+      setFormData(prev => ({ ...prev, email: location.state.email }));
+    }
+  }, [location.state]);
+
+  // Auto-remove notifications after 5 seconds
+  useEffect(() => {
+    notifications.forEach(notification => {
+      setTimeout(() => {
+        removeNotification(notification.id);
+      }, 5000);
     });
+  }, [notifications]);
+
+  const addNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    const id = Date.now().toString();
+    setNotifications(prev => [...prev, { id, type, message }]);
   };
 
-  const handleEmailLogin = async () => {
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      errors.password = "Password is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      addNotification('error', 'Please fix the errors below');
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      // Supabase auth logic here
       const { data, error } = await auth.signInWithPassword({
         email: formData.email,
-        password: formData.password
-
+        password: formData.password,
       });
-      `${window.location.origin}/dashboard`;
 
-      console.log({data, error});
-      
-    } catch (error) {
+      if (error) {
+        // Handle specific auth errors
+        if (error.message.includes('Invalid login credentials')) {
+          addNotification('error', 'Invalid email or password. Please try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          addNotification('error', 'Please check your email and confirm your account before signing in.');
+        } else if (error.message.includes('Too many requests')) {
+          addNotification('error', 'Too many login attempts. Please try again later.');
+        } else {
+          addNotification('error', error.message || 'Failed to sign in');
+        }
+        return;
+      }
+
+      if (data?.user) {
+        addNotification('success', 'Welcome back! Redirecting to dashboard...');
+        
+        // Redirect to dashboard or intended page
+        const redirectTo = location.state?.from?.pathname || '/dashboard';
+        setTimeout(() => {
+          navigate(redirectTo, { replace: true });
+        }, 1000);
+      }
+
+    } catch (error: any) {
       console.error('Login error:', error);
+      addNotification('error', error.message || 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleAuth = async () => {
+  const handleSocialAuth = async (provider: 'google' | 'github') => {
     try {
-      // Supabase Google OAuth
+      setIsLoading(true);
+      
       const { data, error } = await auth.signInWithOAuth({
-        provider: 'google',
+        provider,
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
 
-      console.log({data, error});
+      if (error) {
+        addNotification('error', error.message || `Failed to authenticate with ${provider}`);
+        return;
+      }
 
-    } catch (error) {
-      console.error('Google auth error:', error);
+      // For OAuth, the redirect will happen automatically
+      // No need to show success message as user will be redirected
+    } catch (error: any) {
+      console.error(`${provider} auth error:`, error);
+      addNotification('error', error.message || `An error occurred during ${provider} authentication`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGithubAuth = async () => {
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      addNotification('error', 'Please enter your email address first');
+      return;
+    }
+
     try {
-      // Supabase GitHub OAuth
-      const { data, error } = await auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
+      const { error } = await auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      console.log({data, error});
+      if (error) {
+        addNotification('error', error.message || 'Failed to send reset email');
+        return;
+      }
 
-    } catch (error) {
-      console.error('GitHub auth error:', error);
+      addNotification('success', 'Password reset email sent! Please check your inbox.');
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      addNotification('error', error.message || 'Failed to send reset email');
     }
   };
+
+  const NotificationContainer = () => (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      {notifications.map(notification => (
+        <div
+          key={notification.id}
+          className={`max-w-md p-4 rounded-lg shadow-lg flex items-start gap-3 ${
+            notification.type === 'success' 
+              ? 'bg-green-50 border border-green-200' 
+              : notification.type === 'error'
+              ? 'bg-red-50 border border-red-200'
+              : 'bg-blue-50 border border-blue-200'
+          }`}
+        >
+          {notification.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />}
+          {notification.type === 'error' && <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />}
+          {notification.type === 'info' && <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />}
+          
+          <div className="flex-1">
+            <p className={`text-sm font-medium ${
+              notification.type === 'success' 
+                ? 'text-green-800' 
+                : notification.type === 'error'
+                ? 'text-red-800'
+                : 'text-blue-800'
+            }`}>
+              {notification.message}
+            </p>
+          </div>
+          
+          <button
+            onClick={() => removeNotification(notification.id)}
+            className={`${
+              notification.type === 'success' 
+                ? 'text-green-600 hover:text-green-800' 
+                : notification.type === 'error'
+                ? 'text-red-600 hover:text-red-800'
+                : 'text-blue-600 hover:text-blue-800'
+            }`}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen z-60  bg-gradient-to-br from-slate-50 to-blue-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex">
+      <NotificationContainer />
+      
       {/* Left Side - Hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-12 flex-col justify-center items-center text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-indigo-700/90"></div>
@@ -118,12 +280,14 @@ const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
+          <form onSubmit={handleEmailLogin} className="space-y-6">
             {/* Social Login */}
             <div className="space-y-3">
               <button
-                onClick={handleGoogleAuth}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium text-slate-700"
+                type="button"
+                onClick={() => handleSocialAuth('google')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -135,8 +299,10 @@ const LoginPage: React.FC = () => {
               </button>
 
               <button
-                onClick={handleGithubAuth}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium"
+                type="button"
+                onClick={() => handleSocialAuth('github')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Github className="w-5 h-5" />
                 Continue with GitHub
@@ -165,10 +331,16 @@ const LoginPage: React.FC = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className={`w-full pl-11 pr-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      formErrors.email ? 'border-red-300' : 'border-slate-300'
+                    }`}
                     placeholder="Enter your email"
+                    autoComplete="email"
                   />
                 </div>
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -182,8 +354,11 @@ const LoginPage: React.FC = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full pl-11 pr-12 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className={`w-full pl-11 pr-12 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      formErrors.password ? 'border-red-300' : 'border-slate-300'
+                    }`}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
@@ -193,32 +368,52 @@ const LoginPage: React.FC = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {formErrors.password && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
                     className="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500"
                   />
                   <span className="ml-2 text-sm text-slate-600">Remember me</span>
                 </label>
-                <a
-                  href="/forgot-password"
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
                   className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
                 >
                   Forgot password?
-                </a>
+                </button>
               </div>
 
               <button
-                onClick={handleEmailLogin}
+                type="submit"
                 disabled={isLoading}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </div>
+          </form>
+
+          {/* Additional Links */}
+          <div className="text-center">
+            <p className="text-sm text-slate-600">
+              Having trouble?{' '}
+              <Link
+                to="/support"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Contact Support
+              </Link>
+            </p>
           </div>
         </div>
       </div>
