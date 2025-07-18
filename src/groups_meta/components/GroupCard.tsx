@@ -14,7 +14,7 @@ export const GroupCard = ({ group, isActive, onClick }: Props) => {
   return (
     <Card
       onClick={onClick}
-      className={`p-4 mb-2 cursor-pointer border ${
+      className={`p-4 mb-2 cursor-pointer border mx-1 ${
         isActive ? "bg-primary/10 border-primary" : "hover:bg-muted"
       }`}
     >

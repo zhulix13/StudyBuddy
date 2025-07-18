@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export function GroupTabs() {
   return (
     <div className="p-4">
-      <Tabs defaultValue="notes" className="w-full max-w-4xl mx-auto">
+      <Tabs defaultValue="notes" className="w-full max-w-[90%]">
         <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
@@ -14,7 +14,7 @@ export function GroupTabs() {
 
         <TabsContent value="notes">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 min-h-screen">
               <h2 className="text-xl font-bold mb-2">Group Notes</h2>
               <p className="text-muted-foreground">View and contribute to shared notes here.</p>
               {/* Add note editor or list here */}
