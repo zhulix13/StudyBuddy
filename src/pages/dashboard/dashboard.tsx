@@ -1,6 +1,6 @@
 import { Clock, Users, FileText, Target, Bell, Calendar, Plus, TrendingUp } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-
+import type { Profile } from "@/types/profile";
 
 const DashboardStats = () => {
   const stats = [
@@ -156,7 +156,7 @@ const QuickActions = () => {
   );
 };
 
-const Dashboard = ({user}: {user: User | null}) => {
+const Dashboard = ({user, profile}: {user: User | null, profile: Profile | null}) => {
   return (
     <div className="space-y-8">
       {/* Header */}

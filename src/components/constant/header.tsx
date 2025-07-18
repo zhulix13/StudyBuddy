@@ -4,18 +4,33 @@ import { BookOpen } from "lucide-react";
 import { useAuth } from "../../context/Authcontext"; // Adjust the import path as necessary
 import { supabase } from "../../services/supabase";
 import { NavLink } from "react-router-dom";
+import { toast } from "sonner";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
 
-  const { user } = useAuth(); // Get user from Auth context
+  const { user, profile } = useAuth(); // Get user and profile from Auth context
   const fullName = user?.user_metadata?.full_name;
 
   async function handleSignOut() {
     try {
-      await supabase.auth.signOut();
+      console.log("Signing out...");
+      toast.success("Signing out...");
+
+      const { error } = await supabase.auth.signOut();
+
+      // Always clear local storage to prevent stale session
+      localStorage.clear();
+
+      if (error) {
+        console.error("Signout error:", error);
+        toast.error("Failed to sign out.");
+        return;
+      }
+
       navigate("/");
     } catch (error) {
+      toast.error("Failed to sign out.");
       console.error("Logout error:", error);
     }
   }
@@ -33,7 +48,7 @@ const Header: React.FC = () => {
           </span>
         </Link>
         {/* Navigation */}
-       
+
         <nav className="hidden md:flex items-center gap-8">
           <NavLink
             to="/"
@@ -89,10 +104,20 @@ const Header: React.FC = () => {
           {user ? (
             <>
               <div className="flex items-center gap-2 text-slate-700 font-semibold">
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm">
-                  {fullName?.charAt(0).toUpperCase()}
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Profile"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span>{fullName?.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
-                <span className="hidden sm:block">{fullName}</span>
+                <span className="hidden sm:block">
+                  {profile?.username || fullName}
+                </span>
               </div>
               <div className="flex items-center gap-4">
                 <button
@@ -107,7 +132,7 @@ const Header: React.FC = () => {
             <>
               <button
                 onClick={() => navigate("/login")}
-                className="px-5 py-2.5 text-slate-700 hover:text-slate-900 font-semibold transition-colors"
+                className="px-5 py-2.5 text-slate-700 cursor-pointer hover:text-slate-900 font-semibold transition-colors"
               >
                 Sign In
               </button>

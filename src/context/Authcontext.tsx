@@ -1,52 +1,122 @@
-// src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "../services/supabase";
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/services/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import type { Profile } from "@/types/profile";
 
-interface AuthContextType {
+interface AuthContextProps {
   session: Session | null;
   user: User | null;
+  profile: Profile | null;
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
+const AuthContext = createContext<AuthContextProps>({
   session: null,
   user: null,
+  profile: null,
   loading: true,
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // 1. Load session on mount
   useEffect(() => {
-    // Initial check
-    auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
+    const loadSession = async () => {
+      try {
+        let {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
-    // Listen for changes
-    const { data: listener } = auth.onAuthStateChange((_event, session) => {
+        // Retry in case hydration delay occurs
+        if (!session) {
+          await new Promise((r) => setTimeout(r, 100));
+          const retry = await supabase.auth.getSession();
+          session = retry.data.session;
+        }
+
+        if (error) console.error("Session fetch error:", error);
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        console.log("Session on load:", session?.user?.id);
+      } catch (err) {
+        console.error("Session load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSession();
+
+    // 2. Subscribe to session changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event);
       setSession(session);
-      
       setUser(session?.user ?? null);
     });
 
     return () => {
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
+  // 3. Load profile if user is present
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Profile load error:", error);
+        }
+
+        if (!data) {
+          // fallback to user metadata if no profile row exists
+          const meta = user.user_metadata;
+          const fallbackProfile: Profile = {
+            id: user.id,
+            username: meta.username || meta.full_name || "Guest",
+            full_name: meta.full_name || "",
+            avatar_url: meta.avatar_url || "",
+            bio: "",
+            updated_at: new Date().toISOString(),
+          };
+          setProfile(fallbackProfile);
+        } else {
+          setProfile(data);
+        }
+
+        console.log("Loaded profile for:", user.id);
+        console.log("Profile data:", data);
+      } catch (err) {
+        console.error("Unexpected profile fetch error:", err);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, session }}>
+    <AuthContext.Provider value={{ session, user, profile, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook for consuming
 export const useAuth = () => useContext(AuthContext);

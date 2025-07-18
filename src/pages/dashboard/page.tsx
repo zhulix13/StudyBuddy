@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "../../context/Authcontext";
-import Profile from "./profile";
+import Profile  from '@/pages/dashboard/profile';
 import SettingsPage from "./settings";
 import Sidebar from "./sidebar";
 import type { User as Usertype } from "@supabase/supabase-js";
 import Dashboard from "./dashboard";
+import type { Profile as Profiletype } from "@/types/profile";
 
 import {
   BookOpen,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 
  export default function StudyBuddyApp() {
-  const { user, loading }: { user: Usertype | null; loading: boolean } = useAuth();
+  const { user, loading, profile }: { user: Usertype | null; loading: boolean; profile: Profiletype | null   } = useAuth();
 
   // While loading auth status
   if (loading) {
@@ -49,11 +50,11 @@ import {
   const renderPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard user={user} />;
+        return <Dashboard user={user} profile={profile} />;
       case "profile":
-        return <Profile user={user} />;
+        return <Profile user={user} profile={profile} />;
       case "settings":
-        return <SettingsPage user={user} />;
+        return <SettingsPage user={user}  profile={profile} />;
       default:
         return (
           <div className="flex items-center justify-center h-64">
@@ -76,6 +77,7 @@ import {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         user={user}
+        profile={profile}
       />
 
       {/* Main Content */}

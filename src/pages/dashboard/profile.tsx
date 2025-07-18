@@ -1,75 +1,168 @@
-import type { User } from '@supabase/supabase-js';
+// src/components/Profile.tsx
+import React, { useState, useRef } from "react";
+import type { User } from "@supabase/supabase-js";
+import type { Profile } from "@/types/profile";
+import { uploadAvatar } from "@/services/upload";
+import { supabase } from "@/services/supabase";
 
-const Profile = ({ user }: { user: User | null }) => {
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+type ProfileProps = {
+  user: User | null;
+  profile: Profile | null;
+};
+
+const Profile: React.FC<ProfileProps> = ({ user, profile }) => {
+  const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [bio, setBio] = useState(profile?.bio || "");
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  console.log(avatarUrl)
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      setIsLoading(true);
+      
+      const { publicUrl } = await uploadAvatar(user.id, file);
+     
+        const { error } = await supabase
+          .from("profiles")
+          .update({ avatar_url: publicUrl })
+          .eq("id", user.id);
+        if (error) {
+          throw error;
+        }
+     
+
+      setAvatarUrl(publicUrl);
+      toast.success("Avatar updated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update avatar.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          bio: bio,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Profile updated!");
+
+      // Refresh profile context manually if needed
+      const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (updatedProfile) {
+        location.reload(); // Simple page reload to reflect new avatar + data
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Update failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="max-w-3xl mx-auto py-10 space-y-10">
+      {/* Profile Header */}
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50">
-        <div className="flex items-center space-x-6 mb-8">
-          <img 
-            src={user?.user_metadata.avatar_url || 'https://via.placeholder.com/150'} 
-            alt={user?.user_metadata.name || 'User Avatar'}
-            className="w-24 h-24 rounded-full object-cover ring-4 ring-blue-500/20"
-          />
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            <img
+              src={
+                avatarUrl ||
+                user?.user_metadata?.avatar_url ||
+                "https://via.placeholder.com/150"
+              }
+              alt="avatar"
+              className="w-24 h-24 rounded-full object-cover ring-4 ring-blue-500/30"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              className="mt-2 w-full"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+            >
+              Change Avatar
+            </Button>
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{user?.user_metadata.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {fullName || user?.user_metadata?.name || "Unnamed User"}
+            </h1>
             <p className="text-gray-600">{user?.email}</p>
-            <div className="flex items-center space-x-4 mt-4">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                Active Learner
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                7 Day Streak
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
-            <h3 className="text-2xl font-bold text-blue-700">156</h3>
-            <p className="text-blue-600">Study Hours</p>
-          </div>
-          <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
-            <h3 className="text-2xl font-bold text-purple-700">23</h3>
-            <p className="text-purple-600">Groups Joined</p>
-          </div>
-          <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
-            <h3 className="text-2xl font-bold text-green-700">89</h3>
-            <p className="text-green-600">Notes Created</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Profile Settings</h2>
-        <div className="space-y-6">
+      {/* Editable Profile Form */}
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 space-y-6">
+        <h2 className="text-xl font-bold text-gray-900">Profile Settings</h2>
+
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
-            <input 
-              type="text" 
-              defaultValue={user?.user_metadata.name || ''}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <label className="block text-sm font-medium mb-1 text-gray-700">
+              Full Name
+            </label>
+            <Input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Enter your full name"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input 
-              type="email" 
-              defaultValue={user?.email || ''}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <label className="block text-sm font-medium mb-1 text-gray-700">
+              Email (read-only)
+            </label>
+            <Input value={user?.email || ""} disabled />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-            <textarea 
+            <label className="block text-sm font-medium mb-1 text-gray-700">
+              Bio
+            </label>
+            <Textarea
               rows={4}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about yourself..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all">
-            Save Changes
-          </button>
+
+          <Button onClick={handleSave} disabled={isLoading} className="w-full">
+            {isLoading ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
       </div>
     </div>

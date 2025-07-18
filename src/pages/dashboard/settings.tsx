@@ -1,7 +1,8 @@
 import type { User as User } from '@supabase/supabase-js';
+import type { Profile as Profile } from '@/types/profile';
 
 
-const SettingsPage = ({user}: {user: User | null}) => {
+const SettingsPage = ({user, profile}: {user: User | null, profile: Profile | null}) => {
   return (
     <div className="space-y-8">
       <div>

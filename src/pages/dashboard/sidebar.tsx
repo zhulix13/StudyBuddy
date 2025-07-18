@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import type { User as Usertype } from "@supabase/supabase-js";
+import type { Profile } from "@/types/profile";
 
 const Sidebar = ({
   isOpen,
@@ -18,12 +19,14 @@ const Sidebar = ({
   currentPage,
   setCurrentPage,
   user,
+  profile
 }: {
   isOpen: boolean;
   toggleSidebar: () => void;
   currentPage: string;
   setCurrentPage: (page: string) => void;
   user: Usertype | null;
+  profile: Profile | null;
 }) => {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/dashboard" },
@@ -90,6 +93,7 @@ const Sidebar = ({
           <div className="flex items-center space-x-3">
             <img
               src={
+                profile?.avatar_url ||
                 user?.user_metadata.avatar_url ||
                 "https://via.placeholder.com/150"
               }
@@ -98,7 +102,8 @@ const Sidebar = ({
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">
-                {user?.user_metadata.name}
+                {profile?.full_name || user?.user_metadata.name || "User"}
+                
               </p>
               <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
