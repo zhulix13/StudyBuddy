@@ -1,4 +1,4 @@
-import PageLayout from "../layout/PageLayout";
+import GroupContent from "../layout/PageLayout";
 import { MobileHeader } from "../layout/MobileHeader";
 
 
@@ -9,7 +9,9 @@ import { MobileHeader } from "../layout/MobileHeader";
     return (
       <div>
          <MobileHeader />
-         <PageLayout />
+         <GroupContent
+            
+         />
 
       </div>
     )

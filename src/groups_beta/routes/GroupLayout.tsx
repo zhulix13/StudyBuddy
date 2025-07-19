@@ -5,7 +5,7 @@ import { Sidebar} from "../layout/Sidebar";
 import { useGroupStore } from "@/store/groupStore";
 import { Outlet } from "react-router-dom";
 
-export const MainLayout = () => {
+const GroupLayout = () => {
   const activeGroup = useGroupStore((s) => s.activeGroup);
   const setActiveGroup = useGroupStore((s) => s.setActiveGroup);
   
@@ -35,3 +35,5 @@ export const MainLayout = () => {
     </div>
   );
 };
+
+export default GroupLayout;

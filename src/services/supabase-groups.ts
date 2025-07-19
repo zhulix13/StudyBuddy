@@ -311,4 +311,88 @@ export async function deleteOwnGroup(groupId: string): Promise< { success: boole
     };
   }
 }
+// Get a particular group by its ID
+export async function getGroupById(groupId: string): Promise<StudyGroup | null> {
+  const { data: group, error } = await supabase
+    .from("study_groups")
+    .select("*")
+    .eq("id", groupId)
+    .single();
+
+  if (error) throw error;
+  if (!group) return null;
+
+  // Get member count
+  const { data: memberCounts } = await supabase
+    .from("group_members")
+    .select("group_id")
+    .eq("group_id", groupId);
+
+  const member_count = memberCounts ? memberCounts.length : 0;
+
+  // Get current user's role in the group
+  const { data: { user } } = await supabase.auth.getUser();
+  let user_role: string | null = null;
+  if (user) {
+    const { data: membership } = await supabase
+      .from("group_members")
+      .select("role")
+      .eq("group_id", groupId)
+      .eq("user_id", user.id)
+      .single();
+    user_role = membership?.role ?? null;
+  }
+
+  return {
+    ...group,
+    member_count,
+    user_role,
+  };
+}
+
+// Get groups where user is a member (not just creator)
+export async function getGroupsWhereUserIsMember(): Promise<StudyGroup[]> {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw authError ?? new Error("Not authenticated");
+
+  // Get group memberships for user
+  const { data: memberships, error: memberError } = await supabase
+    .from("group_members")
+    .select("group_id, role")
+    .eq("user_id", user.id);
+
+  if (memberError) throw memberError;
+  if (!memberships || memberships.length === 0) return [];
+
+  const groupIds = memberships.map((m) => m.group_id);
+
+  // Get group details
+  const { data: groups, error: groupError } = await supabase
+    .from("study_groups")
+    .select("*")
+    .in("id", groupIds);
+
+  if (groupError) throw groupError;
+
+  // Get member counts
+  const { data: memberCounts } = await supabase
+    .from("group_members")
+    .select("group_id");
+
+  const countMap = memberCounts?.reduce((acc, cur) => {
+    acc[cur.group_id] = (acc[cur.group_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) ?? {};
+
+  const membershipMap = memberships.reduce((acc, cur) => {
+    acc[cur.group_id] = cur.role;
+    return acc;
+  }, {} as Record<string, string>);
+
+  return groups.map((group) => ({
+    ...group,
+    user_role: membershipMap[group.id] ?? null,
+    member_count: countMap[group.id] ?? 0,
+  }));
+}
 
