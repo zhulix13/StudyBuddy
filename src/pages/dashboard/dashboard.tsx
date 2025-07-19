@@ -164,7 +164,7 @@ const Dashboard = ({user, profile}: {user: User | null, profile: Profile | null}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">
-            Welcome back! Here's your study overview.
+            Welcome back, {profile?.username || user?.user_metadata?.name ||  'User'} ! Here's your study overview.
           </p>
         </div>
         <div className="flex items-center space-x-4">

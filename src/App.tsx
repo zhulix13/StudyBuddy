@@ -8,7 +8,7 @@ import StudyBuddyApp from "./pages/dashboard/page";
 import Home from "./pages/home";
 import Groups from "./pages/groups";
 import { Toaster } from "sonner";
-import MetaPage from "./groups_meta";
+import MetaPage from "./groups_beta";
 
 const Discover = () => <div className="p-6 text-xl">🔎 Discover</div>;
 
