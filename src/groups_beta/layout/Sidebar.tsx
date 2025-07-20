@@ -10,13 +10,13 @@ import type { StudyGroup } from "@/types/groups"
 import { toast } from "sonner"
 
 interface SidebarProps {
-  onSelectGroup: (group: StudyGroup) => void
+  setActiveGroup: (group: StudyGroup) => void
   activeGroupId: string | null
   isOpen?: boolean
-  onClose?: () => void
+  setsidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void
 }
 
-export const Sidebar = ({ onSelectGroup, activeGroupId, isOpen, onClose }: SidebarProps) => {
+export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen }: SidebarProps) => {
   const [searchTerm, setSearchTerm] = useState("")
   const [groups, setGroups] = useState<StudyGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -51,9 +51,10 @@ export const Sidebar = ({ onSelectGroup, activeGroupId, isOpen, onClose }: Sideb
   )
 
   const handleGroupClick = (group: StudyGroup) => {
-    onSelectGroup(group)
+    setActiveGroup(group)
       navigate(`/groups/${group.id}`)
-    onClose?.()
+      setsidebarOpen(false) // Close sidebar after selecting a group
+   //  onClose?.()
   }
 
   const LoadingState = () => (
@@ -129,7 +130,7 @@ export const Sidebar = ({ onSelectGroup, activeGroupId, isOpen, onClose }: Sideb
   return (
     <>
       {/* Mobile Sidebar */}
-      <Sheet open={isOpen} onOpenChange={onClose}>
+      <Sheet open={isOpen} onOpenChange={setsidebarOpen}>
         <SheetContent side="left" className="w-[320px] p-0">
           {sidebarContent}
         </SheetContent>

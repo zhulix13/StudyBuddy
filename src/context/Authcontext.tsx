@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         setSession(session);
         setUser(session?.user ?? null);
-        console.log("Session on load:", session?.user?.id);
+      
       } catch (err) {
         console.error("Session load error:", err);
       } finally {
@@ -102,8 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setProfile(data);
         }
 
-        console.log("Loaded profile for:", user.id);
-        console.log("Profile data:", data);
+    
       } catch (err) {
         console.error("Unexpected profile fetch error:", err);
       }

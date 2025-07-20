@@ -8,7 +8,7 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
   const setSidebarOpen = useGroupStore((s) => s.setSidebarOpen)
 
   function onMenuClick() {
-    setSidebarOpen() // just toggle
+    setSidebarOpen(true) // just toggle
   }
 
   return (

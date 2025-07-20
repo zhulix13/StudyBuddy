@@ -16,27 +16,27 @@ interface GroupStore {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
    sidebarOpen: boolean
-   setSidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void
+   setSidebarOpen: (open: boolean ) => void
 }
 
 export const useGroupStore = create<GroupStore>()(
-  persist(
-    (set) => ({
-      activeGroup: null,
-      setActiveGroup: (group) => set({ activeGroup: group }),
+   persist(
+      (set) => ({
+         activeGroup: null,
+         setActiveGroup: (group) => set({ activeGroup: group }),
 
-      activeTab: "notes",
-      setActiveTab: (tab) => set({ activeTab: tab }),
+         activeTab: "notes",
+         setActiveTab: (tab) => set({ activeTab: tab }),
 
-      sidebarOpen: true,
-      setSidebarOpen: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-    }),
-    {
-      name: "group-ui-store",
-      partialize: (state) => ({
-        activeGroup: state.activeGroup,
-        activeTab: state.activeTab,
+         sidebarOpen: false,
+         setSidebarOpen: (open) => set({ sidebarOpen: open }),
       }),
-    }
-  )
+      {
+         name: "group-ui-store",
+         partialize: (state) => ({
+            activeGroup: state.activeGroup,
+            activeTab: state.activeTab,
+         }),
+      }
+   )
 )
