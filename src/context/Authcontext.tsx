@@ -98,6 +98,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             updated_at: new Date().toISOString(),
           };
           setProfile(fallbackProfile);
+          // await supabase
+          //   .from("profiles")
+          //   .upsert(fallbackProfile, { onConflict: "id" })
+          //   .eq("id", user.id)
+          //   .select("*") 
+            
+          //   .single(); // Ensure we create a profile if it doesn't exist
         } else {
           setProfile(data);
         }

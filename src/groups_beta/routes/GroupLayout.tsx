@@ -10,8 +10,8 @@ const GroupLayout = () => {
   const activeGroup = useGroupStore((s) => s.activeGroup);
   const setActiveGroup = useGroupStore((s) => s.setActiveGroup);
   
-  const activeTab = useGroupStore((s) => s.activeTab);
-  const setActiveTab = useGroupStore((s) => s.setActiveTab);
+//   const activeTab = useGroupStore((s) => s.activeTab);
+//   const setActiveTab = useGroupStore((s) => s.setActiveTab);
 
  const sidebarOpen = useGroupStore((s) => s.sidebarOpen);
  const setSidebarOpen = useGroupStore((s) => s.setSidebarOpen);
@@ -21,7 +21,7 @@ const GroupLayout = () => {
    if (activeGroup) {
       console.log("Active group changed:", activeGroup);
       navigate(`/groups/${activeGroup.id}`); // Navigate to the group page when a group is active
-      setActiveTab("notes"); // Default to "notes" tab when a group is active
+      
    }
 }, [activeGroup]);
 

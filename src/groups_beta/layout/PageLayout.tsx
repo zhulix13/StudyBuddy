@@ -1,9 +1,10 @@
-import { useState } from "react";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FileText, MessageCircle } from "lucide-react";
 import { ChatView } from "../chat/ChatView";
 import { NotesView } from "../notes/NotesViews";
+import { useGroupStore } from "@/store/groupStore";
 
 // Assuming Group type is defined somewhere
 import type { StudyGroup } from "@/types/groups";
@@ -25,7 +26,8 @@ const GroupHeader = ({ group }: { group: StudyGroup }) => (
 );
 
 const GroupContent = ({ group }: { group: StudyGroup }) => {
-   const [activeTab, setActiveTab] = useState("notes");
+ const activeTab = useGroupStore((s) => s.activeTab);
+   const setActiveTab = useGroupStore((s) => s.setActiveTab);
 
    return (
       <div className="flex-1 flex flex-col">
