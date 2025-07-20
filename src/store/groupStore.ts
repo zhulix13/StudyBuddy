@@ -1,11 +1,8 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import type { StudyGroup } from "@/types/groups"
 
-interface Group {
-  id: string
-  name: string
-  description: string
-}
+
 
 
 
@@ -13,8 +10,8 @@ interface Group {
 type TabType = "notes" | "chat" | "settings"
 
 interface GroupStore {
-  activeGroup: Group | null
-  setActiveGroup: (group: Group | null) => void
+  activeGroup: StudyGroup | null
+  setActiveGroup: (group: StudyGroup | null) => void
 
   activeTab: TabType
   setActiveTab: (tab: TabType) => void

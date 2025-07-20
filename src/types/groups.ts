@@ -8,6 +8,9 @@ export interface StudyGroup {
   created_at: string
   member_count?: number
   user_role?: "member" | "admin"
+  lastActivity?: string
+  unreadCount?: number
+  avatar?: string
 }
 
 export interface GroupMember {

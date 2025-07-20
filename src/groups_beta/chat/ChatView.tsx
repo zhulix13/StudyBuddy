@@ -21,6 +21,7 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
   const handleSendMessage = (message: string) => {
     // Here you would typically send to your backend
     console.log("Sending message:", message)
+    console.log("Group ID:", groupId)
   }
 
   return (

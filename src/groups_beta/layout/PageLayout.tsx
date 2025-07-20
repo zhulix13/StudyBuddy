@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FileText, MessageCircle } from "lucide-react";
@@ -6,9 +6,9 @@ import { ChatView } from "../chat/ChatView";
 import { NotesView } from "../notes/NotesViews";
 
 // Assuming Group type is defined somewhere
-import type { Group } from "../types/index";
+import type { StudyGroup } from "@/types/groups";
 
-const GroupHeader = ({ group }: { group: Group }) => (
+const GroupHeader = ({ group }: { group: StudyGroup }) => (
    <div className="hidden md:block p-6 border-b">
       <div className="flex items-center gap-3">
          <Avatar className="w-12 h-12">
@@ -24,7 +24,7 @@ const GroupHeader = ({ group }: { group: Group }) => (
    </div>
 );
 
-const GroupContent = ({ group }: { group: Group }) => {
+const GroupContent = ({ group }: { group: StudyGroup }) => {
    const [activeTab, setActiveTab] = useState("notes");
 
    return (

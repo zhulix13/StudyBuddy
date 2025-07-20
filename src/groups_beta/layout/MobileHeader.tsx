@@ -1,20 +1,16 @@
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Menu } from "lucide-react"
-import type { Group } from "../types"
+import type { StudyGroup } from "@/types/groups"
 import { useGroupStore } from "@/store/groupStore"
 
+export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null }) => {
+  const setSidebarOpen = useGroupStore((s) => s.setSidebarOpen)
 
-  const activeGroup = useGroupStore((s) => s.activeGroup || null)
+  function onMenuClick() {
+    setSidebarOpen() // just toggle
+  }
 
- const sidebarOpen = useGroupStore((s) => s.sidebarOpen);
- const setSidebarOpen = useGroupStore((s) => s.setSidebarOpen);
-
-   function onMenuClick() {
-    setSidebarOpen(!sidebarOpen);
-   }
-
-export const MobileHeader = () => {
   return (
     <div className="md:hidden flex items-center justify-between p-4 border-b">
       <Button variant="ghost" size="sm" onClick={onMenuClick}>
