@@ -61,7 +61,7 @@ export const GroupCard = ({ group, isActive, onClick }: GroupCardProps) => {
             </div>
           </div>
           
-          <p className="text-xs text-gray-500 truncate mb-2">{group.description}</p>
+          <p className="text-xs text-gray-500 truncate mb-2">{group.subject}</p>
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
