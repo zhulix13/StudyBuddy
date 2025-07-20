@@ -1,13 +1,17 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search, Loader2 } from "lucide-react"
+import { Search } from "lucide-react"
 import { GroupCard } from "../layout/GroupCard"
-import { getGroupsWhereUserIsMember } from "@/services/supabase-groups" // Adjust import path as needed
+import { getGroupsWhereUserIsMember } from "@/services/supabase-groups"
 import type { StudyGroup } from "@/types/groups"
 import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
+import Skeleton from "react-loading-skeleton"
+import "react-loading-skeleton/dist/skeleton.css"
+
 
 interface SidebarProps {
   setActiveGroup: (group: StudyGroup) => void
@@ -16,51 +20,61 @@ interface SidebarProps {
   setsidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void
 }
 
-export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen }: SidebarProps) => {
+export const Sidebar = ({
+  setActiveGroup,
+  activeGroupId,
+  isOpen,
+  setsidebarOpen
+}: SidebarProps) => {
   const [searchTerm, setSearchTerm] = useState("")
-  const [groups, setGroups] = useState<StudyGroup[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const userGroups = await getGroupsWhereUserIsMember()
-        setGroups(userGroups)
-         if (userGroups.length === 0) {
-            toast.info("You have no groups yet. Join or create one to get started.")
-         }
-         toast.success("Groups loaded successfully")
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load groups")
-        toast.error("Failed to load groups")
-        console.error("Error fetching groups:", err)
-      } finally {
-        setIsLoading(false)
+  const {
+    data: groups = [],
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ["user-groups"],
+    queryFn: getGroupsWhereUserIsMember,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    onSuccess: (data) => {
+      if (data.length === 0) {
+        toast.info("You have no groups yet. Join or create one to get started.")
+      } else {
+        toast.success("Groups loaded successfully")
       }
-    }
 
-    fetchGroups()
-  }, [])
- 
-  const filteredGroups = groups.filter(group =>
+      const savedGroupId = localStorage.getItem("activeGroupId")
+      if (savedGroupId) {
+        const saved = data.find((group: StudyGroup) => group.id === savedGroupId)
+        if (saved) setActiveGroup(saved)
+      }
+    },
+    onError: (err: any) => {
+      toast.error("Failed to load groups")
+      console.error("Error fetching groups:", err)
+    }
+  })
+
+  const filteredGroups = groups.filter((group: StudyGroup) =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleGroupClick = (group: StudyGroup) => {
     setActiveGroup(group)
-      navigate(`/groups/${group.id}`)
-      setsidebarOpen(false) // Close sidebar after selecting a group
-   //  onClose?.()
+    localStorage.setItem("activeGroupId", group.id)
+    navigate(`/groups/${group.id}`)
+    setsidebarOpen(false)
   }
 
   const LoadingState = () => (
-    <div className="flex flex-col items-center justify-center py-8 px-4">
-      <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-3" />
-      <p className="text-sm text-gray-500">Loading your groups...</p>
+    <div className="space-y-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="p-4 border rounded-md">
+          <Skeleton height={20} width={`60%`} />
+          <Skeleton height={15} width={`40%`} className="mt-2" />
+        </div>
+      ))}
     </div>
   )
 
@@ -84,10 +98,10 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
         <Search className="w-8 h-8 text-red-400" />
       </div>
       <p className="text-sm text-red-600 mb-1">Failed to load groups</p>
-      <p className="text-xs text-gray-400">{error}</p>
+      <p className="text-xs text-gray-400">{(error as Error)?.message}</p>
     </div>
   )
-  
+
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b">
@@ -103,7 +117,7 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
           />
         </div>
       </div>
-      
+
       <ScrollArea className="flex-1">
         <div className="p-4">
           {isLoading ? (
@@ -113,7 +127,7 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
           ) : filteredGroups.length === 0 ? (
             <EmptyState />
           ) : (
-            filteredGroups.map((group) => (
+            filteredGroups.map((group: StudyGroup) => (
               <GroupCard
                 key={group.id}
                 group={group}
@@ -126,7 +140,7 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
       </ScrollArea>
     </div>
   )
-  
+
   return (
     <>
       {/* Mobile Sidebar */}
@@ -135,9 +149,9 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
           {sidebarContent}
         </SheetContent>
       </Sheet>
-     
+
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block fixed left-0 top-16  h-full w-[320px] border-r bg-white z-10">
+      <aside className="hidden md:block fixed left-0 top-16 h-full w-[320px] border-r bg-white z-10">
         {sidebarContent}
       </aside>
     </>

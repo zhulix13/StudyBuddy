@@ -1,54 +1,41 @@
-import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import GroupContent from "../layout/PageLayout";
 import { MobileHeader } from "../layout/MobileHeader";
-import { getGroupById } from "@/services/supabase-groups"; // Adjust import path as needed
-import { Loader2, AlertCircle, Users } from "lucide-react";
+import { getGroupById } from "@/services/supabase-groups";
+import { AlertCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import type { StudyGroup } from "@/types/groups";
 
 const GroupPage = () => {
   const params = useParams();
   const groupId = params.groupId as string | undefined;
-  
-  const [group, setGroup] = useState<StudyGroup | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchGroup = async () => {
-      if (!groupId) {
-        setError("Group ID not found");
-        setIsLoading(false);
-        return;
-      }
+  const {
+    data: group,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<StudyGroup | null, Error>({
+    queryKey: ["group", groupId],
+    queryFn: () => {
+      if (!groupId) throw new Error("Group ID not provided");
+      return getGroupById(groupId);
+    },
+    enabled: !!groupId,
+    staleTime: 1000 * 60 * 5, // cache for 5 minutes
+  });
 
-      try {
-        setIsLoading(true);
-        setError(null);
-        const groupData = await getGroupById(groupId);
-        
-        if (!groupData) {
-          setError("Group not found");
-        } else {
-          setGroup(groupData);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load group");
-        console.error("Error fetching group:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGroup();
-  }, [groupId]);
-
-  const LoadingState = () => (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Loading group...</h2>
-        <p className="text-sm text-gray-600">Please wait while we fetch the group details</p>
+  const SkeletonGroup = () => (
+    <div className="min-h-screen bg-gray-50 px-6 py-10">
+      <div className="space-y-6 max-w-4xl mx-auto animate-pulse">
+        <div className="h-6 w-1/3 bg-gray-200 rounded" />
+        <div className="h-4 w-2/3 bg-gray-200 rounded" />
+        <div className="h-4 w-1/2 bg-gray-200 rounded" />
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -60,7 +47,9 @@ const GroupPage = () => {
           <AlertCircle className="w-10 h-10 text-red-500" />
         </div>
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Group not found</h2>
-        <p className="text-sm text-gray-600 mb-6">{error}</p>
+        <p className="text-sm text-gray-600 mb-6">
+          {error instanceof Error ? error.message : "An error occurred"}
+        </p>
         <button
           onClick={() => window.history.back()}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
@@ -74,16 +63,16 @@ const GroupPage = () => {
   if (isLoading) {
     return (
       <div>
-        <MobileHeader group={group || null} />
-        <LoadingState />
+        <MobileHeader group={null} />
+        <SkeletonGroup />
       </div>
     );
   }
 
-  if (error || !group) {
+  if (isError || !group) {
     return (
       <div>
-        <MobileHeader group={group || null} />
+        <MobileHeader group={null} />
         <ErrorState />
       </div>
     );
