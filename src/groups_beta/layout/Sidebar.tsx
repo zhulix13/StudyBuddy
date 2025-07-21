@@ -72,7 +72,7 @@ const {
 
   const handleGroupClick = (group: StudyGroup) => {
     setActiveGroup(group)
-    localStorage.setItem("activeGroupId", group.id)
+    
     navigate(`/groups/${group.id}`)
     setsidebarOpen(false)
   }

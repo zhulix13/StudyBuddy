@@ -36,12 +36,9 @@ const GroupLayout = () => {
       />
 
       <main className="flex-1 md:ml-[320px] flex flex-col bg-white">
-        {/* <MobileHeader
-          activeGroup={activeGroup}
-          onMenuClick={() => setSidebarOpen(true)}
-        /> */}
+      
          <Outlet />
-        {/* {activeGroup ? <GroupContent group={activeGroup} /> : <GroupHome />} */}
+     
       </main>
     </div>
   );
