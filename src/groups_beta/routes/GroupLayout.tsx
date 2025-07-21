@@ -28,6 +28,7 @@ const GroupLayout = () => {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
       <Sidebar
+        
         setActiveGroup={setActiveGroup}
         activeGroupId={activeGroup?.id ?? null}
         isOpen={sidebarOpen}

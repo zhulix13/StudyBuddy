@@ -13,14 +13,17 @@ import Skeleton from "react-loading-skeleton"
 import "react-loading-skeleton/dist/skeleton.css"
 
 
+
 interface SidebarProps {
-  setActiveGroup: (group: StudyGroup) => void
+   
+  setActiveGroup: (group: StudyGroup | null) => void
   activeGroupId: string | null
   isOpen?: boolean
   setsidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void
 }
 
 export const Sidebar = ({
+   
   setActiveGroup,
   activeGroupId,
   isOpen,
@@ -29,34 +32,41 @@ export const Sidebar = ({
   const [searchTerm, setSearchTerm] = useState("")
   const navigate = useNavigate()
 
-  const {
-    data: groups = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ["user-groups"],
-    queryFn: getGroupsWhereUserIsMember,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    onSuccess: (data) => {
-      if (data.length === 0) {
-        toast.info("You have no groups yet. Join or create one to get started.")
-      } else {
-        toast.success("Groups loaded successfully")
-      }
 
-      const savedGroupId = localStorage.getItem("activeGroupId")
-      if (savedGroupId) {
-        const saved = data.find((group: StudyGroup) => group.id === savedGroupId)
-        if (saved) setActiveGroup(saved)
-      }
-    },
-    onError: (err: any) => {
-      toast.error("Failed to load groups")
-      console.error("Error fetching groups:", err)
+
+const {
+  data: groups = [],
+  isLoading,
+  error
+} = useQuery({
+  queryKey: ["user-groups"],
+  queryFn: getGroupsWhereUserIsMember,
+  staleTime: 1000 * 60 * 5, // 5 minutes
+  onSuccess: (data) => {
+    if (data.length === 0) {
+      toast.info("You have no groups yet. Join or create one to get started.")
+    } else {
+      toast.success("Groups loaded successfully")
     }
-  })
 
-  const filteredGroups = groups.filter((group: StudyGroup) =>
+    // Check if the current persisted activeGroup.id exists in the new fetched list
+    if (activeGroupId) {
+      const stillValid = data.find((group: StudyGroup) => group.id === activeGroupId)
+      if (stillValid) {
+        setActiveGroup(stillValid)
+      } else {
+        setActiveGroup(null) // or reset logic if the group was deleted or user removed
+      }
+    }
+  },
+  onError: (err: any) => {
+    toast.error("Failed to load groups")
+    console.error("Error fetching groups:", err)
+  }
+})
+
+
+  const filteredGroups: StudyGroup[] = groups.filter((group: StudyGroup) =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
