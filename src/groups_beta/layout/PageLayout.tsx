@@ -11,7 +11,9 @@ import type { StudyGroup } from "@/types/groups";
 
 const GroupHeader = ({ group }: { group: StudyGroup }) => (
    <div className="hidden md:block p-6 border-b">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 cursor-pointer"
+      onClick={() => console.log("Group header clicked")}
+      >
          <Avatar className="w-12 h-12">
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white">
                {group.name.charAt(0)}
