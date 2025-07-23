@@ -10,7 +10,7 @@ export interface StudyGroup {
   user_role?: "member" | "admin"
   lastActivity?: string
   unreadCount?: number
-  avatar?: string
+  avatar_url?: string
 }
 
 export interface GroupMember {
@@ -34,6 +34,7 @@ export interface CreateGroupData {
 
 export interface UpdateGroupData {
   name?: string
+  avatar_url?: string
   subject?: string
   description?: string
   is_private?: boolean

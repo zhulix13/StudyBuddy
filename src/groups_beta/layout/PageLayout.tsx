@@ -13,20 +13,20 @@ import { useState } from "react"
 import type { StudyGroup } from "@/types/groups"
 
 // Mock data for demonstration
-const mockGroup = {
-  id: "1",
-  name: "MEE CLASS'25",
-  subject: "Mechanical Engineering",
-  description: "Who wants to be our new class rep pls?",
-  avatar: null,
-  memberCount: 45,
-  notesCount: 127,
-  adminCount: 3,
-  isUserAdmin: true,
-  user_role: "admin",
-  member_count: 45,
-  created_at: "10/28/2021 6:49 PM",
-}
+// const mockGroup = {
+//   id: "1",
+//   name: "MEE CLASS'25",
+//   subject: "Mechanical Engineering",
+//   description: "Who wants to be our new class rep pls?",
+//   avatar_url: null,
+//   memberCount: 45,
+//   notesCount: 127,
+//   adminCount: 3,
+//   isUserAdmin: true,
+//   user_role: "admin",
+//   member_count: 45,
+//   created_at: "10/28/2021 6:49 PM",
+// }
 
 // Main Group Header Component
 const GroupHeader = ({ group }: any) => {
@@ -60,7 +60,10 @@ const GroupHeader = ({ group }: any) => {
         <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={handleToggleExpanded}>
          <Avatar className="w-12 h-12">
            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white">
-            {group.name.charAt(0)}
+            {group.avatar_url
+              ? <img src={group.avatar_url} alt={group.name} className="w-full h-full object-cover rounded-full" />
+              : group.name.charAt(0)
+            }
            </AvatarFallback>
          </Avatar>
          <div className="flex-1">
@@ -92,7 +95,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
 
   return (
     <div className="flex-1 flex flex-col  relative">
-      <GroupHeader group={group || mockGroup} />
+      <GroupHeader group={group } />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col  ">
         <TabsList className="grid w-full grid-cols-2 mx-4 mt-4">
           <TabsTrigger value="notes" className="flex items-center gap-2">

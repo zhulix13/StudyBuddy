@@ -78,7 +78,7 @@ export async function createGroup(
 }
 
 // Update group details
-// Only allow updates to name, subject, description, and privacy status
+// Only allow updates to name, avatar, subject, description, and privacy status
 export async function updateGroup(groupId: string, updates: UpdateGroupData) {
   const { error } = await supabase
     .from("study_groups")

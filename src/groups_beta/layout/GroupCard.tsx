@@ -43,7 +43,7 @@ export const GroupCard = ({ group, isActive, onClick }: GroupCardProps) => {
     >
       <div className="flex items-center gap-3">
         <Avatar className="w-12 h-12">
-          <AvatarImage src={group.avatar} />
+          <AvatarImage src={group.avatar_url} />
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-medium">
             {group.name.substring(0, 2).toUpperCase()}
           </AvatarFallback>

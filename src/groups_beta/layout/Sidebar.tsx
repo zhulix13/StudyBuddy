@@ -47,6 +47,7 @@ const {
       toast.info("You have no groups yet. Join or create one to get started.")
     } else {
       toast.success("Groups loaded successfully")
+      console.log("Groups loaded:", data)
     }
 
     // Check if the current persisted activeGroup.id exists in the new fetched list
