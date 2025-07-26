@@ -67,9 +67,10 @@ const GroupDetailsDropdown = ({ group, isExpanded, onLeaveGroup, onSaveEdit, onD
                 <span className="text-gray-600">Admins:</span>
                 <span className="font-medium">{group.adminCount}</span>
               </div>
-              <div className="text-sm">
-                <span className="text-gray-600">Created:</span>
-                <div className="font-medium text-xs">{group.created_at}</div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Created:</span>
+                  {new Date(group.created_at).toLocaleString()}
+                </div>
               </div>
             </div>
 
@@ -89,7 +90,7 @@ const GroupDetailsDropdown = ({ group, isExpanded, onLeaveGroup, onSaveEdit, onD
                 Leave Group
               </button>
             </div>
-          </div>
+          
 
           {/* Edit Group Dropdown - positioned to slide from right */}
           <EditGroupDropdown
@@ -101,6 +102,7 @@ const GroupDetailsDropdown = ({ group, isExpanded, onLeaveGroup, onSaveEdit, onD
           />
         </motion.div>
       )}
+   
     </AnimatePresence>
   )
 }

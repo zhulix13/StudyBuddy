@@ -182,7 +182,7 @@ const EditGroupDropdown = ({ group, isOpen, onClose, onSave, onDelete }) => {
             animate="visible"
             exit="exit"
             variants={slideVariants}
-            className="absolute top-0 right-0 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50 origin-left"
+            className="absolute top-0 right-0 w-100 bg-white border border-gray-200 rounded-lg shadow-xl z-50 origin-left"
             style={{ transform: "translateX(100%)" }}
           >
             <div className="p-4 space-y-4">
@@ -231,7 +231,7 @@ const EditGroupDropdown = ({ group, isOpen, onClose, onSave, onDelete }) => {
                   disabled={isLoading}
                   className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50"
                 >
-                  <Camera className="w-4 h-4" />
+                  <Camera className="w-4 h-4 md:h-8 md:w-8" />
                   {avatarFile ? "Change Avatar" : "Upload Avatar"}
                 </button>
               </div>
