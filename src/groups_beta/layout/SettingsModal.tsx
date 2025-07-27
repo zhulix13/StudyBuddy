@@ -71,7 +71,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             animate="visible"
             exit="exit"
             variants={backdropVariants}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-60"
             onClick={onClose}
           />
 
@@ -81,7 +81,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             animate="visible"
             exit="exit"
             variants={modalVariants}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4 sm:mx-0"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-60 w-full max-w-md mx-4 sm:mx-0"
           >
             <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden max-h-[90vh] flex flex-col">
               {/* Header */}

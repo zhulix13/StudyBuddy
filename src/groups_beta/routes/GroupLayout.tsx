@@ -31,8 +31,8 @@ const GroupLayout = () => {
         
         setActiveGroup={setActiveGroup}
         activeGroupId={activeGroup?.id ?? null}
-        isOpen={sidebarOpen}
-        setsidebarOpen={setSidebarOpen}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
       />
 
       <main className="flex-1 md:ml-[320px] flex flex-col bg-white">

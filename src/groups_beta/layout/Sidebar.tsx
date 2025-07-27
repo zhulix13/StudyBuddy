@@ -20,11 +20,12 @@ import SettingsModal from "./SettingsModal"
 interface SidebarProps {
   setActiveGroup: (group: StudyGroup | null) => void
   activeGroupId: string | null
-  isOpen?: boolean
-  setsidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean ) => void
+  
 }
 
-export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen }: SidebarProps) => {
+export const Sidebar = ({ setActiveGroup, activeGroupId,  sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [searchTerm, setSearchTerm] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
@@ -38,7 +39,7 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
     queryKey: ["user-groups"],
     queryFn: getGroupsWhereUserIsMember,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    onSuccess: (data) => {
+    onSuccess: (data: StudyGroup[]) => {
       if (data.length === 0) {
         toast.info("You have no groups yet. Join or create one to get started.")
       } else {
@@ -68,13 +69,16 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
   const handleGroupClick = (group: StudyGroup) => {
     setActiveGroup(group)
     navigate(`/groups/${group.id}`)
-    setsidebarOpen(false)
+   setSidebarOpen(false) // Close sidebar after selecting a group
+    // if (setSidebarMobileOpen) {
+    //   setSidebarMobileOpen(false)
+    // }
   }
 
   const handleCreateSuccess = (newGroup: StudyGroup) => {
     setActiveGroup(newGroup)
     navigate(`/groups/${newGroup.id}`)
-    setsidebarOpen(false)
+   
     setIsCreateModalOpen(false)
   }
 
@@ -183,8 +187,8 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, isOpen, setsidebarOpen 
   return (
     <>
       {/* Mobile Sidebar */}
-      <Sheet open={isOpen} onOpenChange={setsidebarOpen}>
-        <SheetContent side="left" className="w-[320px] p-0">
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-full block md:hidden p-0">
           {sidebarContent}
         </SheetContent>
       </Sheet>

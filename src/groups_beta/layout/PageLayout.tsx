@@ -33,7 +33,7 @@ const GroupHeader = ({ group }: any) => {
   }
 
   return (
-    <div className="hidden md:block border-b bg-white sticky top-0 ">
+    <div className="hidden md:block border-b bg-white sticky z-20 top-0 ">
       {/* Main Header */}
       <div className="p-6 w-full">
         <div className="flex items-center justify-between">
@@ -93,7 +93,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   return (
     <div className="flex-1 flex flex-col relative">
       <GroupHeader group={group} />
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 z-10 flex overflow-y-scroll flex-col">
         <TabsList className="grid w-full grid-cols-2 mx-4 mt-4 bg-gray-100">
           <TabsTrigger
             value="notes"

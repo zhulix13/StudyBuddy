@@ -12,6 +12,7 @@ interface GroupStore {
   setActiveTab: (tab: TabType) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+
 }
 
 export const useGroupStore = create<GroupStore>()(
@@ -25,6 +26,8 @@ export const useGroupStore = create<GroupStore>()(
 
       sidebarOpen: false,
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+     
     }),
     {
       name: "group-ui-store",

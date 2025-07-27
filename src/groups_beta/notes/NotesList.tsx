@@ -22,6 +22,38 @@ const dummyNotes: Note[] = [
     createdAt: "1 day ago",
     author: "Sarah",
     tags: ["react", "javascript"]
+  },
+   {
+    id: "1",
+    title: "Quadratic Equations",
+    content: "The quadratic formula is x = (-b ± √(b²-4ac)) / 2a",
+    createdAt: "2 hours ago",
+    author: "Alex",
+    tags: ["algebra", "formulas"]
+  },
+  {
+    id: "2",
+    title: "React Hooks",
+    content: "useState and useEffect are the most commonly used hooks...",
+    createdAt: "1 day ago",
+    author: "Sarah",
+    tags: ["react", "javascript"]
+  },
+   {
+    id: "1",
+    title: "Quadratic Equations",
+    content: "The quadratic formula is x = (-b ± √(b²-4ac)) / 2a",
+    createdAt: "2 hours ago",
+    author: "Alex",
+    tags: ["algebra", "formulas"]
+  },
+  {
+    id: "2",
+    title: "React Hooks",
+    content: "useState and useEffect are the most commonly used hooks...",
+    createdAt: "1 day ago",
+    author: "Sarah",
+    tags: ["react", "javascript"]
   }
 ]
 

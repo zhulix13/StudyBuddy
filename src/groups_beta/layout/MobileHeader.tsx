@@ -9,11 +9,14 @@ import { useGroupStore } from "@/store/groupStore"
 import GroupDetailsMobile from "./GroupDetailsMobile"
 
 export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null }) => {
+  const sidebarOpen = useGroupStore((s) => s.sidebarOpen)
   const setSidebarOpen = useGroupStore((s) => s.setSidebarOpen)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   function onMenuClick() {
-    setSidebarOpen(true)
+    console.log("Menu clicked")
+      setSidebarOpen(true)
+  
   }
 
   const handleLeaveGroup = () => {
@@ -22,7 +25,7 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
     // Add leave group logic here
   }
 
-  const handleSaveEdit = (formData) => {
+  const handleSaveEdit = (formData: FormData) => {
     console.log("Save edit:", formData)
     // Add save edit logic here
   }
