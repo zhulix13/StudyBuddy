@@ -6,7 +6,7 @@ import { FileText, MessageCircle, MoreVertical } from "lucide-react"
 import { ChatView } from "../chat/ChatView"
 import { NotesView } from "../notes/NotesViews"
 import { useGroupStore } from "@/store/groupStore"
-import GroupDetailsModal from "./GroupDetails"
+import GroupDetailsDesktop from "./GroupDetailsDesktop"
 import { useState, useRef } from "react"
 import type { StudyGroup } from "@/types/groups"
 
@@ -73,7 +73,7 @@ const GroupHeader = ({ group }: any) => {
       </div>
 
       {/* Group Details Modal */}
-      <GroupDetailsModal
+      <GroupDetailsDesktop
         group={group}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
