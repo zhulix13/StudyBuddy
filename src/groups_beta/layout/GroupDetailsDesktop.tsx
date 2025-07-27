@@ -89,7 +89,7 @@ const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit,
             animate="visible"
             exit="exit"
             variants={backdropVariants}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
             onClick={() => !isEditOpen && onClose()}
           />
 

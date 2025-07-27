@@ -33,7 +33,7 @@ const GroupHeader = ({ group }: any) => {
   }
 
   return (
-    <div className="hidden md:block border-b bg-white sticky top-0 z-30">
+    <div className="hidden md:block border-b bg-white sticky top-0 ">
       {/* Main Header */}
       <div className="p-6 w-full">
         <div className="flex items-center justify-between">
