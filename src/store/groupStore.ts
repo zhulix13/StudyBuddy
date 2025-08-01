@@ -8,8 +8,8 @@ interface GroupStore {
   activeGroup: StudyGroup | null;
   setActiveGroup: (group: StudyGroup | null) => void;
 
-  activeTab: TabType;
-  setActiveTab: (tab: TabType) => void;
+  activeTab: TabType | string;
+  setActiveTab: (tab: TabType | string) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 
@@ -24,7 +24,7 @@ export const useGroupStore = create<GroupStore>()(
       activeTab: "notes",
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      sidebarOpen: false,
+      sidebarOpen: true,
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
      

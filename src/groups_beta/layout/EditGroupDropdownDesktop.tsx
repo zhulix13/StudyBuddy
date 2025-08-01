@@ -10,7 +10,13 @@ import { toast } from "sonner"
 import { updateGroup, deleteOwnGroup } from "@/services/supabase-groups"
 import { uploadGroupAvatar } from "@/services/upload"
 
-const GroupDetailsEditDesktop = ({ group, onClose, onSave, onDelete }) => {
+
+const GroupDetailsEditDesktop = ({ group, onClose, onSave, onDelete }: {
+  group: { id: string; name: string; subject: string; description: string; avatar_url?: string | null }
+  onClose: () => void
+  onSave?: (updatedGroup: any) => void
+  onDelete?: (groupId: string) => void
+}) => {
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 

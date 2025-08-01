@@ -12,7 +12,7 @@ const GroupHome = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setSidebarOpen(true); // Ensure sidebar is open when group home is accessed
+
     
     if (activeGroup) {
       console.log("Active group changed:", activeGroup);
@@ -48,3 +48,4 @@ const GroupHome = () => {
 };
 
 export default GroupHome;
+

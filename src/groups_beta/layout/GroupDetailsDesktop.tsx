@@ -5,6 +5,13 @@ import { FileText } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import GroupDetailsEditDesktop from "./EditGroupDropdownDesktop"
+import type { StudyGroup } from "@/types/groups"
+
+interface StudyGroupExtended extends StudyGroup {
+  member_count: number
+  notesCount: number
+  adminCount: number  
+}
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95, y: -20 },
@@ -34,7 +41,7 @@ const backdropVariants = {
   exit: { opacity: 0 },
 }
 
-const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit, onDeleteGroup, triggerRef }) => {
+const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit, onDeleteGroup, triggerRef }: { group: Partial<StudyGroupExtended>; isOpen: boolean; onClose: () => void; onLeaveGroup: () => void; onSaveEdit: (formData: FormData) => void; onDeleteGroup: () => void; triggerRef: React.RefObject<HTMLButtonElement | null> }) => {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 })
 
@@ -53,7 +60,7 @@ const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit,
     }
   }, [isOpen, isEditOpen])
 
-  const handleSaveEdit = (formData) => {
+  const handleSaveEdit = (formData: FormData) => {
     onSaveEdit(formData)
     setIsEditOpen(false)
   }
@@ -64,7 +71,7 @@ const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit,
 
   // Close modal on escape key
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (isEditOpen) {
           setIsEditOpen(false)
