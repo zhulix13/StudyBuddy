@@ -91,32 +91,43 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const setActiveTab = useGroupStore((s) => s.setActiveTab)
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex flex-col h-screen">
+      {/* Fixed Group Header */}
       <GroupHeader group={group} />
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1  flex-col">
-        <TabsList className="grid w-full grid-cols-2 mx-4 mt-4 bg-gray-100">
-          <TabsTrigger
-            value="notes"
-            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            <FileText className="w-4 h-4" />
-            Notes
-          </TabsTrigger>
-          <TabsTrigger
-            value="chat"
-            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Chat
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="notes" className="flex-1 mt-4">
-          <NotesView groupId={group.id} />
-        </TabsContent>
-        <TabsContent value="chat" className="flex-1 mt-4">
-          <ChatView groupId={group.id} />
-        </TabsContent>
-      </Tabs>
+
+      {/* Fixed Tab Triggers */}
+      <div className="sticky top-[80px] z-20 bg-white border-b">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mx-4 my-4 bg-gray-100">
+            <TabsTrigger
+              value="notes"
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <FileText className="w-4 h-4" />
+              Notes
+            </TabsTrigger>
+            <TabsTrigger
+              value="chat"
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Chat
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* Scrollable Tab Content Area */}
+      <div className="flex-1 overflow-y-auto hide-scrollbar">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+          <TabsContent value="notes" className="h-full">
+            <NotesView groupId={group.id} />
+          </TabsContent>
+          <TabsContent value="chat" className="h-full">
+            <ChatView groupId={group.id} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }

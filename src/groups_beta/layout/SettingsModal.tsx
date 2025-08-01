@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, User, Bell, Shield, Palette, HelpCircle, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { createPortal } from "react-dom"
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95, y: -20 },
@@ -62,8 +63,9 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   ]
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    isOpen && createPortal(
+      <AnimatePresence>
+      
         <>
           {/* Backdrop */}
           <motion.div
@@ -149,8 +151,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
           </motion.div>
         </>
-      )}
-    </AnimatePresence>
+      
+    </AnimatePresence>,
+      document.body
+    )
   )
 }
 

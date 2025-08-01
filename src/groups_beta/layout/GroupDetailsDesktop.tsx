@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import GroupDetailsEditDesktop from "./EditGroupDropdownDesktop"
 import type { StudyGroup } from "@/types/groups"
+import { createPortal } from "react-dom"
 
 interface StudyGroupExtended extends StudyGroup {
   member_count: number
@@ -87,16 +88,17 @@ const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit,
   }, [isOpen, isEditOpen, onClose])
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
+    isOpen && createPortal(
+      <AnimatePresence>
+        
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
             exit="exit"
             variants={backdropVariants}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+            className="fixed h-[100vh] inset-0 bg-black/20 backdrop-blur-sm z-[100]"
             onClick={() => !isEditOpen && onClose()}
           />
 
@@ -106,7 +108,7 @@ const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit,
             animate="visible"
             exit="exit"
             variants={modalVariants}
-            className="fixed z-50"
+            className="fixed z-[150]"
             style={{
               top: modalPosition.top,
               left: modalPosition.left,
@@ -232,9 +234,10 @@ const GroupDetailsDesktop = ({ group, isOpen, onClose, onLeaveGroup, onSaveEdit,
             </motion.div>
           </motion.div>
         </>
-      )}
-    </AnimatePresence>
+      
+    </AnimatePresence>,
+    document.body
   )
-}
+)}
 
 export default GroupDetailsDesktop

@@ -130,7 +130,7 @@ export const Sidebar = ({
   );
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full ">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
@@ -166,7 +166,7 @@ export const Sidebar = ({
       </div>
 
       {/* Groups List */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 pb-12 overflow-y-scroll hide-scrollbar">
         <div className="p-4">
           {isLoading ? (
             <LoadingState />

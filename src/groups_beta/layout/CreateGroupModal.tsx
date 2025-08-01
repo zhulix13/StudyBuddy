@@ -16,6 +16,7 @@ import { createGroup } from "@/services/supabase-groups"
 import { uploadGroupAvatar } from "@/services/upload"
 import { supabase } from "@/services/supabase" // Import supabase client
 import type { StudyGroup } from "@/types/groups"
+import { createPortal } from "react-dom"
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95, y: -20 },
@@ -155,8 +156,9 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }: CreateGroupModalProps)
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    isOpen && createPortal(
+      <AnimatePresence>
+      
         <>
           {/* Backdrop */}
           <motion.div
@@ -367,8 +369,10 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }: CreateGroupModalProps)
             </div>
           </motion.div>
         </>
-      )}
-    </AnimatePresence>
+     
+    </AnimatePresence>,
+      document.body
+    )
   )
 }
 
