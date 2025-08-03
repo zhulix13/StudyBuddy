@@ -200,7 +200,8 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
       *,
       profiles (
         username,
-        full_name
+        full_name,
+        avatar_url
       )
     `)
     .eq("group_id", groupId)

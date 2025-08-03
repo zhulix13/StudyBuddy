@@ -20,6 +20,7 @@ export interface GroupMember {
   role: "member" | "admin"
   joined_at: string
   profiles?: {
+    avatar_url?: string
     username: string | null
     full_name: string | null
   }

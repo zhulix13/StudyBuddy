@@ -17,12 +17,15 @@ const GroupLayout = () => {
  const setSidebarOpen = useGroupStore((s) => s.setSidebarOpen);
  const navigate = useNavigate();
 
- useEffect(() => {
-   if (activeGroup) {
-      console.log("Active group changed:", activeGroup);
-      navigate(`/groups/${activeGroup.id}`); // Navigate to the group page when a group is active
-      
-   }
+useEffect(() => {
+  if (activeGroup) {
+    const currentGroupId = window.location.pathname.split('/groups/')[1]?.split('/')[0];
+    
+    // Only navigate if we're on a different group or not on a group page
+    if (currentGroupId !== activeGroup.id) {
+      navigate(`/groups/${activeGroup.id}${window.location.search}`);
+    }
+  }
 }, [activeGroup]);
 
   return (
