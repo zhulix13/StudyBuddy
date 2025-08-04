@@ -1,33 +1,4 @@
-// Database Types
-// export interface User {
-//   id: string;
-//   name: string;
-//   email: string;
-//   avatar_url?: string;
-//   created_at: string;
-//   updated_at: string;
-// }
 
-// export interface StudyGroup {
-//   id: string;
-//   name: string;
-//   description?: string;
-//   subject: string;
-//   is_private: boolean;
-//   created_by: string;
-//   created_at: string;
-//   updated_at: string;
-//   member_count?: number;
-//   last_activity?: string;
-// }
-
-// export interface GroupMember {
-//   id: string;
-//   group_id: string;
-//   user_id: string;
-//   role: 'admin' | 'member';
-//   joined_at: string;
-// }
 
 export interface NewNote{
   title: string;

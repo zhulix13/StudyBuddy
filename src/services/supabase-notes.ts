@@ -1,4 +1,4 @@
-import type { Note, NewNote } from "@/types/index";
+import type { Note, NewNote } from "@/types/notes";
 import { supabase } from "./supabase";
 
 class NotesService {

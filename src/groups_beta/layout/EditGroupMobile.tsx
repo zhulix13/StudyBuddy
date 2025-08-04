@@ -25,7 +25,7 @@ const slideVariants = {
   },
 }
 
-const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }) => {
+const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: any) => {
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
