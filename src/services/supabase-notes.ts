@@ -1,7 +1,7 @@
 import type { Note, NewNote } from "@/types/notes";
 import { supabase } from "./supabase";
 
-class NotesService {
+export default class NotesService {
   /**
    * Create a note for a specific group.
    * @param groupId - The ID of the group to create the note for.
@@ -16,34 +16,37 @@ class NotesService {
       .from('notes')
       .insert([{ 
         user_id: user.id, 
-       
         group_id: groupId, 
         ...note 
       }])
-      .select(`
-        *,
-        author:profiles!user_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) {
       throw new Error(`Error creating note: ${error.message}`);
     }
+
+    // Fetch the author profile separately (may not exist)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .eq('id', user.id)
+      .maybeSingle(); // Use maybeSingle() instead of single() to handle missing profiles
     
     // Transform the response to match Note interface
     return {
       ...data,
-      author: data.author ? {
-        id: data.author.id,
-        name: data.author.full_name,
-        username: data.author.username,
-        avatar_url: data.author.avatar_url
-      } : undefined
+      author: profile ? {
+        id: profile.id,
+        name: profile.full_name || user.email || 'Unknown User', // Fallback to email
+        username: profile.username,
+        avatar_url: profile.avatar_url
+      } : {
+        id: user.id,
+        name: user.email || 'Unknown User', // Fallback when no profile exists
+        username: null,
+        avatar_url: null
+      }
     };
   }
 
@@ -64,15 +67,7 @@ class NotesService {
   ) {
     let query = supabase
       .from('notes')
-      .select(`
-        *,
-        author:profiles!user_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('group_id', groupId);
 
     // Filter out deleted notes by default
@@ -90,22 +85,48 @@ class NotesService {
       query = query.limit(options.limit);
     }
 
-    const { data, error } = await query;
+    const { data: notes, error } = await query;
 
     if (error) {
       throw new Error(`Error fetching notes: ${error.message}`);
     }
 
+    if (!notes || notes.length === 0) {
+      return [];
+    }
+
+    // Get unique user IDs
+    const userIds = [...new Set(notes.map(note => note.user_id))];
+
+    // Fetch all author profiles in one query
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .in('id', userIds);
+
+    // Create a map of user_id to profile for quick lookup
+    const profileMap = new Map(
+      (profiles || []).map(profile => [profile.id, profile])
+    );
+
     // Transform the response to match Note interface
-    return (data || []).map(note => ({
-      ...note,
-      author: note.author ? {
-        id: note.author.id,
-        name: note.author.full_name,
-        username: note.author.username,
-        avatar_url: note.author.avatar_url
-      } : undefined
-    }));
+    return notes.map(note => {
+      const profile = profileMap.get(note.user_id);
+      return {
+        ...note,
+        author: profile ? {
+          id: profile.id,
+          name: profile.full_name || 'Unknown User',
+          username: profile.username,
+          avatar_url: profile.avatar_url
+        } : {
+          id: note.user_id,
+          name: 'Unknown User', // Fallback when no profile exists
+          username: null,
+          avatar_url: null
+        }
+      };
+    });
   }
 
   /**
@@ -114,17 +135,9 @@ class NotesService {
    * @returns A promise that resolves to the note with author info or null if not found.
    */
   static async getNoteById(noteId: string) {
-    const { data, error } = await supabase
+    const { data: note, error } = await supabase
       .from('notes')
-      .select(`
-        *,
-        author:profiles!user_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('id', noteId)
       .is('deleted_at', null)
       .single();
@@ -137,15 +150,27 @@ class NotesService {
       throw new Error(`Error fetching note: ${error.message}`);
     }
 
+    // Fetch the author profile (may not exist)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .eq('id', note.user_id)
+      .maybeSingle();
+
     // Transform the response to match Note interface
     return {
-      ...data,
-      author: data.author ? {
-        id: data.author.id,
-        name: data.author.full_name,
-        username: data.author.username,
-        avatar_url: data.author.avatar_url
-      } : undefined
+      ...note,
+      author: profile ? {
+        id: profile.id,
+        name: profile.full_name || 'Unknown User',
+        username: profile.username,
+        avatar_url: profile.avatar_url
+      } : {
+        id: note.user_id,
+        name: 'Unknown User',
+        username: null,
+        avatar_url: null
+      }
     };
   }
 
@@ -156,34 +181,38 @@ class NotesService {
    * @returns A promise that resolves to the updated note with author info.
    */
   static async updateNote(noteId: string, updates: Partial<Omit<Note, 'id' | 'user_id' | 'created_by' | 'created_at' | 'author'>>) {
-    const { data, error } = await supabase
+    const { data: note, error } = await supabase
       .from('notes')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', noteId)
-      .select(`
-        *,
-        author:profiles!user_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) {
       throw new Error(`Error updating note: ${error.message}`);
     }
 
+    // Fetch the author profile (may not exist)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .eq('id', note.user_id)
+      .maybeSingle();
+
     // Transform the response to match Note interface
     return {
-      ...data,
-      author: data.author ? {
-        id: data.author.id,
-        name: data.author.full_name,
-        username: data.author.username,
-        avatar_url: data.author.avatar_url
-      } : undefined
+      ...note,
+      author: profile ? {
+        id: profile.id,
+        name: profile.full_name || 'Unknown User',
+        username: profile.username,
+        avatar_url: profile.avatar_url
+      } : {
+        id: note.user_id,
+        name: 'Unknown User',
+        username: null,
+        avatar_url: null
+      }
     };
   }
 
@@ -230,36 +259,38 @@ class NotesService {
    * @returns A promise that resolves to the updated note with author info.
    */
   static async togglePinNote(noteId: string, pinned: boolean) {
-    const { data, error } = await supabase
+    const { data: note, error } = await supabase
       .from('notes')
       .update({ pinned, updated_at: new Date().toISOString() })
       .eq('id', noteId)
-      .select(`
-        *,
-        author:profiles!user_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) {
       throw new Error(`Error toggling pin status: ${error.message}`);
     }
 
+    // Fetch the author profile (may not exist)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .eq('id', note.user_id)
+      .maybeSingle();
+
     // Transform the response to match Note interface
     return {
-      ...data,
-      author: data.author ? {
-        id: data.author.id,
-        name: data.author.full_name,
-        username: data.author.username,
-        avatar_url: data.author.avatar_url
-      } : undefined
+      ...note,
+      author: profile ? {
+        id: profile.id,
+        name: profile.full_name || 'Unknown User',
+        username: profile.username,
+        avatar_url: profile.avatar_url
+      } : {
+        id: note.user_id,
+        name: 'Unknown User',
+        username: null,
+        avatar_url: null
+      }
     };
   }
 }
-
-export const notesService = new NotesService();

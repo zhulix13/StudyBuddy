@@ -2,7 +2,7 @@
 
 export interface NewNote{
   title: string;
-  content: string;
+  content: JSON;
   tags?: string[];
   is_private?: boolean;
   group_id?: string;
