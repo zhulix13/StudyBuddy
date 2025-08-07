@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { NotesList } from "./NotesList";
 import { NoteEditor } from "./NoteEditor";
-import { NoteViewer } from "./NoteViewer";
+import  NoteViewer  from "./NoteViewer";
 import type { Note, NewNote } from "@/types/notes";
 import { useSearchParams } from "react-router-dom";
 import { useNoteStore } from "@/store/noteStore";
 import { useCreateNote, useUpdateNote } from "@/hooks/useNotes";
 import { toast } from "sonner"; 
+import { useAuth } from "@/context/Authcontext";
 
 interface NotesViewProps {
   groupId: string;
@@ -19,7 +20,7 @@ export const NotesView = ({ groupId }: NotesViewProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = useNoteStore((s) => s.mode);
   const setMode = useNoteStore((s) => s.setMode);
-
+  const { user } = useAuth();
   // TanStack Query mutations
   const createNoteMutation = useCreateNote();
   const updateNoteMutation = useUpdateNote();
@@ -142,6 +143,7 @@ export const NotesView = ({ groupId }: NotesViewProps) => {
           note={selectedNote}
           onBack={handleBackToList}
           onEdit={() => handleStartEditing(selectedNote)}
+          currentUserId={user?.id || ""}
         />
       </div>
     );
