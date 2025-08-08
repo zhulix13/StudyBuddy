@@ -1,22 +1,24 @@
 import { useState } from "react";
 import { NotesList } from "./NotesList";
 import { NoteEditor } from "./NoteEditor";
-import  NoteViewer  from "./NoteViewer";
+import NoteViewer from "./NoteViewer";
 import type { Note, NewNote } from "@/types/notes";
 import { useSearchParams } from "react-router-dom";
 import { useNoteStore } from "@/store/noteStore";
-import { useCreateNote, useUpdateNote } from "@/hooks/useNotes";
-import { toast } from "sonner"; 
+import { useCreateNote, useUpdateNote, useDeleteNote } from "@/hooks/useNotes";
+import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
+import type { StudyGroup } from "@/types/groups";
 
 interface NotesViewProps {
-  groupId: string;
+  group: StudyGroup;
 }
 
-export const NotesView = ({ groupId }: NotesViewProps) => {
+export const NotesView = ({ group }: NotesViewProps) => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  
+  const groupId = group.id;
+  // Check if the current user is an admin of the group
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = useNoteStore((s) => s.mode);
   const setMode = useNoteStore((s) => s.setMode);
@@ -24,7 +26,8 @@ export const NotesView = ({ groupId }: NotesViewProps) => {
   // TanStack Query mutations
   const createNoteMutation = useCreateNote();
   const updateNoteMutation = useUpdateNote();
-
+  const deleteNoteMutation = useDeleteNote();
+  const isUserAdmin = group?.created_by === user?.id;
   const handleCreateNote = async (note: NewNote) => {
     try {
       await createNoteMutation.mutateAsync({ groupId, note });
@@ -35,15 +38,14 @@ export const NotesView = ({ groupId }: NotesViewProps) => {
       toast.error("Failed to create note. Please try again.");
     }
   };
-
   const handleUpdateNote = async (note: NewNote) => {
     if (!editingNote) return;
-    
+
     try {
       await updateNoteMutation.mutateAsync({
         noteId: editingNote.id,
         updates: {
-          title: note.title,
+          title: note.title, 
           content: note.content,
           tags: note.tags,
           is_private: note.is_private,
@@ -58,51 +60,61 @@ export const NotesView = ({ groupId }: NotesViewProps) => {
     }
   };
 
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNoteMutation.mutateAsync(noteId);
+      toast.success("Note deleted successfully!");
+      handleBackToList();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("Failed to delete note. Please try again.");
+    }
+  };
   const handleSelectNote = (note: Note) => {
     setMode("view");
     setSelectedNote(note);
     setEditingNote(null);
-    setSearchParams({ n: note.id, m: "view" });
+    setSearchParams({ n: note.id, m: mode ?? "view" }); // Update URL to indicate selected note
   };
 
-  const handleBackToList = () => {
+  function handleBackToList() {
     setMode(null);
     setSelectedNote(null);
     setEditingNote(null);
     setSearchParams({}); // Clear URL parameters
-  };
+  }
 
-  const handleStartCreating = () => {
+  function handleStartCreating() {
     setMode("create");
     setSelectedNote(null);
     setEditingNote(null);
-    setSearchParams({ m: "create" }); // Update URL to indicate creation mode
-  };
+    setSearchParams({ m: mode ?? "create" }); // Update URL to indicate creation mode
+  }
 
-  const handleCancelCreating = () => {
+  function handleCancelCreating() {
     setMode(null);
     setSelectedNote(null);
     setEditingNote(null);
     setSearchParams({}); // Clear URL parameters
-  };
+  }
 
   const handleStartEditing = (note: Note) => {
     setMode("edit");
     setEditingNote(note);
     setSelectedNote(null);
-    setSearchParams({ n: note.id, m: "edit" });
+    setSearchParams({ n: note.id, m: mode ?? "edit" }); // Update URL to indicate editing mode
   };
 
-  const handleCancelEditing = () => {
+  function handleCancelEditing() {
     setMode("view");
     if (editingNote) {
       setSelectedNote(editingNote);
-      setSearchParams({ n: editingNote.id, m: "view" });
+      setSearchParams({ n: editingNote.id, m: mode ?? "view" }); // Keep the note in view mode
     } else {
       handleBackToList();
     }
     setEditingNote(null);
-  };
+  }
 
   // Show create note editor
   if (mode === "create") {
@@ -144,6 +156,8 @@ export const NotesView = ({ groupId }: NotesViewProps) => {
           onBack={handleBackToList}
           onEdit={() => handleStartEditing(selectedNote)}
           currentUserId={user?.id || ""}
+          isUserAdmin={isUserAdmin}
+          onDelete={handleDeleteNote}
         />
       </div>
     );

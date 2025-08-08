@@ -121,7 +121,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
           <TabsContent value="notes" className="h-full">
-            <NotesView groupId={group.id} />
+            <NotesView group={group} />
           </TabsContent>
           <TabsContent value="chat" className="h-full">
             <ChatView groupId={group.id} />
