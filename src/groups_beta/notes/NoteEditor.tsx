@@ -1,3 +1,5 @@
+import '@/tiptap.css'
+import '@/index.css'
 import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -18,6 +20,8 @@ import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
 import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import { Button } from "@/components/ui/button";
@@ -25,58 +29,32 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
-  Bold,
-  Italic,
-  Strikethrough,
-  List,
-  ListOrdered,
-  Quote,
-  Code,
-  Highlighter as HighlightIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Link as LinkIcon,
-  CheckSquare,
-  Type,
   X,
   Plus,
   Pin,
   Lock,
   Unlock,
   Loader2,
-  Underline as UnderlineIcon,
-  Subscript as SubscriptIcon,
-  Superscript as SuperscriptIcon,
-  Table as TableIcon,
-  Image as ImageIcon,
-  Minus,
-  Palette,
-  Undo,
-  Redo,
+ 
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Toggle } from "@/components/ui/toggle";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import type { Note, NewNote } from "@/types/notes";
+
+// Tool Imports
+import UndoTool from "./tiptap-tools/undo";
+import FontFamilies from "./tiptap-tools/fontFamily";
+import TextFormat from "./tiptap-tools/TextFormat";
+import SubscriptTool from "./tiptap-tools/subscript";
+import TextColor from "./tiptap-tools/textColor";
+import HighlightTool from "./tiptap-tools/highlight";
+import Lists from "./tiptap-tools/Lists";
+import Alignment from "./tiptap-tools/Alignment";
+import QuoteTool from "./tiptap-tools/Quote";
+import TableImageRuler from "./tiptap-tools/Table";
+import Headings from "./tiptap-tools/headings";
+
+
 
 interface NoteEditorProps {
   groupId: string;
@@ -104,36 +82,22 @@ export const NoteEditor = ({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
+        bulletList: true,
+        orderedList: true,
       }),
-      Placeholder.configure({
-        placeholder: "Start writing your note...",
-      }),
+      BulletList.configure({ keepMarks: true, keepAttributes: false }),
+      OrderedList.configure({ keepMarks: true, keepAttributes: false }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Placeholder.configure({ placeholder: "Start writing your note..." }),
       Typography,
       TextStyle,
-      Color.configure({
-        types: ["textStyle"],
-      }),
-      FontFamily.configure({
-        types: ["textStyle"],
-      }),
+      Color.configure({ types: ["textStyle"] }),
+      FontFamily.configure({ types: ["textStyle"] }),
       Underline,
       Subscript,
       Superscript,
-      Highlight.configure({
-        multicolor: true,
-      }),
-      TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
+      Highlight.configure({ multicolor: true }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -143,9 +107,7 @@ export const NoteEditor = ({
       TextAlign.configure({
         types: ["heading", "paragraph", "listItem", "taskItem"],
       }),
-      Table.configure({
-        resizable: true,
-      }),
+      Table.configure({ resizable: true, lastColumnResizable: true }),
       TableRow,
       TableHeader,
       TableCell,
@@ -155,9 +117,7 @@ export const NoteEditor = ({
         },
       }),
       HorizontalRule.configure({
-        HTMLAttributes: {
-          class: "my-4 border-gray-300",
-        },
+        HTMLAttributes: { class: "my-4 border-gray-300" },
       }),
     ],
     content: initialNote?.content || "",
@@ -225,7 +185,7 @@ export const NoteEditor = ({
       editor
         .chain()
         .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .insertTable({ rows: 5, cols: 5, withHeaderRow: true })
         .run();
     }
   };
@@ -454,85 +414,21 @@ export const NoteEditor = ({
       </div>
 
       {/* Enhanced Toolbar */}
-      <div className="p-2 sm:p-3 border-b bg-gray-50/50 overflow-x-auto">
-        <div className="flex items-center gap-1 min-w-max">
+     <div className="p-2 sm:p-3 border-b bg-gray-50/50">
+  <div className="flex flex-wrap items-center gap-1">
           {/* Undo/Redo */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => editor.chain().focus().undo().run()}
-                  disabled={!editor.can().undo() || isLoading}
-                  className="hover:bg-gray-200"
-                >
-                  <Undo className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Undo</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <UndoTool editor={editor} isLoading={isLoading} />
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => editor.chain().focus().redo().run()}
-                  disabled={!editor.can().redo() || isLoading}
-                  className="hover:bg-gray-200"
-                >
-                  <Redo className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Redo</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {/* Add Image */}
 
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* Font Family */}
-          <div className="hidden sm:block">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Select
-                    value={
-                      editor.getAttributes("textStyle")?.fontFamily || "Inter"
-                    }
-                    onValueChange={(value: any) => {
-                      if (value === "Inter") {
-                        editor.chain().focus().unsetFontFamily().run();
-                      } else {
-                        editor.chain().focus().setFontFamily(value).run();
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger className="w-32 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fontFamilies.map((font) => (
-                        <SelectItem key={font.value} value={font.value}>
-                          {font.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Font Family</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <FontFamilies
+            editor={editor}
+            isLoading={isLoading}
+            fontFamilies={fontFamilies}
+          />
 
           <Separator
             orientation="vertical"
@@ -540,644 +436,60 @@ export const NoteEditor = ({
           />
 
           {/* Text Formatting */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("bold")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleBold().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("bold")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  } cursor-pointer`}
-                >
-                  <Bold className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Bold</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("italic")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleItalic().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("italic")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <Italic className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Italic</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("underline")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleUnderline().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("underline")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <UnderlineIcon className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Underline</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("strike")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleStrike().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("strike")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <Strikethrough className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Strikethrough</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("code")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleCode().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("code")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <Code className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Code</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TextFormat editor={editor} isLoading={isLoading} />
 
           {/* Subscript/Superscript */}
-          <div className="hidden sm:flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive("subscript")}
-                    onPressedChange={() =>
-                      editor.chain().focus().toggleSubscript().run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive("subscript")
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <SubscriptIcon className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Subscript</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive("superscript")}
-                    onPressedChange={() =>
-                      editor.chain().focus().toggleSuperscript().run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive("superscript")
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <SuperscriptIcon className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Superscript</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <SubscriptTool editor={editor} isLoading={isLoading} />
 
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* Text Color */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isLoading}
-                      className={`hover:bg-gray-200 relative ${
-                        editor.isActive("textStyle", {
-                          color: editor.getAttributes("textStyle").color,
-                        })
-                          ? "border-blue-500"
-                          : ""
-                      }`}
-                      style={{
-                        backgroundColor:
-                          editor.getAttributes("textStyle").color ||
-                          "transparent",
-                      }}
-                    >
-                      <Palette
-                        className="w-4 h-4"
-                       
-                      />
-                      {/* Optional: Add a visual indicator (e.g., colored underline) */}
-                      {editor.getAttributes("textStyle").color && (
-                        <span
-                          className="absolute bottom-0 left-0 w-full h-1"
-                          style={{
-                            backgroundColor:
-                              editor.getAttributes("textStyle").color,
-                          }}
-                        />
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-60 p-3">
-                    <div className="grid grid-cols-7 gap-2">
-                      {colors.map((color) => (
-                        <button
-                          key={color}
-                          className={`w-8 h-8 rounded border border-gray-300 hover:scale-110 transition-transform ${
-                            editor.isActive("textStyle", { color })
-                              ? "ring-2 ring-blue-500"
-                              : ""
-                          }`}
-                          style={{ backgroundColor: color }}
-                          onClick={() =>
-                            editor.chain().focus().setColor(color).run()
-                          }
-                        />
-                      ))}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-3"
-                      onClick={() => editor.chain().focus().unsetColor().run()}
-                    >
-                      Remove Color
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Text Color</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TextColor editor={editor} isLoading={isLoading} colors={colors} />
 
           {/* Highlight */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("highlight")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleHighlight().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("highlight")
-                      ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <HighlightIcon className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Highlight</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HighlightTool editor={editor} isLoading={isLoading} />
 
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* Headings */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isLoading}
-                      className="hover:bg-gray-200"
-                    >
-                      <Type className="w-4 h-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-1">
-                    {[1, 2, 3, 4, 5, 6].map((level) => (
-                      <Button
-                        key={level}
-                        variant="ghost"
-                        size="sm"
-                        className={`w-full justify-start ${
-                          editor.isActive("heading", { level })
-                            ? "bg-blue-100 text-blue-700"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          editor.chain().focus().toggleHeading({ level }).run()
-                        }
-                      >
-                        Heading {level}
-                      </Button>
-                    ))}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`w-full justify-start ${
-                        editor.isActive("paragraph")
-                          ? "bg-blue-100 text-blue-700"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        editor.chain().focus().setParagraph().run()
-                      }
-                    >
-                      Paragraph
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Text Style</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Headings editor={editor} isLoading={isLoading} />
 
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* Lists */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("bulletList")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleBulletList().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("bulletList")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Bullet List</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("orderedList")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleOrderedList().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("orderedList")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <ListOrdered className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Numbered List</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Toggle
-                  pressed={editor.isActive("taskList")}
-                  onPressedChange={() =>
-                    editor.chain().focus().toggleTaskList().run()
-                  }
-                  size="sm"
-                  disabled={isLoading}
-                  className={`${
-                    editor.isActive("taskList")
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <CheckSquare className="w-4 h-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Task List</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Lists editor={editor} isLoading={isLoading} />
 
           {/* Desktop-only features */}
           <div className="hidden sm:flex items-center gap-1">
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             {/* Alignment */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive({ textAlign: "left" })}
-                    onPressedChange={() =>
-                      editor.chain().focus().setTextAlign("left").run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive({ textAlign: "left" })
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <AlignLeft className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Align Left</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive({ textAlign: "center" })}
-                    onPressedChange={() =>
-                      editor.chain().focus().setTextAlign("center").run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive({ textAlign: "center" })
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <AlignCenter className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Align Center</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive({ textAlign: "right" })}
-                    onPressedChange={() =>
-                      editor.chain().focus().setTextAlign("right").run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive({ textAlign: "right" })
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <AlignRight className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Align Right</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive({ textAlign: "justify" })}
-                    onPressedChange={() =>
-                      editor.chain().focus().setTextAlign("justify").run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive({ textAlign: "justify" })
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <AlignJustify className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Justify</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Alignment editor={editor} isLoading={isLoading} />
 
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             {/* Quote & Link */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    pressed={editor.isActive("blockquote")}
-                    onPressedChange={() =>
-                      editor.chain().focus().toggleBlockquote().run()
-                    }
-                    size="sm"
-                    disabled={isLoading}
-                    className={`${
-                      editor.isActive("blockquote")
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <Quote className="w-4 h-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Quote</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={setLink}
-                    className={`${
-                      editor.isActive("link")
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "hover:bg-gray-200"
-                    }`}
-                  >
-                    <LinkIcon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Add Link</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <QuoteTool
+              editor={editor}
+              isLoading={isLoading}
+              setLink={setLink}
+            />
 
             <Separator orientation="vertical" className="h-6 mx-1" />
 
-            {/* Table & Image */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={addTable}
-                    className="hover:bg-gray-200"
-                  >
-                    <TableIcon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Insert Table</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={addImage}
-                    className="hover:bg-gray-200"
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Insert Image</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={() =>
-                      editor.chain().focus().setHorizontalRule().run()
-                    }
-                    className="hover:bg-gray-200"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Horizontal Rule</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Table & Image & Ruler*/}
+            <TableImageRuler
+              editor={editor}
+              isLoading={isLoading}
+              addImage={addImage}
+              addTable={addTable}
+            />
           </div>
         </div>
       </div>
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto max-w-full">
         <EditorContent editor={editor} className="h-full" />
       </div>
 

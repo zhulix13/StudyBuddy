@@ -97,8 +97,8 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
 
       {/* Fixed Tab Triggers */}
       <div className="sticky top-[80px] z-20 bg-white border-b">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mx-4 my-4 bg-gray-100">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-full w-full">
+          <TabsList className="grid max-w-[96%] w-full grid-cols-2 mx-auto my-4 bg-gray-100">
             <TabsTrigger
               value="notes"
               className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
@@ -118,7 +118,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
       </div>
 
       {/* Scrollable Tab Content Area */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar">
+      <div className="flex-1 overflow-y-auto hide-scrollbar max-w-full w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
           <TabsContent value="notes" className="h-full">
             <NotesView group={group} />
