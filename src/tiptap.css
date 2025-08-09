@@ -66,3 +66,68 @@ ul[data-type="taskList"] li {
 ul[data-type="taskList"] input[type="checkbox"] {
   margin-right: 0.5rem;
 }
+
+
+
+.ProseMirror {
+  /* Prevent layout blowouts on small screens */
+  overflow-x: hidden;
+  word-break: break-word;
+}
+
+/* Make images responsive by default */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Table responsiveness and containment */
+.ProseMirror table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  display: block; /* allows internal horizontal scroll if needed */
+  overflow-x: auto;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* Tiptap column resize handle improves usability on touch/hiDPI */
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: color-mix(in oklab, currentColor 15%, transparent);
+  pointer-events: none;
+}
+
+/* Our image resizer handle affordance */
+.resizer-handle {
+  transition: opacity 0.12s ease-in-out;
+}
+
+/* When figure is hovered or selected, show the handle */
+figure:hover .resizer-handle,
+figure[draggable="true"] .resizer-handle {
+  opacity: 1;
+}
+
+/* Better table borders (optional, tweak to taste) */
+.ProseMirror table th,
+.ProseMirror table td {
+  border: 1px solid hsl(0 0% 90%);
+  padding: 6px 8px;
+}
+
+/* Prevent the editor container from creating page-wide horizontal scroll */
+.editor-shell {
+  max-width: 100%;
+  overflow-x: hidden;
+}

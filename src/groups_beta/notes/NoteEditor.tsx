@@ -1,89 +1,114 @@
+"use client"
+
+import type React from "react"
+import { useEffect, useState } from "react"
+
+// TipTap imports
+import { useEditor, EditorContent } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import Placeholder from "@tiptap/extension-placeholder"
+import Typography from "@tiptap/extension-typography"
+import Highlight from "@tiptap/extension-highlight"
+import TaskList from "@tiptap/extension-task-list"
+import TaskItem from "@tiptap/extension-task-item"
+import Link from "@tiptap/extension-link"
+import TextAlign from "@tiptap/extension-text-align"
+import { Table } from "@tiptap/extension-table"
+import TableRow from "@tiptap/extension-table-row"
+import TableHeader from "@tiptap/extension-table-header"
+import TableCell from "@tiptap/extension-table-cell"
+import HorizontalRule from "@tiptap/extension-horizontal-rule"
+import Subscript from "@tiptap/extension-subscript"
+import Superscript from "@tiptap/extension-superscript"
+import Underline from "@tiptap/extension-underline"
+import Color from "@tiptap/extension-color"
+import BulletList from "@tiptap/extension-bullet-list"
+import OrderedList from "@tiptap/extension-ordered-list"
+import { FontSize } from "@tiptap/extension-text-style"
+import { TextStyle } from "@tiptap/extension-text-style"
+import FontFamily from "@tiptap/extension-font-family"
+import { ResizableImage } from "./resizable-image"
+
+// UI Component imports
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { ArrowLeft, X, Plus, Pin, Lock, Unlock, Loader2 } from "lucide-react"
+
+// Tool imports
+import UndoTool from "./tiptap-tools/undo"
+import FontFamilies from "./tiptap-tools/fontFamily"
+import TextFormat from "./tiptap-tools/TextFormat"
+import SubscriptTool from "./tiptap-tools/subscript"
+import TextColor from "./tiptap-tools/textColor"
+import HighlightTool from "./tiptap-tools/highlight"
+import Lists from "./tiptap-tools/Lists"
+import Alignment from "./tiptap-tools/Alignment"
+import QuoteTool from "./tiptap-tools/Quote"
+import TableImageRuler from "./tiptap-tools/Table"
+import Headings from "./tiptap-tools/headings"
+import FontSizeTool from "./tiptap-tools/fontSize"
+
+// Styles
 import '@/tiptap.css'
-import '@/index.css'
-import { useState, useEffect } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import Typography from "@tiptap/extension-typography";
-import Highlight from "@tiptap/extension-highlight";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import Link from "@tiptap/extension-link";
-import TextAlign from "@tiptap/extension-text-align";
-import { Table } from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableHeader from "@tiptap/extension-table-header";
-import TableCell from "@tiptap/extension-table-cell";
-import Image from "@tiptap/extension-image";
-import HorizontalRule from "@tiptap/extension-horizontal-rule";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
-import Underline from "@tiptap/extension-underline";
-import Color from "@tiptap/extension-color";
-import BulletList from "@tiptap/extension-bullet-list";
-import OrderedList from "@tiptap/extension-ordered-list";
-import { TextStyle } from "@tiptap/extension-text-style";
-import FontFamily from "@tiptap/extension-font-family";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  X,
-  Plus,
-  Pin,
-  Lock,
-  Unlock,
-  Loader2,
- 
-} from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-
-import type { Note, NewNote } from "@/types/notes";
-
-// Tool Imports
-import UndoTool from "./tiptap-tools/undo";
-import FontFamilies from "./tiptap-tools/fontFamily";
-import TextFormat from "./tiptap-tools/TextFormat";
-import SubscriptTool from "./tiptap-tools/subscript";
-import TextColor from "./tiptap-tools/textColor";
-import HighlightTool from "./tiptap-tools/highlight";
-import Lists from "./tiptap-tools/Lists";
-import Alignment from "./tiptap-tools/Alignment";
-import QuoteTool from "./tiptap-tools/Quote";
-import TableImageRuler from "./tiptap-tools/Table";
-import Headings from "./tiptap-tools/headings";
 
 
-
-interface NoteEditorProps {
-  groupId: string;
-  initialNote?: Partial<Note>;
-  onSave: (note: NewNote) => void;
-  onCancel: () => void;
-  isEditing?: boolean;
-  isLoading?: boolean;
+// Types
+type Note = {
+  id: string
+  title: string
+  content: any
+  tags: string[]
+  is_private: boolean
+  pinned: boolean
+  group_id: string
 }
 
-export const NoteEditor = ({
+type NewNote = Omit<Note, "id">
+
+interface NoteEditorProps {
+  groupId: string
+  initialNote?: Partial<Note>
+  onSave: (note: NewNote) => void
+  onCancel: () => void
+  isEditing?: boolean
+  isLoading?: boolean
+}
+
+// Utility function
+function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+// Main component
+export default function NoteEditor({
   groupId,
   initialNote,
   onSave,
   onCancel,
   isEditing = false,
   isLoading = false,
-}: NoteEditorProps) => {
-  const [title, setTitle] = useState(initialNote?.title || "");
-  const [tags, setTags] = useState<string[]>(initialNote?.tags || []);
-  const [currentTag, setCurrentTag] = useState("");
-  const [isPrivate, setIsPrivate] = useState(initialNote?.is_private ?? true);
-  const [pinned, setPinned] = useState(initialNote?.pinned ?? false);
+}: NoteEditorProps) {
+  // State declarations
+  const [title, setTitle] = useState(initialNote?.title || "")
+  const [tags, setTags] = useState<string[]>(initialNote?.tags || [])
+  const [currentTag, setCurrentTag] = useState("")
+  const [isPrivate, setIsPrivate] = useState(initialNote?.is_private ?? false)
+  const [pinned, setPinned] = useState(initialNote?.pinned ?? false)
+  const [, setUiTick] = useState(0)
 
+  // Editor configuration
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        bulletList: true,
-        orderedList: true,
+        bulletList: false,
+        orderedList: false,
       }),
       BulletList.configure({ keepMarks: true, keepAttributes: false }),
       OrderedList.configure({ keepMarks: true, keepAttributes: false }),
@@ -94,6 +119,7 @@ export const NoteEditor = ({
       TextStyle,
       Color.configure({ types: ["textStyle"] }),
       FontFamily.configure({ types: ["textStyle"] }),
+      FontSize,
       Underline,
       Subscript,
       Superscript,
@@ -101,19 +127,25 @@ export const NoteEditor = ({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-blue-600 underline hover:text-blue-800 break-words",
+          class: "underline hover:opacity-80 break-words",
         },
       }),
       TextAlign.configure({
         types: ["heading", "paragraph", "listItem", "taskItem"],
       }),
-      Table.configure({ resizable: true, lastColumnResizable: true }),
+      Table.configure({
+        resizable: true,
+        lastColumnResizable: true,
+        HTMLAttributes: {
+          class: "my-3",
+        },
+      }),
       TableRow,
       TableHeader,
       TableCell,
-      Image.configure({
+      ResizableImage.configure({
         HTMLAttributes: {
-          class: "max-w-full h-auto rounded-lg",
+          class: "rounded-lg",
         },
       }),
       HorizontalRule.configure({
@@ -124,41 +156,89 @@ export const NoteEditor = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl mx-auto focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-4 break-words overflow-wrap-anywhere",
+          "prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl mx-auto focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-4 break-words overflow-wrap-anywhere editor-shell",
+      },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items
+        if (!items) return false
+        for (const item of items) {
+          if (item.type.startsWith("image/")) {
+            const file = item.getAsFile()
+            if (file) {
+              fileToDataURL(file).then((src) => {
+                editor?.chain().focus().setImage({ src }).run()
+              })
+              return true
+            }
+          }
+        }
+        return false
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved) return false
+        const dt = event.dataTransfer
+        if (!dt || !dt.files?.length) return false
+        const file = dt.files[0]
+        if (file && file.type.startsWith("image/")) {
+          event.preventDefault()
+          fileToDataURL(file).then((src) => {
+            editor?.chain().focus().setImage({ src }).run()
+          })
+          return true
+        }
+        return false
       },
     },
-  });
+  })
 
-  // Reset form when initialNote changes (for editing mode)
+  // Effects
   useEffect(() => {
     if (initialNote) {
-      setTitle(initialNote.title || "");
-      setTags(initialNote.tags || []);
-      setIsPrivate(initialNote.is_private ?? true);
-      setPinned(initialNote.pinned ?? false);
+      setTitle(initialNote.title || "")
+      setTags(initialNote.tags || [])
+      setIsPrivate(initialNote.is_private ?? false)
+      setPinned(initialNote.pinned ?? false)
       if (editor && initialNote.content) {
-        editor.commands.setContent(initialNote.content);
+        editor.commands.setContent(initialNote.content)
       }
     }
-  }, [initialNote, editor]);
+  }, [initialNote, editor])
 
+  useEffect(() => {
+    if (!editor) return
+    const tick = () => setUiTick((x) => x + 1)
+    editor.on("selectionUpdate", tick)
+    editor.on("transaction", tick)
+    editor.on("update", tick)
+    editor.on("focus", tick)
+    editor.on("blur", tick)
+    return () => {
+      editor.off("selectionUpdate", tick)
+      editor.off("transaction", tick)
+      editor.off("update", tick)
+      editor.off("focus", tick)
+      editor.off("blur", tick)
+    }
+  }, [editor])
+
+  // Event handlers
   const addTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim())) {
-      setTags([...tags, currentTag.trim()]);
-      setCurrentTag("");
+      setTags([...tags, currentTag.trim()])
+      setCurrentTag("")
     }
-  };
+  }
 
   const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
+    setTags(tags.filter((tag) => tag !== tagToRemove))
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      e.preventDefault();
-      addTag();
+      e.preventDefault()
+      addTag()
     }
-  };
+  }
 
   const handleSave = () => {
     if (title.trim() && editor?.getJSON()) {
@@ -169,80 +249,25 @@ export const NoteEditor = ({
         is_private: isPrivate,
         tags,
         pinned,
-      });
+      })
     }
-  };
-
-  const addImage = () => {
-    const url = window.prompt("Enter image URL:");
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
-
-  const addTable = () => {
-    if (editor) {
-      editor
-        .chain()
-        .focus()
-        .insertTable({ rows: 5, cols: 5, withHeaderRow: true })
-        .run();
-    }
-  };
-
-  const setLink = () => {
-    const previousUrl = editor?.getAttributes("link").href;
-    const url = window.prompt("Enter URL:", previousUrl);
-
-    if (url === null) {
-      return;
-    }
-
-    if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
-  };
-
-  const canSave = title.trim() && editor?.getText().trim() && !isLoading;
-
-  if (!editor) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-gray-500">Loading editor...</div>
-      </div>
-    );
   }
 
-  // Re-render on editor updates so isActive(...) stays in sync
-  const [, setUiTick] = useState(0);
+  const setLink = () => {
+    const previousUrl = editor?.getAttributes("link").href
+    const url = window.prompt("Enter URL:", previousUrl)
+    if (url === null) return
+    if (url === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run()
+      return
+    }
+    editor?.chain().focus().extendMarkRange("link").setLink({ href: url, target: "_blank" }).run()
+  }
 
-  useEffect(() => {
-    if (!editor) return;
-    const tick = () => setUiTick((x) => x + 1);
+  // Computed values
+  const canSave = Boolean(title.trim() && editor?.getText().trim() && !isLoading)
 
-    editor.on("selectionUpdate", tick);
-    editor.on("transaction", tick);
-    editor.on("update", tick);
-    editor.on("focus", tick);
-    editor.on("blur", tick);
-
-    return () => {
-      editor.off("selectionUpdate", tick);
-      editor.off("transaction", tick);
-      editor.off("update", tick);
-      editor.off("focus", tick);
-      editor.off("blur", tick);
-    };
-  }, [editor]);
-
+  // Constants
   const colors = [
     "#000000",
     "#333333",
@@ -258,7 +283,7 @@ export const NoteEditor = ({
     "#6600FF",
     "#CC00FF",
     "#FF0066",
-  ];
+  ]
 
   const fontFamilies = [
     { value: "Inter", label: "Inter" },
@@ -267,19 +292,24 @@ export const NoteEditor = ({
     { value: "Times New Roman", label: "Times New Roman" },
     { value: "Courier New", label: "Courier New" },
     { value: "Helvetica", label: "Helvetica" },
-  ];
+  ]
 
+  // Early return for loading state
+  if (!editor) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-gray-500">Loading editor...</div>
+      </div>
+    )
+  }
+
+  // Render
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-gray-50/50">
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={isLoading}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
@@ -291,9 +321,7 @@ export const NoteEditor = ({
             variant="ghost"
             size="sm"
             onClick={() => setPinned(!pinned)}
-            className={`${
-              pinned ? "text-amber-600 bg-amber-50" : "text-gray-400"
-            } hidden sm:flex`}
+            className={`${pinned ? "text-amber-600 bg-amber-50" : "text-gray-400"} hidden sm:flex`}
             disabled={isLoading}
           >
             <Pin className="w-4 h-4" />
@@ -302,24 +330,12 @@ export const NoteEditor = ({
             variant="ghost"
             size="sm"
             onClick={() => setIsPrivate(!isPrivate)}
-            className={`${
-              isPrivate
-                ? "text-red-600 bg-red-50"
-                : "text-green-600 bg-green-50"
-            } hidden sm:flex`}
+            className={`${isPrivate ? "text-red-600 bg-red-50" : "text-green-600 bg-green-50"}`}
             disabled={isLoading}
           >
-            {isPrivate ? (
-              <Lock className="w-4 h-4" />
-            ) : (
-              <Unlock className="w-4 h-4" />
-            )}
+            {isPrivate ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!canSave}
-            className="bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
-          >
+          <Button onClick={handleSave} disabled={!canSave} className="text-sm sm:text-base">
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {isEditing ? "Update" : "Save"}
           </Button>
@@ -345,9 +361,7 @@ export const NoteEditor = ({
               variant="ghost"
               size="sm"
               onClick={() => setPinned(!pinned)}
-              className={`${
-                pinned ? "text-amber-600 bg-amber-50" : "text-gray-400"
-              }`}
+              className={`${pinned ? "text-amber-600 bg-amber-50" : "text-gray-400"}`}
               disabled={isLoading}
             >
               <Pin className="w-4 h-4 mr-1" />
@@ -357,18 +371,10 @@ export const NoteEditor = ({
               variant="ghost"
               size="sm"
               onClick={() => setIsPrivate(!isPrivate)}
-              className={`${
-                isPrivate
-                  ? "text-red-600 bg-red-50"
-                  : "text-green-600 bg-green-50"
-              }`}
+              className={`${isPrivate ? "text-red-600 bg-red-50" : "text-green-600 bg-green-50"}`}
               disabled={isLoading}
             >
-              {isPrivate ? (
-                <Lock className="w-4 h-4 mr-1" />
-              ) : (
-                <Unlock className="w-4 h-4 mr-1" />
-              )}
+              {isPrivate ? <Lock className="w-4 h-4 mr-1" /> : <Unlock className="w-4 h-4 mr-1" />}
               {isPrivate ? "Private" : "Shared"}
             </Button>
           </div>
@@ -402,24 +408,17 @@ export const NoteEditor = ({
             className="text-sm"
             disabled={isLoading}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addTag}
-            disabled={!currentTag.trim() || isLoading}
-          >
+          <Button variant="outline" size="sm" onClick={addTag} disabled={!currentTag.trim() || isLoading}>
             <Plus className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
       {/* Enhanced Toolbar */}
-     <div className="p-2 sm:p-3 border-b bg-gray-50/50">
-  <div className="flex flex-wrap items-center gap-1">
+      <div className="p-2 sm:p-3 border-b bg-gray-50/50">
+        <div className="flex flex-wrap items-center gap-1">
           {/* Undo/Redo */}
           <UndoTool editor={editor} isLoading={isLoading} />
-
-          {/* Add Image */}
 
           <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -429,7 +428,7 @@ export const NoteEditor = ({
             isLoading={isLoading}
             fontFamilies={fontFamilies}
           />
-
+          <FontSizeTool editor={editor} isLoading={isLoading} />
           <Separator
             orientation="vertical"
             className="h-6 mx-1 hidden sm:block"
@@ -481,8 +480,6 @@ export const NoteEditor = ({
             <TableImageRuler
               editor={editor}
               isLoading={isLoading}
-              addImage={addImage}
-              addTable={addTable}
             />
           </div>
         </div>
@@ -490,15 +487,13 @@ export const NoteEditor = ({
 
       {/* Editor Content */}
       <div className="flex-1 overflow-y-auto max-w-full">
-        <EditorContent editor={editor} className="h-full" />
+        <EditorContent editor={editor} className="h-full w-full" />
       </div>
 
       {/* Footer Status */}
       <div className="p-2 sm:p-3 border-t bg-gray-50/30 text-xs text-gray-500 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          <span className="hidden sm:inline">
-            {editor.getText().length} characters
-          </span>
+          <span className="hidden sm:inline">{editor.getText().length} characters</span>
           <span className="hidden sm:inline">
             {
               editor
@@ -509,14 +504,8 @@ export const NoteEditor = ({
             words
           </span>
           <span className="flex items-center gap-1">
-            {isPrivate ? (
-              <Lock className="w-3 h-3" />
-            ) : (
-              <Unlock className="w-3 h-3" />
-            )}
-            <span className="hidden sm:inline">
-              {isPrivate ? "Private" : "Shared"}
-            </span>
+            {isPrivate ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+            <span className="hidden sm:inline">{isPrivate ? "Private" : "Shared"}</span>
           </span>
           {pinned && (
             <span className="flex items-center gap-1 text-amber-600">
@@ -525,11 +514,8 @@ export const NoteEditor = ({
             </span>
           )}
         </div>
-        <div className="text-gray-400">
-          {tags.length > 0 &&
-            `${tags.length} tag${tags.length !== 1 ? "s" : ""}`}
-        </div>
+        <div className="text-gray-400">{tags.length > 0 && `${tags.length} tag${tags.length !== 1 ? "s" : ""}`}</div>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NotesList } from "./NotesList";
-import { NoteEditor } from "./NoteEditor";
+import  NoteEditor  from "./NoteEditor";
 import NoteViewer from "./NoteViewer";
 import type { Note, NewNote } from "@/types/notes";
 import { useSearchParams } from "react-router-dom";
