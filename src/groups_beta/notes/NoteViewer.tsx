@@ -187,10 +187,10 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
     : comments?.slice(0, 3)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      <div className="max-w-4xl mx-auto p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen relative bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="max-w-full  mx-auto p-4 md:p-6 lg:p-8">
         {/* Header with Back Button */}
-        <div className="mb-6">
+        <div className="mb-6 absolute top-6 left-3">
           <Button
             variant="ghost"
             onClick={onBack}
@@ -202,7 +202,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
         </div>
 
         {/* Author Card - Clearly Separated */}
-        <Card className="mb-6 border-l-4 border-l-blue-500 shadow-sm bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+        <Card className="my-12 border-l-4 border-l-blue-500 shadow-sm bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">

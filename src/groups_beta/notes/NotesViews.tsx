@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { NotesList } from "./NotesList";
-import  NoteEditor  from "./NoteEditor";
+import NoteEditor from "./NoteEditor";
 import NoteViewer from "./NoteViewer";
 import type { Note, NewNote } from "@/types/notes";
 import { useSearchParams } from "react-router-dom";
@@ -15,19 +14,28 @@ interface NotesViewProps {
 }
 
 export const NotesView = ({ group }: NotesViewProps) => {
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const groupId = group.id;
-  // Check if the current user is an admin of the group
   const [searchParams, setSearchParams] = useSearchParams();
-  const mode = useNoteStore((s) => s.mode);
-  const setMode = useNoteStore((s) => s.setMode);
+
+  const {
+    mode,
+    setMode,
+    notes,
+    setNotes,
+    selectedNote,
+    setSelectedNote,
+    editingNote,
+    setEditingNote,
+  } = useNoteStore();
+
   const { user } = useAuth();
-  // TanStack Query mutations
+
   const createNoteMutation = useCreateNote();
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
+
   const isUserAdmin = group?.created_by === user?.id;
+
   const handleCreateNote = async (note: NewNote) => {
     try {
       await createNoteMutation.mutateAsync({ groupId, note });
@@ -38,14 +46,14 @@ export const NotesView = ({ group }: NotesViewProps) => {
       toast.error("Failed to create note. Please try again.");
     }
   };
+
   const handleUpdateNote = async (note: NewNote) => {
     if (!editingNote) return;
-
     try {
       await updateNoteMutation.mutateAsync({
         noteId: editingNote.id,
         updates: {
-          title: note.title, 
+          title: note.title,
           content: note.content,
           tags: note.tags,
           is_private: note.is_private,
@@ -70,53 +78,54 @@ export const NotesView = ({ group }: NotesViewProps) => {
       toast.error("Failed to delete note. Please try again.");
     }
   };
+
   const handleSelectNote = (note: Note) => {
     setMode("view");
     setSelectedNote(note);
     setEditingNote(null);
-    setSearchParams({ n: note.id, m: mode ?? "view" }); // Update URL to indicate selected note
+    setNotes(notes); // If you’re refreshing notes list
+    setSearchParams({ n: note.id, m: "view" });
   };
 
   function handleBackToList() {
     setMode(null);
     setSelectedNote(null);
     setEditingNote(null);
-    setSearchParams({}); // Clear URL parameters
+    setSearchParams({});
   }
 
   function handleStartCreating() {
     setMode("create");
     setSelectedNote(null);
     setEditingNote(null);
-    setSearchParams({ m: mode ?? "create" }); // Update URL to indicate creation mode
+    setSearchParams({ m: "create" });
   }
 
   function handleCancelCreating() {
     setMode(null);
     setSelectedNote(null);
     setEditingNote(null);
-    setSearchParams({}); // Clear URL parameters
+    setSearchParams({});
   }
 
   const handleStartEditing = (note: Note) => {
     setMode("edit");
     setEditingNote(note);
     setSelectedNote(null);
-    setSearchParams({ n: note.id, m: mode ?? "edit" }); // Update URL to indicate editing mode
+    setSearchParams({ n: note.id, m: "edit" });
   };
 
   function handleCancelEditing() {
     setMode("view");
     if (editingNote) {
       setSelectedNote(editingNote);
-      setSearchParams({ n: editingNote.id, m: mode ?? "view" }); // Keep the note in view mode
+      setSearchParams({ n: editingNote.id, m: "view" });
     } else {
       handleBackToList();
     }
     setEditingNote(null);
   }
 
-  // Show create note editor
   if (mode === "create") {
     return (
       <div className="h-full w-full">
@@ -131,7 +140,6 @@ export const NotesView = ({ group }: NotesViewProps) => {
     );
   }
 
-  // Show edit note editor
   if (mode === "edit" && editingNote) {
     return (
       <div className="h-full w-full">
@@ -147,7 +155,6 @@ export const NotesView = ({ group }: NotesViewProps) => {
     );
   }
 
-  // Show note viewer
   if (selectedNote && mode === "view") {
     return (
       <div className="h-full w-full">
@@ -163,7 +170,6 @@ export const NotesView = ({ group }: NotesViewProps) => {
     );
   }
 
-  // Show notes list
   return (
     <div className="h-full w-full">
       <NotesList

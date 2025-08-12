@@ -9,6 +9,8 @@ import { useGroupStore } from "@/store/groupStore"
 import GroupDetailsDesktop from "./GroupDetailsDesktop"
 import { useState, useRef } from "react"
 import type { StudyGroup } from "@/types/groups"
+import { motion, AnimatePresence } from "framer-motion"
+import { useNoteStore } from "@/store/noteStore"
 
 // Main Group Header Component
 const GroupHeader = ({ group }: { group: StudyGroup }) => {
@@ -18,23 +20,19 @@ const GroupHeader = ({ group }: { group: StudyGroup }) => {
   const handleLeaveGroup = () => {
     console.log("Leave group clicked")
     setIsModalOpen(false)
-    // Add leave group logic here
   }
 
   const handleSaveEdit = (formData: FormData) => {
     console.log("Save edit:", formData)
-    // Add save edit logic here
   }
 
   const handleDeleteGroup = () => {
     console.log("Delete group clicked")
     setIsModalOpen(false)
-    // Add delete group logic here
   }
 
   return (
-    <div className="hidden md:block border-b bg-white sticky  top-0 ">
-      {/* Main Header */}
+    <div className="border-b hidden md:block bg-white sticky top-0 ">
       <div className="p-6 w-full">
         <div className="flex items-center justify-between">
           {/* Left side - Group info */}
@@ -89,35 +87,62 @@ const GroupHeader = ({ group }: { group: StudyGroup }) => {
 const GroupContent = ({ group }: { group: StudyGroup }) => {
   const activeTab = useGroupStore((s) => s.activeTab)
   const setActiveTab = useGroupStore((s) => s.setActiveTab)
+  const mode = useNoteStore((s) => s.mode)
+
+  // hide header + tabs when editing/creating
+  const hideUI = mode === "create" || mode === "edit"
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Fixed Group Header */}
-      <GroupHeader group={group} />
+      {/* Animate Header */}
+      <AnimatePresence>
+        {!hideUI && (
+          <motion.div
+            key="header"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <GroupHeader group={group} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Fixed Tab Triggers */}
-      <div className="sticky top-[80px] z-20 bg-white border-b">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-full w-full">
-          <TabsList className="grid max-w-[96%] w-full grid-cols-2 mx-auto my-4 bg-gray-100">
-            <TabsTrigger
-              value="notes"
-              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <FileText className="w-4 h-4" />
-              Notes
-            </TabsTrigger>
-            <TabsTrigger
-              value="chat"
-              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Chat
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      {/* Animate Tabs */}
+      <AnimatePresence>
+        {!hideUI && (
+          <motion.div
+            key="tabs"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="sticky top-[80px] z-20 bg-white border-b"
+          >
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-full w-full">
+              <TabsList className="grid max-w-[96%] w-full grid-cols-2 mx-auto my-4 bg-gray-100">
+                <TabsTrigger
+                  value="notes"
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  <FileText className="w-4 h-4" />
+                  Notes
+                </TabsTrigger>
+                <TabsTrigger
+                  value="chat"
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Scrollable Tab Content Area */}
+      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto hide-scrollbar max-w-full w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
           <TabsContent value="notes" className="h-full">
