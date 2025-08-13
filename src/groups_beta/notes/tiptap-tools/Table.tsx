@@ -1,11 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { TableIcon, ImageIcon, Minus, Upload, LinkIcon, Trash2 } from "lucide-react"
+import { TableIcon, ImageIcon, Minus, Upload, LinkIcon, Trash2, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +28,7 @@ export default function TableImageRuler({
 
   const isInTable = editor?.isActive?.("table")
   const isOnImage = useIsImageSelected(editor)
+  const selectedImageAlignment = getSelectedImageAlignment(editor)
 
   const insertTable = () => {
     if (!editor) return
@@ -50,28 +50,98 @@ export default function TableImageRuler({
     const file = e.target.files?.[0]
     if (!file) return
     const dataUrl = await toDataURL(file)
-    editor?.chain().focus().setImage({ src: dataUrl }).run()
+    editor
+      ?.chain()
+      .focus()
+      .setImage({
+        src: dataUrl,
+        alt: file.name,
+        title: file.name,
+        align: "left",
+        width: 300,
+      })
+      .run()
     e.target.value = ""
   }
 
   const insertUrl = async () => {
     const url = window.prompt("Enter image URL")
     if (!url) return
-    editor?.chain().focus().setImage({ src: url }).run()
+    editor
+      ?.chain()
+      .focus()
+      .setImage({
+        src: url,
+        alt: "Image",
+        align: "left",
+        width: 300,
+      })
+      .run()
   }
 
   const deleteSelectedImage = () => {
-    // If image node is selected, deleteSelection works.
     if (!editor) return
-    const { state, view } = editor
-    const sel: any = state.selection
-    if (sel?.node && sel.node.type?.name === "image") {
-      view.dispatch(state.tr.deleteSelection())
+
+    const { state } = editor
+    const { selection } = state
+
+    // Check if we have a node selection with an image
+    if (selection.node && selection.node.type.name === "image") {
+      editor.chain().focus().deleteSelection().run()
       return
     }
-    // Fallback: try running a delete command (no-op if nothing removable)
-    editor.commands.deleteSelection()
+
+    // For text selection, find image nodes and delete them
+    const { from, to } = selection
+    let imagePos = null
+    
+    state.doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name === "image") {
+        imagePos = pos
+        return false // Stop iteration
+      }
+    })
+
+    if (imagePos !== null) {
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: imagePos, to: imagePos + 1 })
+        .run()
+    }
   }
+
+  const setImageAlignment = (align: "left" | "center" | "right") => {
+    if (!editor || !isOnImage) return
+    
+    const { state } = editor
+    const { selection } = state
+
+    // Handle node selection
+    if (selection.node && selection.node.type.name === "image") {
+      editor.chain().focus().updateAttributes("image", { align }).run()
+      return
+    }
+
+    // Handle text selection - find image nodes and update them
+    const { from, to } = selection
+    state.doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name === "image") {
+        editor
+          .chain()
+          .focus()
+          .setNodeSelection(pos)
+          .updateAttributes("image", { align })
+          .run()
+        return false
+      }
+    })
+  }
+
+    // DEBUG: Add these console logs temporarily
+  console.log("🖼️ Image selected:", isOnImage)
+  console.log("📍 Image alignment:", selectedImageAlignment)
+  console.log("📊 Editor state:", editor?.state?.selection)
 
   return (
     <>
@@ -158,6 +228,72 @@ export default function TableImageRuler({
         </Tooltip>
       </TooltipProvider>
 
+      {/* Image alignment controls - only show when image is selected */}
+      {isOnImage && (
+        <>
+          <Separator orientation="vertical" className="h-6 mx-1" />
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={selectedImageAlignment === "left" ? "default" : "outline"}
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => setImageAlignment("left")}
+                  className="hover:bg-gray-200"
+                >
+                  <AlignLeft className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Align Left</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={selectedImageAlignment === "center" ? "default" : "outline"}
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => setImageAlignment("center")}
+                  className="hover:bg-gray-200"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Align Center</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={selectedImageAlignment === "right" ? "default" : "outline"}
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => setImageAlignment("right")}
+                  className="hover:bg-gray-200"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Align Right</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </>
+      )}
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
       {/* Delete context buttons */}
       <TooltipProvider>
         <Tooltip>
@@ -212,7 +348,7 @@ export default function TableImageRuler({
               size="sm"
               disabled={isLoading}
               onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              className="hover:bg-gray-200"
+              className="hover:bg-gray-200 bg-transparent"
             >
               <Minus className="w-4 h-4" />
             </Button>
@@ -238,7 +374,47 @@ function toDataURL(file: File): Promise<string> {
 function useIsImageSelected(editor: any) {
   return useMemo(() => {
     if (!editor) return false
-    const sel: any = editor.state?.selection
-    return Boolean(sel?.node && sel.node.type?.name === "image")
+    const { selection } = editor.state
+
+    // Check for node selection with image
+    if (selection.node && selection.node.type.name === "image") {
+      return true
+    }
+
+    // Check if there are any image nodes in the current selection range
+    const { from, to } = selection
+    let hasImage = false
+    
+    editor.state.doc.nodesBetween(from, to, (node: any) => {
+      if (node.type.name === "image") {
+        hasImage = true
+        return false // Stop iteration
+      }
+    })
+
+    return hasImage
   }, [editor])
+}
+
+function getSelectedImageAlignment(editor: any) {
+  if (!editor) return null
+  const { selection } = editor.state
+
+  // Check for node selection
+  if (selection.node && selection.node.type.name === "image") {
+    return selection.node.attrs.align || "left"
+  }
+
+  // Check selection range for image nodes
+  const { from, to } = selection
+  let alignment = null
+  
+  editor.state.doc.nodesBetween(from, to, (node: any) => {
+    if (node.type.name === "image") {
+      alignment = node.attrs.align || "left"
+      return false // Stop iteration
+    }
+  })
+
+  return alignment
 }

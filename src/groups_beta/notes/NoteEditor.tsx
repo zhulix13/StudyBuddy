@@ -27,7 +27,7 @@ import OrderedList from "@tiptap/extension-ordered-list"
 import { FontSize } from "@tiptap/extension-text-style"
 import { TextStyle } from "@tiptap/extension-text-style"
 import FontFamily from "@tiptap/extension-font-family"
-import { ResizableImage } from "./resizable-image"
+import { TiptapImage } from "./extensions/tiptap-image-extension"
 
 // UI Component imports
 import { Button } from "@/components/ui/button"
@@ -49,6 +49,7 @@ import QuoteTool from "./tiptap-tools/Quote"
 import TableImageRuler from "./tiptap-tools/Table"
 import Headings from "./tiptap-tools/headings"
 import FontSizeTool from "./tiptap-tools/fontSize"
+import { ImageAlignment } from "./ImageAlignment"
 
 // Styles
 import '@/tiptap.css'
@@ -104,7 +105,7 @@ export default function NoteEditor({
   const [, setUiTick] = useState(0)
 
   // Editor configuration
-  const editor = useEditor({
+const editor = useEditor({
     extensions: [
       StarterKit.configure({
         bulletList: false,
@@ -143,7 +144,9 @@ export default function NoteEditor({
       TableRow,
       TableHeader,
       TableCell,
-      ResizableImage.configure({
+      TiptapImage.configure({
+        inline: false,
+        allowBase64: true,
         HTMLAttributes: {
           class: "rounded-lg",
         },
@@ -458,6 +461,15 @@ export default function NoteEditor({
           {/* Lists */}
           <Lists editor={editor} isLoading={isLoading} />
 
+          
+
+          {/* Table & Image & Ruler*/}
+          <TableImageRuler
+            editor={editor}
+            isLoading={isLoading}
+          />
+          <ImageAlignment editor={editor} />
+          
           {/* Desktop-only features */}
           <div className="hidden sm:flex items-center gap-1">
             <Separator orientation="vertical" className="h-6 mx-1" />
@@ -476,11 +488,7 @@ export default function NoteEditor({
 
             <Separator orientation="vertical" className="h-6 mx-1" />
 
-            {/* Table & Image & Ruler*/}
-            <TableImageRuler
-              editor={editor}
-              isLoading={isLoading}
-            />
+            
           </div>
         </div>
       </div>
