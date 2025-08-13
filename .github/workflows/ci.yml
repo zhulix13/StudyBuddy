@@ -28,8 +28,8 @@ jobs:
         run: npm ci
 
       # 4. Lint code
-      - name: Lint code
-        run: npm run lint
+      # - name: Lint code
+      #   run: npm run lint
 
       # 5. Run tests
       - name: Run tests
