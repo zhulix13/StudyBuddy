@@ -11,7 +11,7 @@ import { Table } from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
-import Image from '@tiptap/extension-image'
+// import Image from '@tiptap/extension-image'
 import HorizontalRule from '@tiptap/extension-horizontal-rule'
 import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
@@ -19,6 +19,8 @@ import Underline from '@tiptap/extension-underline'
 import Color from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
+import { FontSize } from '@/groups_beta/notes/extensions/font-size' 
+import { TiptapImage } from '@/groups_beta/notes/extensions/tiptap-image-extension'
 
 const extensions = [
   StarterKit,
@@ -34,7 +36,7 @@ const extensions = [
     },
   }),
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
-  Table.configure({ 
+  Table.configure({
     resizable: true,
     HTMLAttributes: {
       class: 'border-collapse border border-gray-300 w-full my-4',
@@ -55,11 +57,14 @@ const extensions = [
       class: 'border border-gray-300 px-4 py-2',
     },
   }),
-  Image.configure({
+  TiptapImage.configure({
+    inline: true,
+    allowBase64: true,
     HTMLAttributes: {
       class: 'max-w-full h-auto rounded-lg my-4',
     },
   }),
+ 
   HorizontalRule.configure({
     HTMLAttributes: {
       class: 'my-6 border-gray-300',
@@ -71,12 +76,13 @@ const extensions = [
   Color,
   TextStyle,
   FontFamily,
+  FontSize, // Add your FontSize extension here
 ]
 
 export const renderTipTapContent = (content: any): string => {
   try {
     if (!content) return '<p>No content available</p>'
-    
+   
     return generateHTML(content, extensions)
   } catch (e) {
     console.error('Error rendering TipTap content:', e)

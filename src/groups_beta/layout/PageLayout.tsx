@@ -90,7 +90,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const mode = useNoteStore((s) => s.mode)
 
   // hide header + tabs when editing/creating
-  const hideUI = mode === "create" || mode === "edit"
+  const hideUI = mode === "create" || mode === "edit" || mode === "view";
 
   return (
     <div className="flex flex-col h-screen">

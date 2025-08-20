@@ -1,41 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Search, Plus, Settings } from "lucide-react";
-import { GroupCard } from "../layout/GroupCard";
-import { getGroupsWhereUserIsMember } from "@/services/supabase-groups";
-import type { StudyGroup } from "@/types/groups";
-import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import CreateGroupModal from "./CreateGroupModal";
-import SettingsModal from "./SettingsModal";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { Search, Plus, Settings } from "lucide-react"
+import { GroupCard } from "../layout/GroupCard"
+import { getGroupsWhereUserIsMember } from "@/services/supabase-groups"
+import type { StudyGroup } from "@/types/groups"
+import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
+import Skeleton from "react-loading-skeleton"
+import "react-loading-skeleton/dist/skeleton.css"
+import CreateGroupModal from "./CreateGroupModal"
+import SettingsModal from "./SettingsModal"
+import { useIsMobile } from "@/hooks/useIsMobile"
+import { useNoteStore } from "@/store/noteStore"
+import { UnsavedChangesModal } from "../notes/UnsavedChangesModal"
 
 interface SidebarProps {
-  setActiveGroup: (group: StudyGroup | null) => void;
-  activeGroupId: string | null;
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+  setActiveGroup: (group: StudyGroup | null) => void
+  activeGroupId: string | null
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
 }
 
-export const Sidebar = ({
-  setActiveGroup,
-  activeGroupId,
-  sidebarOpen,
-  setSidebarOpen,
-}: SidebarProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
+export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebarOpen }: SidebarProps) => {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false)
+  const [pendingGroup, setPendingGroup] = useState<StudyGroup | null>(null)
+
+  const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const {
     data: groups = [],
@@ -47,50 +47,84 @@ export const Sidebar = ({
     staleTime: 1000 * 60 * 5, // 5 minutes
     onSuccess: (data: StudyGroup[]) => {
       if (data.length === 0) {
-        toast.info(
-          "You have no groups yet. Join or create one to get started."
-        );
+        toast.info("You have no groups yet. Join or create one to get started.")
       } else {
-        toast.success("Groups loaded successfully");
-        console.log("Groups loaded:", data);
+        toast.success("Groups loaded successfully")
+        console.log("Groups loaded:", data)
       }
       // Check if the current persisted activeGroup.id exists in the new fetched list
       if (activeGroupId) {
-        const stillValid = data.find(
-          (group: StudyGroup) => group.id === activeGroupId
-        );
+        const stillValid = data.find((group: StudyGroup) => group.id === activeGroupId)
         if (stillValid) {
-          setActiveGroup(stillValid);
+          setActiveGroup(stillValid)
         } else {
-          setActiveGroup(null); // or reset logic if the group was deleted or user removed
+          setActiveGroup(null) // or reset logic if the group was deleted or user removed
         }
       }
     },
     onError: (err: any) => {
-      toast.error("Failed to load groups");
-      console.error("Error fetching groups:", err);
+      toast.error("Failed to load groups")
+      console.error("Error fetching groups:", err)
     },
-  });
+  })
 
   const filteredGroups: StudyGroup[] = groups.filter((group: StudyGroup) =>
-    group.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    group.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  const { setMode, setNotes, setEditingNote, isDirty, clearLocalDraft } = useNoteStore()
 
   const handleGroupClick = (group: StudyGroup) => {
-    setActiveGroup(group);
-    navigate(`/groups/${group.id}`);
-    setSidebarOpen(false); // Close sidebar after selecting a group
-    // if (setSidebarMobileOpen) {
-    //   setSidebarMobileOpen(false)
-    // }
-  };
+    // If there are unsaved changes, show confirmation modal
+    if (isDirty) {
+      setPendingGroup(group)
+      setShowUnsavedModal(true)
+      return
+    }
+
+    // Proceed with normal navigation
+    proceedWithNavigation(group)
+  }
+
+  const proceedWithNavigation = (group: StudyGroup) => {
+    setActiveGroup(group)
+    navigate(`/groups/${group.id}`)
+    setSidebarOpen(false)
+    setMode(null)
+    setNotes([])
+    setEditingNote(null)
+  }
+
+  const handleSaveAndLeave = async () => {
+    if (pendingGroup) {
+      setShowUnsavedModal(false)
+      setPendingGroup(null)
+      // User stays in editor to save draft manually
+      toast.info("Please save your draft from the editor, then navigate again")
+    }
+  }
+
+  const handleDiscardAndLeave = () => {
+    if (pendingGroup) {
+      if (activeGroupId) {
+        clearLocalDraft(activeGroupId)
+      }
+      setShowUnsavedModal(false)
+      proceedWithNavigation(pendingGroup)
+      setPendingGroup(null)
+    }
+  }
+
+  const handleCancelNavigation = () => {
+    setShowUnsavedModal(false)
+    setPendingGroup(null)
+  }
 
   const handleCreateSuccess = (newGroup: StudyGroup) => {
-    setActiveGroup(newGroup);
-    navigate(`/groups/${newGroup.id}`);
-
-    setIsCreateModalOpen(false);
-  };
+    setActiveGroup(newGroup)
+    navigate(`/groups/${newGroup.id}`)
+    setIsCreateModalOpen(false)
+  }
 
   const LoadingState = () => (
     <div className="space-y-4">
@@ -101,23 +135,19 @@ export const Sidebar = ({
         </div>
       ))}
     </div>
-  );
+  )
 
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
         <Search className="w-8 h-8 text-gray-400" />
       </div>
-      <p className="text-sm text-gray-500 mb-1">
-        {searchTerm ? "No groups found" : "No study groups yet"}
-      </p>
+      <p className="text-sm text-gray-500 mb-1">{searchTerm ? "No groups found" : "No study groups yet"}</p>
       <p className="text-xs text-gray-400">
-        {searchTerm
-          ? "Try a different search term"
-          : "Join or create a group to get started"}
+        {searchTerm ? "Try a different search term" : "Join or create a group to get started"}
       </p>
     </div>
-  );
+  )
 
   const ErrorState = () => (
     <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -127,7 +157,7 @@ export const Sidebar = ({
       <p className="text-sm text-red-600 mb-1">Failed to load groups</p>
       <p className="text-xs text-gray-400">{(error as Error)?.message}</p>
     </div>
-  );
+  )
 
   const sidebarContent = (
     <div className="flex flex-col h-full ">
@@ -194,12 +224,16 @@ export const Sidebar = ({
         onSuccess={handleCreateSuccess}
       />
 
-      <SettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
+      <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
+
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onSaveDraft={handleSaveAndLeave}
+        onDiscardChanges={handleDiscardAndLeave}
+        onCancel={handleCancelNavigation}
       />
     </div>
-  );
+  )
 
   return (
     <>
@@ -219,5 +253,5 @@ export const Sidebar = ({
         {sidebarContent}
       </aside>
     </>
-  );
-};
+  )
+}

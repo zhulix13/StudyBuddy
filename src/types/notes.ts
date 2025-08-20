@@ -7,6 +7,7 @@ export interface NewNote{
   is_private?: boolean;
   group_id?: string;
   pinned?: boolean;
+  status? : 'draft' | 'published';
 }
 
 export interface Note {
@@ -16,6 +17,7 @@ export interface Note {
   content: JSON;
   group_id: string;
   is_private: boolean;
+  status?: 'draft' | 'published';
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 
 // TipTap imports
 import { useEditor, EditorContent } from "@tiptap/react"
@@ -28,13 +28,21 @@ import { FontSize } from "@tiptap/extension-text-style"
 import { TextStyle } from "@tiptap/extension-text-style"
 import FontFamily from "@tiptap/extension-font-family"
 import { TiptapImage } from "./extensions/tiptap-image-extension"
+import Focus from "@tiptap/extension-focus"
+import BubbleMenu from "@tiptap/extension-bubble-menu"
+import { Dropcursor } from "@tiptap/extension-dropcursor"
+import { Gapcursor } from "@tiptap/extension-gapcursor"
+import CharacterCount from "@tiptap/extension-character-count"
+
+// Store import
+import { useNoteStore } from "@/store/noteStore"
 
 // UI Component imports
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, X, Plus, Pin, Lock, Unlock, Loader2 } from "lucide-react"
+import { ArrowLeft, X, Plus, Pin, Lock, Unlock, Loader2, Save, Send, CheckCircle2 } from "lucide-react"
 
 // Tool imports
 import UndoTool from "./tiptap-tools/undo"
@@ -51,27 +59,20 @@ import Headings from "./tiptap-tools/headings"
 import FontSizeTool from "./tiptap-tools/fontSize"
 import { ImageAlignment } from "./ImageAlignment"
 
-// Styles
-import '@/tiptap.css'
+// Modal import
+import { UnsavedChangesModal } from "./UnsavedChangesModal"
 
+// Styles
+import "@/tiptap.css"
 
 // Types
-type Note = {
-  id: string
-  title: string
-  content: any
-  tags: string[]
-  is_private: boolean
-  pinned: boolean
-  group_id: string
-}
-
-type NewNote = Omit<Note, "id">
+import type { Note, NewNote } from "@/types/notes"
 
 interface NoteEditorProps {
   groupId: string
   initialNote?: Partial<Note>
   onSave: (note: NewNote) => void
+  onSaveDraft: (note: NewNote) => void
   onCancel: () => void
   isEditing?: boolean
   isLoading?: boolean
@@ -92,10 +93,25 @@ export default function NoteEditor({
   groupId,
   initialNote,
   onSave,
+  onSaveDraft,
   onCancel,
   isEditing = false,
   isLoading = false,
 }: NoteEditorProps) {
+  // Note store hooks
+  const {
+    editingNote,
+    draftNote,
+    saveDraftLocally,
+    clearLocalDraft,
+    loadDraftForGroup,
+    isDirty,
+    setIsDirty,
+    originalContent,
+    setOriginalContent,
+    checkIfDirty,
+  } = useNoteStore()
+
   // State declarations
   const [title, setTitle] = useState(initialNote?.title || "")
   const [tags, setTags] = useState<string[]>(initialNote?.tags || [])
@@ -103,9 +119,11 @@ export default function NoteEditor({
   const [isPrivate, setIsPrivate] = useState(initialNote?.is_private ?? false)
   const [pinned, setPinned] = useState(initialNote?.pinned ?? false)
   const [, setUiTick] = useState(0)
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false)
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false)
 
   // Editor configuration
-const editor = useEditor({
+  const editor = useEditor({
     extensions: [
       StarterKit.configure({
         bulletList: false,
@@ -145,7 +163,7 @@ const editor = useEditor({
       TableHeader,
       TableCell,
       TiptapImage.configure({
-        inline: false,
+        inline: true,
         allowBase64: true,
         HTMLAttributes: {
           class: "rounded-lg",
@@ -154,12 +172,47 @@ const editor = useEditor({
       HorizontalRule.configure({
         HTMLAttributes: { class: "my-4 border-gray-300" },
       }),
+      Focus.configure({
+        className: "has-focus", // Add visual focus styling
+        mode: "all",
+      }),
+      BubbleMenu.configure({
+        element: null, // We'll create the bubble menu component separately
+      }),
+      Dropcursor.configure({
+        color: "#3b82f6", // Blue cursor when dragging
+        width: 2,
+      }),
+      Gapcursor,
+      CharacterCount.configure({
+        limit: 10000, // Optional character limit
+      }),
     ],
     content: initialNote?.content || "",
     editorProps: {
       attributes: {
         class:
           "prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl mx-auto focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-4 break-words overflow-wrap-anywhere editor-shell",
+      },
+      handleKeyDown: (view, event) => {
+        // Handle Tab key for indentation
+        if (event.key === "Tab") {
+          event.preventDefault()
+          const { state, dispatch } = view
+          const { selection } = state
+
+          if (event.shiftKey) {
+            // Shift+Tab: Outdent
+            const tr = state.tr.insertText("", selection.from - 2, selection.from)
+            dispatch(tr)
+          } else {
+            // Tab: Indent with 2 spaces
+            const tr = state.tr.insertText("   ", selection.from, selection.to)
+            dispatch(tr)
+          }
+          return true
+        }
+        return false
       },
       handlePaste: (view, event) => {
         const items = event.clipboardData?.items
@@ -195,34 +248,105 @@ const editor = useEditor({
   })
 
   // Effects
+
   useEffect(() => {
+    loadDraftForGroup(groupId)
+
     if (initialNote) {
-      setTitle(initialNote.title || "")
-      setTags(initialNote.tags || [])
-      setIsPrivate(initialNote.is_private ?? false)
-      setPinned(initialNote.pinned ?? false)
-      if (editor && initialNote.content) {
-        editor.commands.setContent(initialNote.content)
+      // Set original content for editing mode
+      setOriginalContent({
+        title: initialNote.title || "",
+        content: initialNote.content || null,
+        tags: initialNote.tags || [],
+        is_private: initialNote.is_private ?? false,
+        pinned: initialNote.pinned ?? false,
+      })
+    } else {
+      // Clear original content for create mode
+      setOriginalContent(null)
+    }
+  }, [groupId, initialNote, loadDraftForGroup, setOriginalContent])
+
+  useEffect(() => {
+    if (draftNote && !initialNote) {
+      setTitle(draftNote.title || "")
+      setTags(draftNote.tags || [])
+      setIsPrivate(draftNote.is_private ?? false)
+      setPinned(draftNote.pinned ?? false)
+      if (editor && draftNote.content) {
+        editor.commands.setContent(draftNote.content)
       }
     }
-  }, [initialNote, editor])
+  }, [draftNote, editor, initialNote])
+
+  useEffect(() => {
+    if (editor) {
+      const draftData = {
+        title,
+        content: editor.getJSON(),
+        group_id: groupId,
+        is_private: isPrivate,
+        tags,
+        pinned,
+      }
+
+      // Check if content has changed and update isDirty
+      checkIfDirty(title, editor.getJSON(), tags, isPrivate, pinned)
+
+      // Only save to localStorage if there are actual changes
+      if (title.trim() || editor.getText().trim() || tags.length > 0) {
+        saveDraftLocally(draftData, groupId)
+      }
+    }
+  }, [title, tags, isPrivate, pinned, saveDraftLocally, groupId, editor, checkIfDirty])
 
   useEffect(() => {
     if (!editor) return
-    const tick = () => setUiTick((x) => x + 1)
-    editor.on("selectionUpdate", tick)
-    editor.on("transaction", tick)
-    editor.on("update", tick)
-    editor.on("focus", tick)
-    editor.on("blur", tick)
-    return () => {
-      editor.off("selectionUpdate", tick)
-      editor.off("transaction", tick)
-      editor.off("update", tick)
-      editor.off("focus", tick)
-      editor.off("blur", tick)
+
+    const handleUpdate = () => {
+      const currentContent = editor.getJSON()
+      checkIfDirty(title, currentContent, tags, isPrivate, pinned)
+
+      if (title.trim() || editor.getText().trim() || tags.length > 0) {
+        const draftData = {
+          title,
+          content: currentContent,
+          group_id: groupId,
+          is_private: isPrivate,
+          tags,
+          pinned,
+        }
+        saveDraftLocally(draftData, groupId)
+      }
     }
-  }, [editor])
+
+    editor.on("update", handleUpdate)
+    return () => {
+      editor.off("update", handleUpdate)
+    }
+  }, [editor, title, groupId, isPrivate, tags, pinned, saveDraftLocally, checkIfDirty])
+
+  useEffect(() => {
+    if (!isDirty && (title || editor?.getText())) {
+      setShowSavedIndicator(true)
+      const timer = setTimeout(() => {
+        setShowSavedIndicator(false)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [isDirty, title, editor])
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ""
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [isDirty])
 
   // Event handlers
   const addTag = () => {
@@ -243,18 +367,73 @@ const editor = useEditor({
     }
   }
 
-  const handleSave = () => {
+  const handleSaveDraft = useCallback(async () => {
     if (title.trim() && editor?.getJSON()) {
-      onSave({
+      const noteData = {
         title: title.trim(),
         content: editor.getJSON(),
         group_id: groupId,
         is_private: isPrivate,
         tags,
         pinned,
-      })
+        status: "draft" as const,
+      }
+      await onSaveDraft(noteData)
+      clearLocalDraft(groupId)
     }
-  }
+  }, [title, editor, groupId, isPrivate, tags, pinned, onSaveDraft, clearLocalDraft])
+
+  const handlePublish = useCallback(async () => {
+    if (title.trim() && editor?.getJSON()) {
+      const noteData = {
+        title: title.trim(),
+        content: editor.getJSON(),
+        group_id: groupId,
+        is_private: isPrivate,
+        tags,
+        pinned,
+        status: "published" as const,
+      }
+      await onSave(noteData)
+      clearLocalDraft(groupId)
+    }
+  }, [title, editor, groupId, isPrivate, tags, pinned, onSave, clearLocalDraft])
+
+   useEffect(() => {
+      if (!editor) return
+      const tick = () => setUiTick((x) => x + 1)
+      editor.on("selectionUpdate", tick)
+      editor.on("transaction", tick)
+      editor.on("update", tick)
+      editor.on("focus", tick)
+      editor.on("blur", tick)
+      return () => {
+        editor.off("selectionUpdate", tick)
+        editor.off("transaction", tick)
+        editor.off("update", tick)
+        editor.off("focus", tick)
+        editor.off("blur", tick)
+      }
+    }, [editor])
+
+
+  const handleSaveDraftAndLeave = useCallback(async () => {
+    setShowUnsavedModal(false)
+    if (title.trim() && editor?.getJSON()) {
+      await handleSaveDraft()
+    }
+    onCancel()
+  }, [title, editor, handleSaveDraft, onCancel])
+
+  const handleDiscardChanges = useCallback(() => {
+    setShowUnsavedModal(false)
+    clearLocalDraft(groupId)
+    onCancel()
+  }, [clearLocalDraft, groupId, onCancel])
+
+  const handleCancelNavigation = useCallback(() => {
+    setShowUnsavedModal(false)
+  }, [])
 
   const setLink = () => {
     const previousUrl = editor?.getAttributes("link").href
@@ -309,7 +488,7 @@ const editor = useEditor({
   // Render
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header */}
+      {/* Enhanced Header */}
       <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-gray-50/50">
         <div className="flex items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="sm" onClick={onCancel} disabled={isLoading}>
@@ -318,7 +497,17 @@ const editor = useEditor({
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
             {isEditing ? "Edit Note" : "New Note"}
           </h2>
+
+          <div
+            className={`flex items-center gap-2 text-sm transition-all duration-300 ${
+              showSavedIndicator ? "opacity-100 scale-100" : "opacity-0 scale-95"
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <span className="text-green-600 font-medium">Draft Saved</span>
+          </div>
         </div>
+
         <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
@@ -338,9 +527,61 @@ const editor = useEditor({
           >
             {isPrivate ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
           </Button>
-          <Button onClick={handleSave} disabled={!canSave} className="text-sm sm:text-base">
+
+          {/* Save as Draft Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveDraft}
+            disabled={!canSave}
+            className="hidden sm:flex bg-transparent"
+          >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {isEditing ? "Update" : "Save"}
+            <Save className="w-4 h-4 mr-1" />
+            Save Draft
+          </Button>
+
+          {/* Publish Button */}
+          <Button onClick={handlePublish} disabled={!canSave} className="text-sm sm:text-base">
+            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Send className="w-4 h-4 mr-1 sm:mr-2" />
+            {isEditing ? "Update" : "Publish"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Save Options */}
+      <div className="p-3 border-b bg-gray-50/30 sm:hidden">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveDraft}
+            disabled={!canSave}
+            className="flex-1 bg-transparent"
+          >
+            <Save className="w-4 h-4 mr-1" />
+            Save Draft
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setPinned(!pinned)}
+            className={`${pinned ? "text-amber-600 bg-amber-50" : "text-gray-400"}`}
+            disabled={isLoading}
+          >
+            <Pin className="w-4 h-4 mr-1" />
+            Pin
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsPrivate(!isPrivate)}
+            className={`${isPrivate ? "text-red-600 bg-red-50" : "text-green-600 bg-green-50"}`}
+            disabled={isLoading}
+          >
+            {isPrivate ? <Lock className="w-4 h-4 mr-1" /> : <Unlock className="w-4 h-4 mr-1" />}
+            {isPrivate ? "Private" : "Shared"}
           </Button>
         </div>
       </div>
@@ -426,16 +667,9 @@ const editor = useEditor({
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* Font Family */}
-          <FontFamilies
-            editor={editor}
-            isLoading={isLoading}
-            fontFamilies={fontFamilies}
-          />
+          <FontFamilies editor={editor} isLoading={isLoading} fontFamilies={fontFamilies} />
           <FontSizeTool editor={editor} isLoading={isLoading} />
-          <Separator
-            orientation="vertical"
-            className="h-6 mx-1 hidden sm:block"
-          />
+          <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
           {/* Text Formatting */}
           <TextFormat editor={editor} isLoading={isLoading} />
@@ -461,15 +695,10 @@ const editor = useEditor({
           {/* Lists */}
           <Lists editor={editor} isLoading={isLoading} />
 
-          
-
           {/* Table & Image & Ruler*/}
-          <TableImageRuler
-            editor={editor}
-            isLoading={isLoading}
-          />
+          <TableImageRuler editor={editor} isLoading={isLoading} />
           <ImageAlignment editor={editor} />
-          
+
           {/* Desktop-only features */}
           <div className="hidden sm:flex items-center gap-1">
             <Separator orientation="vertical" className="h-6 mx-1" />
@@ -480,15 +709,9 @@ const editor = useEditor({
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             {/* Quote & Link */}
-            <QuoteTool
-              editor={editor}
-              isLoading={isLoading}
-              setLink={setLink}
-            />
+            <QuoteTool editor={editor} isLoading={isLoading} setLink={setLink} />
 
             <Separator orientation="vertical" className="h-6 mx-1" />
-
-            
           </div>
         </div>
       </div>
@@ -521,9 +744,23 @@ const editor = useEditor({
               <span className="hidden sm:inline">Pinned</span>
             </span>
           )}
+          {draftNote && (
+            <span className="flex items-center gap-1 text-blue-600">
+              <Save className="w-3 h-3" />
+              <span className="hidden sm:inline">Draft saved</span>
+            </span>
+          )}
         </div>
         <div className="text-gray-400">{tags.length > 0 && `${tags.length} tag${tags.length !== 1 ? "s" : ""}`}</div>
       </div>
+
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onSaveDraft={handleSaveDraftAndLeave}
+        onDiscardChanges={handleDiscardChanges}
+        onCancel={handleCancelNavigation}
+        isLoading={isLoading}
+      />
     </div>
   )
 }

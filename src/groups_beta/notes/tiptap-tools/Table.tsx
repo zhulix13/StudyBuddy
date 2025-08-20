@@ -138,11 +138,7 @@ export default function TableImageRuler({
     })
   }
 
-    // DEBUG: Add these console logs temporarily
-  console.log("🖼️ Image selected:", isOnImage)
-  console.log("📍 Image alignment:", selectedImageAlignment)
-  console.log("📊 Editor state:", editor?.state?.selection)
-
+    
   return (
     <>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />

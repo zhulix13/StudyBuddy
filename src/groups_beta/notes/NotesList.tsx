@@ -32,7 +32,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   // Filter notes based on search term
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    note.tags?.some((tag: any) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   // Sort notes: pinned first, then by updated_at
@@ -221,7 +221,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
                   
                   {note.tags && note.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {note.tags.slice(0, 3).map((tag) => (
+                      {note.tags.slice(0, 3).map((tag: any) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>

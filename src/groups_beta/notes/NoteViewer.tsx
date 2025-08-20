@@ -16,7 +16,9 @@ import {
   Trash2,
   ArrowLeft,
   Crown,
-  Send
+  Send,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -41,8 +43,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type {Note} from "@/types/notes"
-
+import { useNoteById } from "@/hooks/useNotes"
+import type { Note } from "@/types/notes"
 
 interface Comment {
   id: string
@@ -58,13 +60,7 @@ interface Comment {
 }
 
 interface NoteViewerProps {
-  note: Note & {
-    comments?: Comment[]
-    isLiked?: boolean
-    isBookmarked?: boolean
-    pinned?: boolean
-    likes?: number
-  }
+  noteId: string
   currentUserId: string
   isUserAdmin?: boolean
   onLike?: (noteId: string) => void
@@ -72,7 +68,7 @@ interface NoteViewerProps {
   onComment?: (noteId: string, comment: string) => void
   onCommentLike?: (commentId: string) => void
   onShare?: (noteId: string) => void
-  onEdit?: () => void
+  onEdit?: (note: Note) => void
   onDelete?: (noteId: string) => void
   onBack?: () => void
   showComments?: boolean
@@ -131,7 +127,7 @@ const mockComments: Comment[] = [
 ]
 
 const NoteViewer: React.FC<NoteViewerProps> = ({ 
-  note, 
+  noteId,
   currentUserId,
   isUserAdmin,
   onLike, 
@@ -148,26 +144,35 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   const [showAllComments, setShowAllComments] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   
+  // Fetch note data using the hook
+  const { data: note, isLoading, error } = useNoteById(noteId)
+  
   // Use mock comments if none provided
-  const comments = note.comments || mockComments
+  const comments = note?.comments || mockComments
 
   const canEditOrDelete = currentUserId === note?.author?.id || isUserAdmin 
 
   const handleLike = () => {
-    onLike?.(note.id)
+    if (note) {
+      onLike?.(note.id)
+    }
   }
 
   const handleBookmark = () => {
-    onBookmark?.(note.id)
+    if (note) {
+      onBookmark?.(note.id)
+    }
   }
 
   const handleShare = () => {
-    onShare?.(note.id)
+    if (note) {
+      onShare?.(note.id)
+    }
   }
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (comment.trim()) {
+    if (comment.trim() && note) {
       onComment?.(note.id, comment.trim())
       setComment("")
     }
@@ -178,13 +183,80 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   }
 
   const handleDelete = () => {
-    onDelete?.(note.id)
-    setShowDeleteDialog(false)
+    if (note) {
+      onDelete?.(note.id)
+      setShowDeleteDialog(false)
+    }
+  }
+
+  const handleEdit = () => {
+    if (note) {
+      onEdit?.(note)
+    }
   }
 
   const displayedComments = showAllComments 
     ? comments 
     : comments?.slice(0, 3)
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span className="text-lg">Loading note...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center">
+            <div className="text-red-500 mb-4">
+              <AlertTriangle className="w-12 h-12 mx-auto" />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              Failed to load note
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              The note could not be found or you don't have permission to view it.
+            </p>
+            <Button onClick={onBack} variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Notes
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Note not found
+  if (!note) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              Note not found
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              The requested note doesn't exist or has been deleted.
+            </p>
+            <Button onClick={onBack} variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Notes
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
@@ -230,22 +302,11 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
                       </Badge>
                     )}
                   </div>
-                  {/* {note.author.bio && (
-                    <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
-                      {note.author.bio}
-                    </p>
-                  )} */}
                   <div className="flex items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                     </div>
-                    {/* {note.views && (
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        {note.views.toLocaleString()} views
-                      </div>
-                    )} */}
                     {note.updated_at && note.updated_at !== note.created_at && (
                       <Badge variant="outline" className="text-xs">
                         Edited
@@ -275,7 +336,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
                   {canEditOrDelete && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={onEdit}>
+                      <DropdownMenuItem onClick={handleEdit}>
                         <Edit className="w-4 h-4 mr-2" />
                         Edit Note
                       </DropdownMenuItem>
@@ -354,7 +415,6 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
                   }`}
                 >
                   <Heart className={`w-5 h-5 ${note.isLiked ? 'fill-current' : ''}`} />
-                  {/* <span className="font-semibold">{note.likes.toLocaleString()}</span> */}
                 </Button>
 
                 {showComments && (
