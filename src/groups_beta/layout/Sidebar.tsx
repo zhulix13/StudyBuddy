@@ -6,8 +6,9 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Search, Plus, Settings } from "lucide-react"
-import { GroupCard } from "../layout/GroupCard"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Search, Plus, Settings, ChevronLeft, ChevronRight, Users } from "lucide-react"
+import { GroupCard } from "./GroupCard"
 import { getGroupsWhereUserIsMember } from "@/services/supabase-groups"
 import type { StudyGroup } from "@/types/groups"
 import { toast } from "sonner"
@@ -25,9 +26,18 @@ interface SidebarProps {
   activeGroupId: string | null
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
+  isExpanded: boolean
+  setIsExpanded: (expanded: boolean) => void
 }
 
-export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebarOpen }: SidebarProps) => {
+export const Sidebar = ({
+  setActiveGroup,
+  activeGroupId,
+  sidebarOpen,
+  setSidebarOpen,
+  isExpanded,
+  setIsExpanded,
+}: SidebarProps) => {
   const [searchTerm, setSearchTerm] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
@@ -127,9 +137,9 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebar
   }
 
   const LoadingState = () => (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="p-4 border rounded-md">
+        <div key={i} className="p-3 border rounded-xl dark:border-gray-700">
           <Skeleton height={20} width={`60%`} />
           <Skeleton height={15} width={`40%`} className="mt-2" />
         </div>
@@ -139,11 +149,13 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebar
 
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-        <Search className="w-8 h-8 text-gray-400" />
+      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
+        <Users className="w-8 h-8 text-gray-400 dark:text-gray-500" />
       </div>
-      <p className="text-sm text-gray-500 mb-1">{searchTerm ? "No groups found" : "No study groups yet"}</p>
-      <p className="text-xs text-gray-400">
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+        {searchTerm ? "No groups found" : "No study groups yet"}
+      </p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">
         {searchTerm ? "Try a different search term" : "Join or create a group to get started"}
       </p>
     </div>
@@ -151,52 +163,160 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebar
 
   const ErrorState = () => (
     <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3">
-        <Search className="w-8 h-8 text-red-400" />
+      <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-3">
+        <Users className="w-8 h-8 text-red-400 dark:text-red-500" />
       </div>
-      <p className="text-sm text-red-600 mb-1">Failed to load groups</p>
-      <p className="text-xs text-gray-400">{(error as Error)?.message}</p>
+      <p className="text-sm text-red-600 dark:text-red-400 mb-1">Failed to load groups</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">{(error as Error)?.message}</p>
     </div>
   )
 
-  const sidebarContent = (
-    <div className="flex flex-col h-full ">
+  const CollapsedSidebar = () => (
+    <TooltipProvider>
+      <div className="flex flex-col h-full bg-white dark:bg-gray-900/95 border-r border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">
+        {/* Expand Button */}
+        <div className="p-3 border-b border-gray-200 dark:border-gray-700/50">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(true)}
+                className="w-full h-10 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Expand sidebar</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="p-3 space-y-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="w-full h-10 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                disabled={isLoading}
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Create Group</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSettingsModalOpen(true)}
+                className="w-full h-10 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Settings</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* Active Groups Indicators */}
+        <div className="flex-1 p-2 space-y-2">
+          {filteredGroups.slice(0, 8).map((group) => (
+            <Tooltip key={group.id}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleGroupClick(group)}
+                  className={`w-full h-10 p-0 relative ${
+                    group.id === activeGroupId
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
+                    {group.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  {group.unreadCount && group.unreadCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                      {group.unreadCount > 9 ? "9+" : group.unreadCount}
+                    </div>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{group.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+    </TooltipProvider>
+  )
+
+  const ExpandedSidebar = () => (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900/95 border-r border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">
       {/* Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Study Groups</h2>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700/50">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Study Groups</h2>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsSettingsModalOpen(true)}
-            className="p-2 h-8 w-8"
-            title="Settings"
+            onClick={() => setIsExpanded(false)}
+            className="p-2 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="Collapse sidebar"
           >
-            <Settings className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </Button>
         </div>
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+
+        {/* Action Buttons Row */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex-1 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white shadow-sm"
+            disabled={isLoading}
+          >
+            <Plus className="w-4 h-4" />
+            Create
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSettingsModalOpen(true)}
+            className="p-2 h-9 w-9 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="Settings"
+          >
+            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </Button>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
           <Input
             placeholder="Search groups..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             disabled={isLoading}
           />
         </div>
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="w-full flex items-center gap-2"
-          disabled={isLoading}
-        >
-          <Plus className="w-4 h-4" />
-          Create Group
-        </Button>
       </div>
 
       {/* Groups List */}
-      <ScrollArea className="flex-1 pb-12 overflow-y-scroll hide-scrollbar">
+      <ScrollArea className="flex-1 pb-4">
         <div className="p-4">
           {isLoading ? (
             <LoadingState />
@@ -205,17 +325,45 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebar
           ) : filteredGroups.length === 0 ? (
             <EmptyState />
           ) : (
-            filteredGroups.map((group: StudyGroup) => (
-              <GroupCard
-                key={group.id}
-                group={group}
-                isActive={group.id === activeGroupId}
-                onClick={() => handleGroupClick(group)}
-              />
-            ))
+            <div className="space-y-2">
+              {filteredGroups.map((group: StudyGroup) => (
+                <GroupCard
+                  key={group.id}
+                  group={group}
+                  isActive={group.id === activeGroupId}
+                  onClick={() => handleGroupClick(group)}
+                />
+              ))}
+            </div>
           )}
         </div>
       </ScrollArea>
+    </div>
+  )
+
+  const sidebarContent = isExpanded ? <ExpandedSidebar /> : <CollapsedSidebar />
+
+  return (
+    <>
+      {/* Mobile Sidebar */}
+      <div className="md:hidden block w-fit">
+        {isMobile && (
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetContent side="left" className="w-full p-0 bg-white dark:bg-gray-900">
+              <ExpandedSidebar />
+            </SheetContent>
+          </Sheet>
+        )}
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={`hidden md:block fixed left-0 top-16 h-full transition-all duration-300 ease-in-out z-10 ${
+          isExpanded ? "w-[320px]" : "w-[72px]"
+        }`}
+      >
+        {sidebarContent}
+      </aside>
 
       {/* Modals */}
       <CreateGroupModal
@@ -232,26 +380,6 @@ export const Sidebar = ({ setActiveGroup, activeGroupId, sidebarOpen, setSidebar
         onDiscardChanges={handleDiscardAndLeave}
         onCancel={handleCancelNavigation}
       />
-    </div>
-  )
-
-  return (
-    <>
-      <div className="md:hidden block w-fit">
-        {isMobile && (
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="w-full p-0">
-              {sidebarContent}
-            </SheetContent>
-          </Sheet>
-        )}
-      </div>
-      {/* Mobile Sidebar */}
-
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:block fixed left-0 top-16 h-full w-[320px] border-r bg-white ">
-        {sidebarContent}
-      </aside>
     </>
   )
 }

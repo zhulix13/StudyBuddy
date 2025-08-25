@@ -11,10 +11,7 @@ import { Toaster } from "sonner";
 import GroupHome from "./groups_beta/routes/GroupHome";
 import GroupPage from "./groups_beta/routes/GroupPage";
 import GroupLayout from "./groups_beta/routes/GroupLayout";
-
-// const Discover = () => <div className="p-6 text-xl">🔎 Discover</div>;
-
-
+import ProtectedRoutes from "./pages/protected/ProtectedRoutes";
 
 const App = () => {
   return (
@@ -24,17 +21,19 @@ const App = () => {
         <Header />
 
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<StudyBuddyApp />} />
-          {/* <Route path="/groups" element={<Groups />} /> */}
-          <Route path="/discover" element={<Groups />} />
-          <Route path="/groups/" element={<GroupLayout />}>
-            <Route index element={<GroupHome />} />
-            <Route path=":groupId" element={<GroupPage />} />
-            {/* Add more nested routes as needed */}
-          {/* Add more routes as needed */}
+
+          {/* Protected routes */}
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/dashboard" element={<StudyBuddyApp />} />
+            <Route path="/discover" element={<Groups />} />
+            <Route path="/groups" element={<GroupLayout />}>
+              <Route index element={<GroupHome />} />
+              <Route path=":groupId" element={<GroupPage />} />
+            </Route>
           </Route>
         </Routes>
       </Router>

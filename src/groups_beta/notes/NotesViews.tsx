@@ -1,6 +1,6 @@
 "use client"
 
-import { NotesList } from "./NotesList"
+import { NotesList } from "./noteslist/NotesList"
 import NoteEditor from "./NoteEditor"
 import NoteViewer from "./NoteViewer"
 import type { Note, NewNote } from "@/types/notes"
