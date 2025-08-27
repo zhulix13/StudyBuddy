@@ -18,7 +18,7 @@ const UndoTool = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) =
                disabled={!editor.can().undo() || isLoading}
                className="hover:bg-gray-200"
              >
-               <Undo className="w-4 h-4" />
+               <Undo className="w-4 h-4 dark:text-gray-400" />
              </Button>
            </TooltipTrigger>
            <TooltipContent>
@@ -37,7 +37,7 @@ const UndoTool = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) =
                disabled={!editor.can().redo() || isLoading}
                className="hover:bg-gray-200"
              >
-               <Redo className="w-4 h-4" />
+               <Redo className="w-4 h-4 dark:text-gray-400" />
              </Button>
            </TooltipTrigger>
            <TooltipContent>

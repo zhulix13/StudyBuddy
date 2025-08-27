@@ -20,7 +20,7 @@ const TextFormat = ({ editor, isLoading }: { editor: any; isLoading: boolean; })
                         className={`${
                           editor.isActive("bold")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         } cursor-pointer`}
                       >
                         <Bold className="w-4 h-4" />
@@ -45,7 +45,7 @@ const TextFormat = ({ editor, isLoading }: { editor: any; isLoading: boolean; })
                         className={`${
                           editor.isActive("italic")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <Italic className="w-4 h-4" />
@@ -70,7 +70,7 @@ const TextFormat = ({ editor, isLoading }: { editor: any; isLoading: boolean; })
                         className={`${
                           editor.isActive("underline")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <UnderlineIcon className="w-4 h-4" />
@@ -95,7 +95,7 @@ const TextFormat = ({ editor, isLoading }: { editor: any; isLoading: boolean; })
                         className={`${
                           editor.isActive("strike")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <Strikethrough className="w-4 h-4" />
@@ -120,10 +120,10 @@ const TextFormat = ({ editor, isLoading }: { editor: any; isLoading: boolean; })
                         className={`${
                           editor.isActive("code")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
-                        <Code className="w-4 h-4" />
+                        <Code className="w-4 h-4 dark:text-gray-400" />
                       </Toggle>
                     </TooltipTrigger>
                     <TooltipContent>

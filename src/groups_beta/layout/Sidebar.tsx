@@ -316,7 +316,7 @@ export const Sidebar = ({
       </div>
 
       {/* Groups List */}
-      <ScrollArea className="flex-1 pb-4">
+      <ScrollArea className="flex-1 pb-4 hide-scrollbar overflow-scroll">
         <div className="p-4">
           {isLoading ? (
             <LoadingState />

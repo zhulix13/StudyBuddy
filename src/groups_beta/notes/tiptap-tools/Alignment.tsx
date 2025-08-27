@@ -20,7 +20,7 @@ const Alignment = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) 
                           className={`${
                             editor.isActive({ textAlign: "left" })
                               ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              : "hover:bg-gray-200"
+                              : "hover:bg-gray-200 dark:text-gray-400"
                           }`}
                         >
                           <AlignLeft className="w-4 h-4" />
@@ -46,7 +46,7 @@ const Alignment = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) 
                           className={`${
                             editor.isActive({ textAlign: "center" })
                               ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              : "hover:bg-gray-200"
+                              : "hover:bg-gray-200 dark:text-gray-400"
                           }`}
                         >
                           <AlignCenter className="w-4 h-4" />
@@ -72,7 +72,7 @@ const Alignment = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) 
                           className={`${
                             editor.isActive({ textAlign: "right" })
                               ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              : "hover:bg-gray-200"
+                              : "hover:bg-gray-200 dark:text-gray-400"
                           }`}
                         >
                           <AlignRight className="w-4 h-4" />
@@ -99,7 +99,7 @@ const Alignment = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) 
                           className={`${
                             editor.isActive({ textAlign: "justify" })
                               ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              : "hover:bg-gray-200"
+                              : "hover:bg-gray-200 dark:text-gray-400"
                           }`}
                         >
                           <AlignJustify className="w-4 h-4" />

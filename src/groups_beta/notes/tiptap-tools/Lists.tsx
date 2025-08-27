@@ -19,7 +19,7 @@ const Lists = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) => {
                         className={`${
                           editor.isActive("bulletList")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <List className="w-4 h-4" />
@@ -44,7 +44,7 @@ const Lists = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) => {
                         className={`${
                           editor.isActive("orderedList")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <ListOrdered className="w-4 h-4" />
@@ -69,7 +69,7 @@ const Lists = ({ editor, isLoading }: { editor: any; isLoading: boolean; }) => {
                         className={`${
                           editor.isActive("taskList")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <CheckSquare className="w-4 h-4" />

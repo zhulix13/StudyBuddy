@@ -326,7 +326,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
         </div>
 
         {/* Notes Grid/List */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto  p-4 sm:p-6">
           {processedNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 px-4">
               <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-6 mb-6">
@@ -362,7 +362,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
 
         {/* Footer */}
         {processedNotes.length > 0 && (
-          <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+          <div className="p-3 absolute inset-x-0 bottom-0 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
               {isMobile
                 ? `${processedNotes.length}/${notes.length} notes`

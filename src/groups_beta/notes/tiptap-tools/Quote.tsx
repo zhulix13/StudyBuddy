@@ -20,7 +20,7 @@ const QuoteTool = ({ editor, isLoading, setLink }: { editor: any; isLoading: boo
                           className={`${
                             editor.isActive("blockquote")
                               ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              : "hover:bg-gray-200"
+                              : "hover:bg-gray-200 dark:text-gray-400"
                           }`}
                         >
                           <Quote className="w-4 h-4" />
@@ -43,7 +43,7 @@ const QuoteTool = ({ editor, isLoading, setLink }: { editor: any; isLoading: boo
                           className={`${
                             editor.isActive("link")
                               ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              : "hover:bg-gray-200"
+                              : "hover:bg-gray-200 dark:text-gray-400"
                           }`}
                         >
                           <LinkIcon className="w-4 h-4" />

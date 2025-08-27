@@ -1,35 +1,35 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { FileText, MessageCircle, MoreVertical } from "lucide-react"
-import { ChatView } from "../chat/ChatView"
-import { NotesView } from "../notes/NotesViews"
-import { useGroupStore } from "@/store/groupStore"
-import GroupDetailsDesktop from "./GroupDetailsDesktop"
-import { useState, useRef } from "react"
-import type { StudyGroup } from "@/types/groups"
-import { motion, AnimatePresence } from "framer-motion"
-import { useNoteStore } from "@/store/noteStore"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FileText, MessageCircle, MoreVertical } from "lucide-react";
+import { ChatView } from "../chat/ChatView";
+import { NotesView } from "../notes/NotesViews";
+import { useGroupStore } from "@/store/groupStore";
+import GroupDetailsDesktop from "./GroupDetailsDesktop";
+import { useState, useRef } from "react";
+import type { StudyGroup } from "@/types/groups";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNoteStore } from "@/store/noteStore";
 
 // Main Group Header Component
 const GroupHeader = ({ group }: { group: StudyGroup }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const triggerRef = useRef(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const triggerRef = useRef(null);
 
   const handleLeaveGroup = () => {
-    console.log("Leave group clicked")
-    setIsModalOpen(false)
-  }
+    console.log("Leave group clicked");
+    setIsModalOpen(false);
+  };
 
   const handleSaveEdit = (formData: FormData) => {
-    console.log("Save edit:", formData)
-  }
+    console.log("Save edit:", formData);
+  };
 
   const handleDeleteGroup = () => {
-    console.log("Delete group clicked")
-    setIsModalOpen(false)
-  }
+    console.log("Delete group clicked");
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="border-b border-slate-200/80 dark:border-slate-700/60 hidden md:block bg-gradient-to-r from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 sticky top-0 backdrop-blur-md shadow-sm dark:shadow-black/10">
@@ -85,19 +85,19 @@ const GroupHeader = ({ group }: { group: StudyGroup }) => {
         triggerRef={triggerRef}
       />
     </div>
-  )
-}
+  );
+};
 
 const GroupContent = ({ group }: { group: StudyGroup }) => {
-  const activeTab = useGroupStore((s) => s.activeTab)
-  const setActiveTab = useGroupStore((s) => s.setActiveTab)
-  const mode = useNoteStore((s) => s.mode)
+  const activeTab = useGroupStore((s) => s.activeTab);
+  const setActiveTab = useGroupStore((s) => s.setActiveTab);
+  const mode = useNoteStore((s) => s.mode);
 
   // hide header + tabs when editing/creating
   const hideUI = mode === "create" || mode === "edit" || mode === "view";
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-slate-50/30 via-white to-slate-50/20 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50/30 via-white to-slate-50/20 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
       {/* Animate Header */}
       <AnimatePresence>
         {!hideUI && (
@@ -106,10 +106,10 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ 
-              duration: 0.3, 
+            transition={{
+              duration: 0.3,
               ease: [0.4, 0, 0.2, 1],
-              opacity: { duration: 0.2 }
+              opacity: { duration: 0.2 },
             }}
           >
             <GroupHeader group={group} />
@@ -125,29 +125,33 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ 
-              duration: 0.3, 
+            transition={{
+              duration: 0.3,
               ease: [0.4, 0, 0.2, 1],
-              opacity: { duration: 0.2 }
+              opacity: { duration: 0.2 },
             }}
             className="sticky top-[80px] z-20 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/80 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-700/60 backdrop-blur-md shadow-sm dark:shadow-black/10"
           >
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-full w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="max-w-full w-full"
+            >
               <TabsList className="grid max-w-[96%] w-full grid-cols-2 mx-auto my-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800 dark:via-slate-700/80 dark:to-slate-800 border border-slate-200/60 dark:border-slate-700/60 shadow-sm backdrop-blur-sm rounded-lg p-1">
-               <TabsTrigger
- value="notes"
- className="flex items-center gap-2 transition-all duration-300 rounded-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 dark:data-[state=active]:from-blue-900/30 dark:data-[state=active]:to-indigo-900/30 data-[state=active]:border-blue-200 dark:data-[state=active]:border-blue-700/50 data-[state=active]:shadow-md data-[state=active]:shadow-blue-100/50 dark:data-[state=active]:shadow-blue-900/20 data-[state=active]:text-blue-800 dark:data-[state=active]:text-blue-200 bg-white/80 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/30 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 hover:border-slate-300/50 dark:hover:border-slate-600/50 hover:shadow-sm hover:scale-[1.02] text-slate-700 dark:text-slate-300 data-[state=active]:font-medium"
->
- <FileText className="w-4 h-4" />
- <span className="font-medium">Notes</span>
-</TabsTrigger>
-<TabsTrigger
- value="chat"
- className="flex items-center gap-2 transition-all duration-300 rounded-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 dark:data-[state=active]:from-blue-900/30 dark:data-[state=active]:to-indigo-900/30 data-[state=active]:border-blue-200 dark:data-[state=active]:border-blue-700/50 data-[state=active]:shadow-md data-[state=active]:shadow-blue-100/50 dark:data-[state=active]:shadow-blue-900/20 data-[state=active]:text-blue-800 dark:data-[state=active]:text-blue-200 bg-white/80 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/30 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 hover:border-slate-300/50 dark:hover:border-slate-600/50 hover:shadow-sm hover:scale-[1.02] text-slate-700 dark:text-slate-300 data-[state=active]:font-medium"
->
- <MessageCircle className="w-4 h-4" />
- <span className="font-medium">Chat</span>
-</TabsTrigger>
+                <TabsTrigger
+                  value="notes"
+                  className="flex items-center gap-2 transition-all duration-300 rounded-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 dark:data-[state=active]:from-blue-900/30 dark:data-[state=active]:to-indigo-900/30 data-[state=active]:border-blue-200 dark:data-[state=active]:border-blue-700/50 data-[state=active]:shadow-md data-[state=active]:shadow-blue-100/50 dark:data-[state=active]:shadow-blue-900/20 data-[state=active]:text-blue-800 dark:data-[state=active]:text-blue-200 bg-white/80 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/30 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 hover:border-slate-300/50 dark:hover:border-slate-600/50 hover:shadow-sm hover:scale-[1.02] text-slate-700 dark:text-slate-300 data-[state=active]:font-medium"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="font-medium">Notes</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="chat"
+                  className="flex items-center gap-2 transition-all duration-300 rounded-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 dark:data-[state=active]:from-blue-900/30 dark:data-[state=active]:to-indigo-900/30 data-[state=active]:border-blue-200 dark:data-[state=active]:border-blue-700/50 data-[state=active]:shadow-md data-[state=active]:shadow-blue-100/50 dark:data-[state=active]:shadow-blue-900/20 data-[state=active]:text-blue-800 dark:data-[state=active]:text-blue-200 bg-white/80 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/30 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 hover:border-slate-300/50 dark:hover:border-slate-600/50 hover:shadow-sm hover:scale-[1.02] text-slate-700 dark:text-slate-300 data-[state=active]:font-medium"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="font-medium">Chat</span>
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </motion.div>
@@ -155,22 +159,28 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
       </AnimatePresence>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar max-w-full w-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 dark:hover:scrollbar-thumb-slate-500">
+      <div className="overflow-y-auto h-full hide-scrollbar max-w-full w-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 dark:hover:scrollbar-thumb-slate-500">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <TabsContent value="notes" className="h-full m-0 p-0 focus-visible:outline-none">
-            <div className="min-h-full bg-gradient-to-b from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
+          <TabsContent
+            value="notes"
+            className="m-0 p-0 focus-visible:outline-none"
+          >
+            <div className="bg-gradient-to-b h-full overflow-auto from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
               <NotesView group={group} />
             </div>
           </TabsContent>
-          <TabsContent value="chat" className="h-full m-0 p-0 focus-visible:outline-none">
-            <div className="min-h-full bg-gradient-to-b from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
+          <TabsContent
+            value="chat"
+            className="h-full m-0 p-0 focus-visible:outline-none"
+          >
+            <div className="bg-gradient-to-b h-full from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
               <ChatView groupId={group.id} />
             </div>
           </TabsContent>
         </Tabs>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GroupContent
+export default GroupContent;

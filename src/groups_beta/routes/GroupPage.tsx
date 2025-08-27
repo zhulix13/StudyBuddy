@@ -5,6 +5,7 @@ import { getGroupById } from "@/services/supabase-groups";
 import { AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { StudyGroup } from "@/types/groups";
+import NotesSkeleton from "@/loaders/NotesSkeleton";
 
 const GroupPage = () => {
   const params = useParams();
@@ -25,20 +26,20 @@ const GroupPage = () => {
     staleTime: 1000 * 60 * 5, // cache for 5 minutes
   });
 
-  const SkeletonGroup = () => (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
-      <div className="space-y-6 max-w-4xl mx-auto animate-pulse">
-        <div className="h-6 w-1/3 bg-gray-200 rounded" />
-        <div className="h-4 w-2/3 bg-gray-200 rounded" />
-        <div className="h-4 w-1/2 bg-gray-200 rounded" />
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  // const SkeletonGroup = () => (
+  //   <div className="min-h-screen bg-gray-50 px-6 py-10">
+  //     <div className="space-y-6 max-w-4xl mx-auto animate-pulse">
+  //       <div className="h-6 w-1/3 bg-gray-200 rounded" />
+  //       <div className="h-4 w-2/3 bg-gray-200 rounded" />
+  //       <div className="h-4 w-1/2 bg-gray-200 rounded" />
+  //       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+  //         {[...Array(4)].map((_, i) => (
+  //           <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+  //         ))}
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   const ErrorState = () => (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -64,7 +65,8 @@ const GroupPage = () => {
     return (
       <div>
         <MobileHeader group={null} />
-        <SkeletonGroup />
+        <NotesSkeleton />
+       
       </div>
     );
   }
@@ -79,10 +81,13 @@ const GroupPage = () => {
   }
 
   return (
-    <div>
-      <MobileHeader group={group} />
+    <>
+    
+    <MobileHeader group={group} />
       <GroupContent group={group} />
-    </div>
+    </>
+      
+    
   );
 };
 

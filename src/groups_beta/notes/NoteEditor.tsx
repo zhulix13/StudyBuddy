@@ -578,7 +578,7 @@ export default function NoteEditor({
             size="sm"
             onClick={onCancel}
             disabled={isLoading}
-            className="h-8 w-8 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="h-8 w-8 p-2 cursor-pointer hover:dark:text-slate-100 hover:bg-gray-200 dark:text-gray-400 border rounded-2xl dark:hover:bg-gray-700"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -632,7 +632,7 @@ export default function NoteEditor({
           placeholder="Note title..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-base sm:text-lg font-medium border-none shadow-none px-0 focus-visible:ring-0 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent dark:text-gray-100"
+          className="text-base sm:text-lg font-medium border-none shadow-none px-3 focus-visible:ring-0 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent dark:text-gray-100"
           disabled={isLoading}
         />
       </div>
@@ -783,6 +783,12 @@ export default function NoteEditor({
                 className="h-4 mx-1 bg-gray-300 dark:bg-gray-600"
               />
 
+              <FontSizeTool editor={editor} isLoading={isLoading} />
+              <Separator
+                orientation="vertical"
+                className="h-4 mx-1 bg-gray-300 dark:bg-gray-600 hidden sm:block"
+              />
+
               {/* Font Family */}
               <FontFamilies
                 editor={editor}
@@ -792,7 +798,7 @@ export default function NoteEditor({
 
               <Separator
                 orientation="vertical"
-                className="h-4 mx-1 bg-gray-300 dark:bg-gray-600 hidden sm:block"
+                className="h-4 mx-1 bg-gray-300  dark:bg-gray-600 hidden sm:block"
               />
 
               {/* Text Formatting */}
@@ -852,16 +858,16 @@ export default function NoteEditor({
         )}
       </div>
 
-      {/* Optimized Editor Content */}
-      <div className="flex-1 overflow-y-auto max-w-full bg-white dark:bg-gray-900/80">
-        <EditorContent
-          editor={editor}
-          className="h-full max-w- w-full [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[calc(100vh-300px)] sm:[&_.ProseMirror]:min-h-[calc(100vh-250px)]"
-        />
-      </div>
+     {/* Optimized Editor Content */}
+<div className="flex-1 max-w-full bg-white dark:bg-gray-900/80">
+  <EditorContent
+    editor={editor}
+    className="w-full p-3 hide-scrollbar dark:dark:text-gray-400 [&_.ProseMirror]:outline-none min-h-[550px] sm:min-h-[calc(100vh-20px)] max-h-[600px] overflow-y-auto"
+  />
+</div>
 
       {/* Minimal Footer Status */}
-      <div className="px-3 py-1 border-t border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-800/30 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+      <div className="px-3 py-1 border-t max-h- border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-800/30 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline">
             {editor.getText().length} chars

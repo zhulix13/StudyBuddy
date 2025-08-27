@@ -18,7 +18,7 @@ const HighlightTool = ({ editor, isLoading }: { editor: any; isLoading: boolean;
                         className={`${
                           editor.isActive("highlight")
                             ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <Highlighter className="w-4 h-4" />

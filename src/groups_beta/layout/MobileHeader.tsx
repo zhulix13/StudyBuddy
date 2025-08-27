@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Menu, MoreVertical } from "lucide-react"
+import { Menu, MoreVertical, ArrowLeft } from "lucide-react"
 import { useState } from "react"
 import type { StudyGroup } from "@/types/groups"
 import { useGroupStore } from "@/store/groupStore"
@@ -15,8 +15,7 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
 
   function onMenuClick() {
     console.log("Menu clicked")
-      setSidebarOpen(true)
-  
+    setSidebarOpen(true)
   }
 
   const handleLeaveGroup = () => {
@@ -37,9 +36,14 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
   }
 
   return (
-    <div className="md:hidden flex items-center justify-between p-4 border-b bg-white sticky top-0 z-30">
-      <Button variant="ghost" size="sm" onClick={onMenuClick}>
-        <Menu className="w-5 h-5" />
+    <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 sticky top-0 z-30 backdrop-blur-sm">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={onMenuClick}
+        className="hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+      >
+        <ArrowLeft className="w-7 h-7" />
       </Button>
 
       {activeGroup && (
@@ -47,10 +51,10 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
           <div className="flex items-center gap-3 flex-1 justify-center">
             {/* Group Info - Clickable Area */}
             <div
-              className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex-1 max-w-xs"
+              className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 px-3 py-2 rounded-lg transition-colors flex-1 max-w-xs"
               onClick={() => setIsModalOpen(true)}
             >
-              <Avatar className="w-8 h-8 ring-1 ring-gray-200">
+              <Avatar className="w-8 h-8 ring-1 ring-gray-200 dark:ring-gray-700">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
                   {activeGroup.avatar_url ? (
                     <img
@@ -64,13 +68,22 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h1 className="font-semibold text-sm truncate">{activeGroup.name}</h1>
-                <p className="text-xs text-gray-500 truncate">{activeGroup.subject}</p>
+                <h1 className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
+                  {activeGroup.name}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {activeGroup.subject}
+                </p>
               </div>
             </div>
 
             {/* More Options Button */}
-            <Button variant="ghost" size="sm" onClick={() => setIsModalOpen(true)} className="p-2 h-8 w-8">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsModalOpen(true)} 
+              className="p-2 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+            >
               <MoreVertical className="w-4 h-4" />
             </Button>
           </div>

@@ -21,7 +21,7 @@ const TextColor = ({ editor, isLoading, colors }: { editor: any; isLoading: bool
                             variant="outline"
                             size="sm"
                             disabled={isLoading}
-                            className={`hover:bg-gray-200 relative ${
+                            className={`hover:bg-gray-200 dark:text-gray-400 relative ${
                               editor.isActive("textStyle", {
                                 color: editor.getAttributes("textStyle").color,
                               })

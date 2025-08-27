@@ -259,7 +259,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-screen overflow-y-scroll hide-scrollbar relative bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="max-w-full  mx-auto p-4 md:p-6 lg:p-8">
         {/* Header with Back Button */}
         <div className="mb-6 absolute top-6 left-3">
@@ -285,22 +285,22 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
                       {note?.author?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  {isUserAdmin && (
+                  {currentUserId === note?.author?.id && isUserAdmin ? (
                     <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
                       <Crown className="w-3 h-3 text-yellow-700" />
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-xl text-slate-900 dark:text-slate-100">
                       {note?.author?.name}
                     </h3>
-                    {isUserAdmin && (
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                    {currentUserId === note?.author?.id && isUserAdmin ? (
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs px-2 py-1 rounded-md">
                         Admin
-                      </Badge>
-                    )}
+                        </Badge>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1">
@@ -308,7 +308,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
                       {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                     </div>
                     {note.updated_at && note.updated_at !== note.created_at && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs dark:text-gray-400">
                         Edited
                       </Badge>
                     )}
@@ -320,7 +320,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="w-4 h-4" />
+                    <MoreHorizontal className="w-4 dark:text-gray-400 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -458,7 +458,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
 
         {/* Comments Section */}
         {showComments && (
-          <Card className="shadow-sm bg-white dark:bg-gray-900 border-0 shadow-lg">
+          <Card className="shadow-sm bg-white dark:bg-gray-900 border-0 sm:shadow-lg">
             <CardContent className="p-6">
               <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">
                 Comments ({comments?.length || 0})

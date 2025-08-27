@@ -19,7 +19,7 @@ const SubscriptTool = ({ editor, isLoading }: { editor: any; isLoading: boolean;
                         className={`${
                           editor.isActive("subscript")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <SubscriptIcon className="w-4 h-4" />
@@ -44,7 +44,7 @@ const SubscriptTool = ({ editor, isLoading }: { editor: any; isLoading: boolean;
                         className={`${
                           editor.isActive("superscript")
                             ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : "hover:bg-gray-200"
+                            : "hover:bg-gray-200 dark:text-gray-400"
                         }`}
                       >
                         <SuperscriptIcon className="w-4 h-4" />
