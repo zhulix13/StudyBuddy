@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 const NotesSkeleton = ({ count = 6 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-7 my-5 max-w-[95%] mx-auto">
       {/* Header skeleton section */}
       <div className="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">

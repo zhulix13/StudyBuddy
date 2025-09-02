@@ -24,7 +24,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
-  const [isFilterCollapsed, setIsFilterCollapsed] = useState(false)
+  const [isFilterCollapsed, setIsFilterCollapsed] = useState(true)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 

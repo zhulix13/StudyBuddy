@@ -2,11 +2,13 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Pin, Lock, Unlock, Clock, User, MoreHorizontal } from "lucide-react"
+import { Pin, Lock, Unlock, Clock, User, MoreHorizontal, Heart, MessageCircle } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import type { Note } from "@/types/notes"
 import type { ViewMode } from "./ViewModeSelector"
 import { Button } from "@/components/ui/button"
+import { useLikeButton } from "@/hooks/useLikes"
+import { useCommentsByNoteId } from "@/hooks/useComments"
 
 interface NoteCardProps {
   note: Note
@@ -15,6 +17,13 @@ interface NoteCardProps {
 }
 
 export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
+  // Get like functionality with optimistic updates
+  const { count: likesCount, isLiked, toggle: toggleLike, isToggling } = useLikeButton(note.id, 'note')
+  
+  // Get comments count
+  const { data: comments = [] } = useCommentsByNoteId(note.id)
+  const commentsCount = comments.length
+
   const getContentPreview = (content: any): string => {
     if (typeof content === "string") return content.slice(0, 150)
     if (content?.content) {
@@ -36,11 +45,50 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
     return formatted.replace(" ago", "").replace("about ", "")
   }
 
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleLike()
+  }
+
+  const handleCardClick = () => {
+    onSelect(note)
+  }
+
+  // Engagement Stats Component (reusable across view modes)
+  const EngagementStats = ({ className = "", size = "sm" }: { className?: string, size?: "sm" | "md" }) => {
+    const iconSize = size === "sm" ? "w-3 h-3" : "w-4 h-4"
+    const textSize = size === "sm" ? "text-xs" : "text-sm"
+    
+    return (
+      <div className={`flex items-center gap-3 ${className}`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLike}
+          disabled={isToggling}
+          className={`flex items-center gap-1 px-2 py-1 h-auto rounded-full transition-all duration-200 ${
+            isLiked
+              ? 'text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900/50'
+              : 'text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50'
+          }`}
+        >
+          <Heart className={`${iconSize} ${isLiked ? 'fill-current' : ''} ${isToggling ? 'animate-pulse' : ''}`} />
+          <span className={`font-medium ${textSize}`}>{likesCount}</span>
+        </Button>
+        
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100/80 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400`}>
+          <MessageCircle className={iconSize} />
+          <span className={`font-medium ${textSize}`}>{commentsCount}</span>
+        </div>
+      </div>
+    )
+  }
+
   if (viewMode === "grid") {
     return (
       <Card
         className="cursor-pointer group relative overflow-hidden bg-white dark:bg-gray-800/80 border border-gray-200/80 dark:border-gray-700/80 hover:border-blue-300 dark:hover:border-blue-500/60 hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-400/20 transition-all duration-300 hover:-translate-y-1 min-w-0"
-        onClick={() => onSelect(note)}
+        onClick={handleCardClick}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/30 dark:to-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -102,7 +150,7 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <div className="flex flex-wrap gap-1 min-w-0 flex-1">
               {note.tags?.slice(0, 2).map((tag: any) => (
                 <Badge
@@ -136,6 +184,9 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
               </div>
             )}
           </div>
+
+          {/* Engagement Stats for Grid View */}
+          <EngagementStats size="sm" />
         </CardContent>
 
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -147,7 +198,7 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
     return (
       <Card
         className="cursor-pointer group bg-white dark:bg-gray-800/80 border border-gray-200/80 dark:border-gray-700/80 hover:border-blue-300 dark:hover:border-blue-500/60 hover:shadow-lg hover:shadow-blue-500/5 dark:hover:shadow-blue-400/10 transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/40 min-w-0"
-        onClick={() => onSelect(note)}
+        onClick={handleCardClick}
       >
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -180,26 +231,31 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
                 {getContentPreview(note.content)}
               </p>
 
-              <div className="flex items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <Clock className="w-3 h-3" />
-                  <span className="truncate max-w-24 sm:max-w-none">
-                    {formatTime(note.updated_at)}
-                  </span>
-                </div>
-
-                {note.author && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <img
-                      src={note.author.avatar_url || "/placeholder.svg?height=16&width=16"}
-                      alt={note.author.name}
-                      className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-600"
-                    />
-                    <span className="truncate max-w-20 sm:max-w-28 font-medium">
-                      {note.author.name || note.author.username}
+              <div className="flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Clock className="w-3 h-3" />
+                    <span className="truncate max-w-24 sm:max-w-none">
+                      {formatTime(note.updated_at)}
                     </span>
                   </div>
-                )}
+
+                  {note.author && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <img
+                        src={note.author.avatar_url || "/placeholder.svg?height=16&width=16"}
+                        alt={note.author.name}
+                        className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-600"
+                      />
+                      <span className="truncate max-w-20 sm:max-w-28 font-medium">
+                        {note.author.name || note.author.username}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Engagement Stats for List View */}
+                <EngagementStats size="sm" />
               </div>
             </div>
 
@@ -243,7 +299,7 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
     return (
       <Card
         className="cursor-pointer group bg-white dark:bg-gray-800/80 border border-gray-200/80 dark:border-gray-700/80 hover:border-blue-300 dark:hover:border-blue-500/60 hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-400/20 transition-all duration-300 min-w-0"
-        onClick={() => onSelect(note)}
+        onClick={handleCardClick}
       >
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between gap-3">
@@ -318,6 +374,11 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
             </p>
           </div>
 
+          {/* Engagement Stats for Details View */}
+          <div className="mb-4">
+            <EngagementStats size="md" />
+          </div>
+
           {note.tags && note.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {note.tags.map((tag: any) => (
@@ -340,7 +401,7 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
   return (
     <div
       className="cursor-pointer group hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50/30 dark:hover:from-gray-800/50 dark:hover:to-blue-900/20 transition-all duration-200 p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0 min-w-0"
-      onClick={() => onSelect(note)}
+      onClick={handleCardClick}
     >
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -368,6 +429,9 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
         </div>
 
         <div className="flex items-center gap-4 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
+          {/* Engagement Stats for Compact View */}
+          <EngagementStats size="sm" />
+
           {note.tags && note.tags.length > 0 && (
             <div className="hidden sm:flex gap-1">
               {note.tags.slice(0, 2).map((tag: any) => (
@@ -414,4 +478,34 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
       </div>
     </div>
   )
+
+  // EngagementStats component defined within the scope
+  function EngagementStat({ className = "", size = "sm" }: { className?: string, size?: "sm" | "md" }) {
+    const iconSize = size === "sm" ? "w-3 h-3" : "w-4 h-4"
+    const textSize = size === "sm" ? "text-xs" : "text-sm"
+    
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLike}
+          disabled={isToggling}
+          className={`flex items-center gap-1 px-2 py-1 h-auto rounded-full transition-all duration-200 ${
+            isLiked
+              ? 'text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900/50'
+              : 'text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50'
+          }`}
+        >
+          <Heart className={`${iconSize} ${isLiked ? 'fill-current' : ''} ${isToggling ? 'animate-pulse' : ''}`} />
+          <span className={`font-medium ${textSize}`}>{likesCount}</span>
+        </Button>
+        
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100/80 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400`}>
+          <MessageCircle className={iconSize} />
+          <span className={`font-medium ${textSize}`}>{commentsCount}</span>
+        </div>
+      </div>
+    )
+  }
 }

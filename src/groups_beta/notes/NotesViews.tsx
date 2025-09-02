@@ -2,7 +2,7 @@
 
 import { NotesList } from "./noteslist/NotesList"
 import NoteEditor from "./NoteEditor"
-import NoteViewer from "./NoteViewer"
+import NoteViewer from "./note-viewer/NoteViewer"
 import type { Note, NewNote } from "@/types/notes"
 import { useSearchParams } from "react-router-dom"
 import { useNoteStore } from "@/store/noteStore"
