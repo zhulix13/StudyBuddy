@@ -1,52 +1,106 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import LikesService from '@/services/supabase-likes';
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import LikesService from "@/services/supabase-likes";
+import { subscribeToLikes } from "@/services/realtime/likes-realtime";
 
-type TargetType = 'note' | 'comment';
+type TargetType = "note" | "comment";
 
 // Query keys
 export const likesKeys = {
-  all: ['likes'] as const,
-  byTarget: (targetId: string, targetType: TargetType) => 
-    [...likesKeys.all, 'target', targetId, targetType] as const,
-  count: (targetId: string, targetType: TargetType) => 
-    [...likesKeys.byTarget(targetId, targetType), 'count'] as const,
-  userStatus: (targetId: string, targetType: TargetType, userId?: string) => 
-    [...likesKeys.byTarget(targetId, targetType), 'user-status', userId] as const,
-  withUsers: (targetId: string, targetType: TargetType) => 
-    [...likesKeys.byTarget(targetId, targetType), 'with-users'] as const,
-  bulk: (targets: Array<{id: string, type: TargetType}>) => 
-    [...likesKeys.all, 'bulk', targets] as const,
+  all: ["likes"] as const,
+  byTarget: (targetId: string, targetType: TargetType) =>
+    [...likesKeys.all, "target", targetId, targetType] as const,
+  count: (targetId: string, targetType: TargetType) =>
+    [...likesKeys.byTarget(targetId, targetType), "count"] as const,
+  userStatus: (targetId: string, targetType: TargetType, userId?: string) =>
+    [...likesKeys.byTarget(targetId, targetType), "user-status", userId] as const,
+  withUsers: (targetId: string, targetType: TargetType) =>
+    [...likesKeys.byTarget(targetId, targetType), "with-users"] as const,
+  bulk: (targets: Array<{ id: string; type: TargetType }>) =>
+    [...likesKeys.all, "bulk", targets] as const,
 };
 
-// Hook to get likes count for a target
+// Hook to get likes count for a target (with realtime)
 export const useLikesCount = (targetId: string, targetType: TargetType) => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: likesKeys.count(targetId, targetType),
     queryFn: () => LikesService.getLikesCount(targetId, targetType),
     enabled: !!targetId && !!targetType,
   });
+
+  useEffect(() => {
+    if (!targetId) return;
+
+    const unsubscribe = subscribeToLikes(targetId, targetType, () => {
+      queryClient.invalidateQueries({
+        queryKey: likesKeys.count(targetId, targetType),
+      });
+    });
+
+    return () => unsubscribe();
+  }, [targetId, targetType, queryClient]);
+
+  return query;
 };
 
-// Hook to check if current user liked a target
-export const useIsLikedByUser = (targetId: string, targetType: TargetType, userId?: string) => {
-  return useQuery({
+// Hook to check if current user liked a target (with realtime)
+export const useIsLikedByUser = (
+  targetId: string,
+  targetType: TargetType,
+  userId?: string
+) => {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: likesKeys.userStatus(targetId, targetType, userId),
     queryFn: () => LikesService.isLikedByUser(targetId, targetType, userId),
     enabled: !!targetId && !!targetType,
   });
+
+  useEffect(() => {
+    if (!targetId) return;
+
+    const unsubscribe = subscribeToLikes(targetId, targetType, () => {
+      queryClient.invalidateQueries({
+        queryKey: likesKeys.userStatus(targetId, targetType, userId),
+      });
+    });
+
+    return () => unsubscribe();
+  }, [targetId, targetType, userId, queryClient]);
+
+  return query;
 };
 
-// Hook to get likes with user info
+// Hook to get likes with user info (with realtime)
 export const useLikesWithUsers = (targetId: string, targetType: TargetType) => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: likesKeys.withUsers(targetId, targetType),
     queryFn: () => LikesService.getLikesWithUsers(targetId, targetType),
     enabled: !!targetId && !!targetType,
   });
+
+  useEffect(() => {
+    if (!targetId) return;
+
+    const unsubscribe = subscribeToLikes(targetId, targetType, () => {
+      queryClient.invalidateQueries({
+        queryKey: likesKeys.withUsers(targetId, targetType),
+      });
+    });
+
+    return () => unsubscribe();
+  }, [targetId, targetType, queryClient]);
+
+  return query;
 };
 
 // Hook to get bulk likes data for multiple targets
-export const useBulkLikesData = (targets: Array<{id: string, type: TargetType}>) => {
+export const useBulkLikesData = (targets: Array<{ id: string; type: TargetType }>) => {
   return useQuery({
     queryKey: likesKeys.bulk(targets),
     queryFn: () => LikesService.getBulkLikesData(targets),
@@ -59,36 +113,28 @@ export const useToggleLike = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ targetId, targetType }: { 
-      targetId: string; 
-      targetType: TargetType;
-    }) =>
+    mutationFn: ({ targetId, targetType }: { targetId: string; targetType: TargetType }) =>
       LikesService.toggleLike(targetId, targetType),
     onSuccess: (result, { targetId, targetType }) => {
-      // Invalidate count query
+      // Invalidate directly after mutation (optimistic)
       queryClient.invalidateQueries({
         queryKey: likesKeys.count(targetId, targetType),
       });
-      
-      // Invalidate user status query
+
       queryClient.invalidateQueries({
         queryKey: likesKeys.userStatus(targetId, targetType),
       });
-      
-      // Invalidate likes with users query
+
       queryClient.invalidateQueries({
         queryKey: likesKeys.withUsers(targetId, targetType),
       });
-      
-      // Invalidate bulk queries that might include this target
+
       queryClient.invalidateQueries({
         queryKey: likesKeys.all,
-        predicate: (query) => {
-          return query.queryKey.includes('bulk');
-        },
+        predicate: (query) => query.queryKey.includes("bulk"),
       });
 
-      // Optimistically update count cache
+      // Optimistic cache update
       queryClient.setQueryData(
         likesKeys.userStatus(targetId, targetType),
         result.liked
@@ -97,7 +143,7 @@ export const useToggleLike = () => {
   });
 };
 
-// Combined hook for like button (count + user status + toggle)
+// Combined hook for like button (auto realtime from above hooks)
 export const useLikeButton = (targetId: string, targetType: TargetType) => {
   const { data: count = 0, isLoading: countLoading } = useLikesCount(targetId, targetType);
   const { data: isLiked = false, isLoading: statusLoading } = useIsLikedByUser(targetId, targetType);

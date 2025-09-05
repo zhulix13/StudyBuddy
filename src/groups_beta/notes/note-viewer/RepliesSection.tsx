@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { useCommentsByParentId } from "@/hooks/useComments"
+import { useCommentsByParentId, useRealtimeComments } from "@/hooks/useComments"
 import NestedCommentItem from "./NestedCommentItem"
 
 interface RepliesSectionProps {
@@ -29,6 +29,7 @@ const RepliesSection: React.FC<RepliesSectionProps> = ({
   const [page, setPage] = useState(1)
   const pageSize = 3
 
+  useRealtimeComments(noteId)
   const { data: replies = [], isLoading } = useCommentsByParentId(parentCommentId, {
     enabled: isVisible
   })

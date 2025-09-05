@@ -74,6 +74,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   const { data: comments = [] } = useCommentsByNoteId(noteId)
 
   const canEditOrDelete = currentUserId === note?.author?.id || isUserAdmin 
+  const currentUserRole = isUserAdmin ? 'admin' : 'user'
 
   const handleBookmark = () => {
     if (note) {
@@ -300,7 +301,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
           </CardContent>
         </Card>
 
-        {/* Engagement Section - Now a separate component */}
+        {/* Engagement Section */}
         <EngagementSection
           noteId={noteId}
           commentsCount={comments.length}
@@ -310,11 +311,12 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
           showComments={showComments}
         />
 
-        {/* Comments Section - Now a separate component */}
+        {/* Comments Section */}
         {showComments && (
           <CommentsSection
             noteId={noteId}
             currentUserId={currentUserId}
+            currentUserRole={currentUserRole}
           />
         )}
       </div>

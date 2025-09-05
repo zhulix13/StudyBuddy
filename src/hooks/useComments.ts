@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import CommentsService from '@/services/supabase-comments';
+import { subscribeToComments,type CommentEvent } from '@/services/realtime/comments-realtime';
 import type { Comment } from '@/types/comments';
+import { useEffect } from 'react';
 
 // Query keys
 export const commentsKeys = {
@@ -11,16 +13,77 @@ export const commentsKeys = {
   rootComments: (noteId: string) => [...commentsKeys.all, 'note', noteId, 'root'] as const,
 };
 
-// Hook to fetch root comments by note ID (comments without parent)
+// Hook to subscribe to realtime comment events for a note
+export const useRealtimeComments = (noteId: string) => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!noteId) return;
+
+    const unsubscribe = subscribeToComments(noteId, (event: CommentEvent) => {
+      if (event.type === 'INSERT') {
+        if (!event.new.parent_comment_id) {
+          // Root comment
+          queryClient.setQueryData<Comment[]>(
+            commentsKeys.rootComments(noteId),
+            (old = []) => [...old, event.new]
+          );
+        } else {
+          // Reply
+          queryClient.setQueryData<Comment[]>(
+            commentsKeys.byParentId(event.new.parent_comment_id),
+            (old = []) => [...old, event.new]
+          );
+
+          queryClient.invalidateQueries({
+            queryKey: [...commentsKeys.byId(event.new.parent_comment_id), 'count'],
+          });
+        }
+
+        queryClient.setQueryData(commentsKeys.byId(event.new.id), event.new);
+      }
+
+      if (event.type === 'UPDATE') {
+        queryClient.setQueryData(commentsKeys.byId(event.new.id), event.new);
+      }
+
+      if (event.type === 'DELETE') {
+        queryClient.removeQueries({ queryKey: commentsKeys.byId(event.old.id) });
+
+        if (!event.old.parent_comment_id) {
+          queryClient.setQueryData<Comment[]>(
+            commentsKeys.rootComments(event.old.note_id),
+            (old = []) => old.filter((c) => c.id !== event.old.id)
+          );
+        } else {
+          queryClient.setQueryData<Comment[]>(
+            commentsKeys.byParentId(event.old.parent_comment_id),
+            (old = []) => old.filter((c) => c.id !== event.old.id)
+          );
+
+          queryClient.invalidateQueries({
+            queryKey: [...commentsKeys.byId(event.old.parent_comment_id), 'count'],
+          });
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [noteId, queryClient]);
+};
+
+// ---- Queries ----
+
+// Root comments
 export const useCommentsByNoteId = (noteId: string) => {
   return useQuery({
     queryKey: commentsKeys.rootComments(noteId),
-    queryFn: () => CommentsService.getRootCommentsByNoteId(noteId), // Only root comments
+    queryFn: () => CommentsService.getRootCommentsByNoteId(noteId),
     enabled: !!noteId,
   });
 };
 
-// Hook to fetch replies by parent comment ID
+// Replies
 export const useCommentsByParentId = (parentCommentId: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: commentsKeys.byParentId(parentCommentId),
@@ -29,7 +92,7 @@ export const useCommentsByParentId = (parentCommentId: string, options?: { enabl
   });
 };
 
-// Hook to fetch a single comment by ID
+// Single comment
 export const useCommentById = (commentId: string) => {
   return useQuery({
     queryKey: commentsKeys.byId(commentId),
@@ -38,7 +101,7 @@ export const useCommentById = (commentId: string) => {
   });
 };
 
-// Hook to get replies count for a comment
+// Replies count
 export const useRepliesCount = (commentId: string) => {
   return useQuery({
     queryKey: [...commentsKeys.byId(commentId), 'count'],
@@ -47,45 +110,25 @@ export const useRepliesCount = (commentId: string) => {
   });
 };
 
-// Hook to create a comment
+// ---- Mutations ----
+
+// Add comment
 export const useAddComment = () => {
   const queryClient = useQueryClient();
- 
+
   return useMutation({
     mutationFn: ({ noteId, content, parentCommentId }: {
       noteId: string;
       content: string;
       parentCommentId?: string | null;
-    }) =>
-      CommentsService.addComment(noteId, content, parentCommentId),
+    }) => CommentsService.addComment(noteId, content, parentCommentId),
     onSuccess: (newComment) => {
-      // If it's a root comment, invalidate root comments
-      if (!newComment.parent_comment_id) {
-        queryClient.invalidateQueries({
-          queryKey: commentsKeys.rootComments(newComment.note_id),
-        });
-      } else {
-        // If it's a reply, invalidate parent's replies
-        queryClient.invalidateQueries({
-          queryKey: commentsKeys.byParentId(newComment.parent_comment_id),
-        });
-        
-        // Also invalidate the replies count for the parent
-        queryClient.invalidateQueries({
-          queryKey: [...commentsKeys.byId(newComment.parent_comment_id), 'count'],
-        });
-      }
-      
-      // Add the new comment to cache
-      queryClient.setQueryData(
-        commentsKeys.byId(newComment.id),
-        newComment
-      );
+      queryClient.setQueryData(commentsKeys.byId(newComment.id), newComment);
     },
   });
 };
 
-// Hook to update a comment
+// Update comment
 export const useUpdateComment = () => {
   const queryClient = useQueryClient();
 
@@ -93,56 +136,21 @@ export const useUpdateComment = () => {
     mutationFn: ({ commentId, content }: {
       commentId: string;
       content: string;
-    }) =>
-      CommentsService.updateComment(commentId, content),
+    }) => CommentsService.updateComment(commentId, content),
     onSuccess: (updatedComment) => {
-      // Update the specific comment in cache
-      queryClient.setQueryData(
-        commentsKeys.byId(updatedComment.id),
-        updatedComment
-      );
-      
-      // Invalidate relevant queries
-      if (!updatedComment.parent_comment_id) {
-        queryClient.invalidateQueries({
-          queryKey: commentsKeys.rootComments(updatedComment.note_id),
-        });
-      } else {
-        queryClient.invalidateQueries({
-          queryKey: commentsKeys.byParentId(updatedComment.parent_comment_id),
-        });
-      }
+      queryClient.setQueryData(commentsKeys.byId(updatedComment.id), updatedComment);
     },
   });
 };
 
-// Hook to delete a comment (soft delete)
+// Delete comment
 export const useDeleteComment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (commentId: string) => CommentsService.deleteComment(commentId),
     onSuccess: (deletedComment) => {
-      // Remove from cache
-      queryClient.removeQueries({
-        queryKey: commentsKeys.byId(deletedComment.id),
-      });
-      
-      // Invalidate relevant queries
-      if (!deletedComment.parent_comment_id) {
-        queryClient.invalidateQueries({
-          queryKey: commentsKeys.rootComments(deletedComment.note_id),
-        });
-      } else {
-        queryClient.invalidateQueries({
-          queryKey: commentsKeys.byParentId(deletedComment.parent_comment_id),
-        });
-        
-        // Update replies count for parent
-        queryClient.invalidateQueries({
-          queryKey: [...commentsKeys.byId(deletedComment.parent_comment_id), 'count'],
-        });
-      }
+      queryClient.removeQueries({ queryKey: commentsKeys.byId(deletedComment.id) });
     },
   });
 };

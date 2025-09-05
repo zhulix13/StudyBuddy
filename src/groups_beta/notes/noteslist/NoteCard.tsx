@@ -8,7 +8,7 @@ import type { Note } from "@/types/notes"
 import type { ViewMode } from "./ViewModeSelector"
 import { Button } from "@/components/ui/button"
 import { useLikeButton } from "@/hooks/useLikes"
-import { useCommentsByNoteId } from "@/hooks/useComments"
+import { useCommentsByNoteId, useRealtimeComments } from "@/hooks/useComments"
 
 interface NoteCardProps {
   note: Note
@@ -21,6 +21,7 @@ export const NoteCard = ({ note, viewMode, onSelect }: NoteCardProps) => {
   const { count: likesCount, isLiked, toggle: toggleLike, isToggling } = useLikeButton(note.id, 'note')
   
   // Get comments count
+  useRealtimeComments(note.id)
   const { data: comments = [] } = useCommentsByNoteId(note.id)
   const commentsCount = comments.length
 

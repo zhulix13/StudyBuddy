@@ -1,4 +1,3 @@
-"use client"
 
 import { NotesList } from "./noteslist/NotesList"
 import NoteEditor from "./NoteEditor"
