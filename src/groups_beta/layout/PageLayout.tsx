@@ -11,6 +11,7 @@ import { useState, useRef } from "react";
 import type { StudyGroup } from "@/types/groups";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNoteStore } from "@/store/noteStore";
+import { useAutoMarkSeen } from "@/hooks/useAutoMarkSeen";
 
 // Main Group Header Component
 const GroupHeader = ({ group }: { group: StudyGroup }) => {
@@ -92,7 +93,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const activeTab = useGroupStore((s) => s.activeTab);
   const setActiveTab = useGroupStore((s) => s.setActiveTab);
   const mode = useNoteStore((s) => s.mode);
-
+  useAutoMarkSeen(group.id, activeTab);
   // hide header + tabs when editing/creating
   const hideUI = mode === "create" || mode === "edit" || mode === "view";
 
