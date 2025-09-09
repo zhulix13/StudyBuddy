@@ -26,7 +26,7 @@ export const MessageInput = ({ onSendMessage, placeholder = "Type a message..." 
   }
 
   return (
-    <div className="p-4 border-t">
+    <div className="p-4 border-t dark:bg-[#111827]">
       <div className="flex items-end gap-2">
         <Button variant="ghost" size="sm">
           <Paperclip className="w-4 h-4" />

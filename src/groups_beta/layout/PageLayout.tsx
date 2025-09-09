@@ -166,7 +166,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             value="notes"
             className="m-0 p-0 focus-visible:outline-none"
           >
-            <div className="bg-gradient-to-b h-full overflow-auto from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
+            <div className="bg-gradient-to-b   h-full overflow-auto from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
               <NotesView group={group} />
             </div>
           </TabsContent>
@@ -174,7 +174,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             value="chat"
             className="h-full m-0 p-0 focus-visible:outline-none"
           >
-            <div className="bg-gradient-to-b h-full from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
+            <div className="bg-gradient-to-b h-full from-transparent via-slate-50/20 chat-bg to-transparent dark:via-slate-900/20">
               <ChatView groupId={group.id} />
             </div>
           </TabsContent>

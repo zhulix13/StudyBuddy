@@ -4,6 +4,7 @@ import { MoreVertical } from "lucide-react"
 import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
 import type { Message } from "../types"
+import { useCreateMessage } from "@/hooks/useMessages"
 
 // Mock data - move this to a separate file or fetch from API
 const dummyMessages: Message[] = [
@@ -20,20 +21,21 @@ interface ChatViewProps {
 export const ChatView = ({ groupId }: ChatViewProps) => {
   const handleSendMessage = (message: string) => {
     // Here you would typically send to your backend
+    useCreateMessage(message, groupId);
     console.log("Sending message:", message)
     console.log("Group ID:", groupId)
   }
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between dark:bg-[#111827] p-4 border-b">
         <h2 className="text-lg font-semibold">Group Chat</h2>
         <Button variant="ghost" size="sm">
           <MoreVertical className="w-4 h-4" />
         </Button>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 overflow-y-scroll hide-scrollbar p-4">
         <div className="space-y-4">
           {dummyMessages.map((message) => (
             <MessageBubble key={message.id} message={message} />

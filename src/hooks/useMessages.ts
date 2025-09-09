@@ -39,7 +39,7 @@ export function useMessage(messageId: string) {
 }
 
 // 🔹 Create message (senderId auto from profile)
-export function useCreateMessage(groupId: string) {
+export function useCreateMessage(groupId: string, content?: string, noteId?: string) {
   const queryClient = useQueryClient();
   const { profile } = useAuth();
 

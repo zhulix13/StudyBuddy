@@ -197,7 +197,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   }
 
   return (
-    <div className="h-full flex bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative">
+    <div className="h-full flex note-bg-light dark:note-bg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative">
       {/* Mobile filter overlay */}
       {isMobile && isMobileFilterOpen && (
         <div 

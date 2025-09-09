@@ -185,7 +185,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
   /** --- VIEW MODE --- */
   if (noteId && mode === "view") {
     return (
-      <div className="h-full w-full">
+      <div className="h-full w-full note-bg">
         <NoteViewer
           noteId={noteId}
           onBack={handleBackToList}
@@ -200,7 +200,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
 
   /** --- LIST MODE --- */
   return (
-    <div className="h-full w-full">
+    <div className="h-full  w-full">
       <NotesList groupId={groupId} onSelectNote={handleSelectNote} onCreateNote={handleStartCreating} />
     </div>
   )
