@@ -1,4 +1,3 @@
-// src/hooks/useAutoMarkSeen.ts
 import { useEffect } from "react";
 import { useAuth } from "@/context/Authcontext";
 import { useMarkGroupSeen } from "@/hooks/useMarkGroupSeen";
@@ -24,8 +23,11 @@ export function useAutoMarkSeen(groupId: string, activeTab: string) {
     );
     if (!messages) return;
 
+    // FIXED: Only check messages from OTHER users, not your own
+    const othersMessages = messages.filter(msg => msg.sender_id !== profile.id);
+    
     // check for any messages not yet seen by this user
-    const unseen = messages.filter(
+    const unseen = othersMessages.filter(
       (msg) =>
         !msg.statuses?.some(
           (s: any) => s.user_id === profile.id && s.status === "seen"
@@ -33,6 +35,7 @@ export function useAutoMarkSeen(groupId: string, activeTab: string) {
     );
 
     if (unseen.length > 0) {
+      // console.log(`🔵 Marking ${unseen.length} messages as seen`);
       markGroupSeen.mutate({ groupId, userId: profile.id });
     }
   }, [activeTab, groupId, profile, markGroupSeen, queryClient]);

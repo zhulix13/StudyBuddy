@@ -298,7 +298,7 @@ const MobileNavigation: React.FC<{
                 to={path}
                 onClick={onClose}
                 className={`flex items-center gap-4 px-4 py-3 rounded-xl text-lg transition-colors ${
-                  currentPath === path
+                  currentPath === path || currentPath.startsWith(path )
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}

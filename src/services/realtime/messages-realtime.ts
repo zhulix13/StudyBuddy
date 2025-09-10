@@ -22,7 +22,7 @@ export function useMessagesRealtime(groupId: string) {
           filter: `group_id=eq.${groupId}`,
         },
         async (payload) => {
-          console.log("📡 Realtime message event:", payload);
+          // console.log("📡 Realtime message event:", payload);
 
           if (payload.eventType === "INSERT") {
             queryClient.setQueryData<Message[]>(

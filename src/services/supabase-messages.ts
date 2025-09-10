@@ -1,4 +1,4 @@
-// src/services/supabase-messages.ts
+// 2. Updated Messages Service to include statuses - src/services/supabase-messages.ts
 import { supabase } from "./supabase";
 import type { Profile } from "@/types/profile";
 import type { Note } from "@/types/notes";
@@ -9,15 +9,24 @@ export type Message = {
   group_id: string;
   sender_id: string;
   content: string | null;
+  message_type : string | null;
+  reply_to? : string | null;
   note_id: string | null;
   created_at: string;
   updated_at: string;
   sender?: Profile;
   note?: Note;
+  statuses?: Array<{
+    id: string;
+    message_id: string;
+    user_id: string;
+    status: "sent" | "delivered" | "seen";
+    created_at: string;
+  }>;
 };
 
 class MessagesService {
-  // 🔹 Fetch all messages in a group (with sender + note info)
+  // 🔹 Fetch all messages in a group (with sender + note + statuses info)
   static async getMessagesByGroupId(
     groupId: string,
     currentUserId: string
@@ -28,7 +37,8 @@ class MessagesService {
         `
         *,
         sender:profiles(*),
-        note:notes(*)
+        note:notes(*),
+        statuses:message_statuses(*)
       `
       )
       .eq("group_id", groupId)
@@ -60,7 +70,8 @@ class MessagesService {
         `
         *,
         sender:profiles(*),
-        note:notes(*)
+        note:notes(*),
+        statuses:message_statuses(*)
       `
       )
       .eq("id", messageId)
@@ -101,7 +112,8 @@ class MessagesService {
         `
         *,
         sender:profiles(*),
-        note:notes(*)
+        note:notes(*),
+        statuses:message_statuses(*)
       `
       )
       .single();
@@ -116,7 +128,7 @@ class MessagesService {
     return data as Message;
   }
 
-  // 🔹 Update message content (only for text, not note_id)
+  // Other methods remain the same...
   static async updateMessage(
     messageId: string,
     content: string
@@ -129,7 +141,8 @@ class MessagesService {
         `
         *,
         sender:profiles(*),
-        note:notes(*)
+        note:notes(*),
+        statuses:message_statuses(*)
       `
       )
       .single();
@@ -138,7 +151,6 @@ class MessagesService {
     return data as Message;
   }
 
-  // 🔹 Delete a message
   static async deleteMessage(messageId: string): Promise<Message> {
     const { data, error } = await supabase
       .from("group_messages")
@@ -148,7 +160,8 @@ class MessagesService {
         `
         *,
         sender:profiles(*),
-        note:notes(*)
+        note:notes(*),
+        statuses:message_statuses(*)
       `
       )
       .single();
