@@ -193,14 +193,21 @@ export async function leaveGroup(groupId: string): Promise<{ success: boolean; m
     return { success: false, message: "An unexpected error occurred" };
   }
 }
-export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
+// services/supabase-groups.ts
+
+export async function getGroupMembers(groupId: string) {
   const { data, error } = await supabase
     .from("group_members")
     .select(`
-      *,
-      profiles (
-        username,
+      id,
+      group_id,
+      user_id,
+      role,
+      joined_at,
+      profiles!group_members_user_id_fkey1 (
+        id,
         full_name,
+        username,
         avatar_url
       )
     `)
@@ -208,8 +215,10 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
     .order("joined_at", { ascending: true });
 
   if (error) throw error;
+
   return data || [];
 }
+
 
 
 // Get public groups (not private)

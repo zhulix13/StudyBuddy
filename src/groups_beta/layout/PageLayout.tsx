@@ -94,12 +94,12 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const setActiveTab = useGroupStore((s) => s.setActiveTab);
   const mode = useNoteStore((s) => s.mode);
   useAutoMarkSeen(group.id, activeTab);
-  // hide header + tabs when editing/creating
+  
   const hideUI = mode === "create" || mode === "edit" || mode === "view";
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50/30 via-white to-slate-50/20 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
-      {/* Animate Header */}
+    <div className="h-full flex flex-col bg-gradient-to-b from-slate-50/30 via-white to-slate-50/20 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
+      {/* Fixed Header */}
       <AnimatePresence>
         {!hideUI && (
           <motion.div
@@ -112,13 +112,14 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.2 },
             }}
+            className="flex-shrink-0"
           >
             <GroupHeader group={group} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Animate Tabs */}
+      {/* Fixed Tabs */}
       <AnimatePresence>
         {!hideUI && (
           <motion.div
@@ -131,7 +132,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.2 },
             }}
-            className="sticky top-[80px] z-20 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/80 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-700/60 backdrop-blur-md shadow-sm dark:shadow-black/10"
+            className="flex-shrink-0 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/80 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-700/60 backdrop-blur-md shadow-sm dark:shadow-black/10"
           >
             <Tabs
               value={activeTab}
@@ -159,14 +160,14 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
         )}
       </AnimatePresence>
 
-      {/* Scrollable Content */}
-      <div className="overflow-y-auto h-full hide-scrollbar max-w-full w-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 dark:hover:scrollbar-thumb-slate-500">
+      {/* Flexible Content Area */}
+      <div className="flex-1 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
           <TabsContent
             value="notes"
-            className="m-0 p-0 focus-visible:outline-none"
+            className="h-full m-0 p-0 focus-visible:outline-none"
           >
-            <div className="bg-gradient-to-b   h-full overflow-auto from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
+            <div className="h-full bg-gradient-to-b from-transparent via-slate-50/20 to-transparent dark:via-slate-900/20">
               <NotesView group={group} />
             </div>
           </TabsContent>
@@ -174,7 +175,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             value="chat"
             className="h-full m-0 p-0 focus-visible:outline-none"
           >
-            <div className="bg-gradient-to-b h-full from-transparent via-slate-50/20 chat-bg to-transparent dark:via-slate-900/20">
+            <div className="h-full bg-gradient-to-b from-transparent via-slate-50/20 chat-bg to-transparent dark:via-slate-900/20">
               <ChatView groupId={group.id} />
             </div>
           </TabsContent>

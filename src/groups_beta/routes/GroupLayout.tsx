@@ -40,7 +40,7 @@ const GroupLayout = () => {
       />
 
       <main
-        className={`flex-1 transition-all duration-300 min-h-screen ease-in-out flex flex-col bg-white dark:bg-gray-900 ${
+        className={`flex-1 transition-all duration-300 h-full ease-in-out flex flex-col bg-white dark:bg-gray-900 ${
           isExpanded ? "md:ml-[320px]" : "md:ml-[72px]"
         }`}
       >

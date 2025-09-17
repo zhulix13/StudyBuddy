@@ -161,7 +161,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   }
 
   return (
-    <div className="min-h-screen pb-12 overflow-y-scroll hide-scrollbar relative bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-full pb-12  relative bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="max-w-full  mx-auto p-4 md:p-6 lg:p-8">
         {/* Header with Back Button */}
         <div className="mb-6 absolute top-6 left-3">

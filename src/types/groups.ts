@@ -19,7 +19,8 @@ export interface GroupMember {
   user_id: string
   role: "member" | "admin"
   joined_at: string
-  profiles?: {
+  profiles: {
+    id: string,
     avatar_url?: string
     username: string | null
     full_name: string | null

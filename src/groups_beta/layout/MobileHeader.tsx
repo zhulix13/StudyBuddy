@@ -21,22 +21,19 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
   const handleLeaveGroup = () => {
     console.log("Leave group clicked")
     setIsModalOpen(false)
-    // Add leave group logic here
   }
 
   const handleSaveEdit = (formData: FormData) => {
     console.log("Save edit:", formData)
-    // Add save edit logic here
   }
 
   const handleDeleteGroup = () => {
     console.log("Delete group clicked")
     setIsModalOpen(false)
-    // Add delete group logic here
   }
 
   return (
-    <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 sticky top-0 z-30 backdrop-blur-sm">
+    <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
       <Button 
         variant="ghost" 
         size="sm" 
@@ -49,7 +46,6 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
       {activeGroup && (
         <>
           <div className="flex items-center gap-3 flex-1 justify-center">
-            {/* Group Info - Clickable Area */}
             <div
               className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 px-3 py-2 rounded-lg transition-colors flex-1 max-w-xs"
               onClick={() => setIsModalOpen(true)}
@@ -77,7 +73,6 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
               </div>
             </div>
 
-            {/* More Options Button */}
             <Button 
               variant="ghost" 
               size="sm" 
@@ -88,7 +83,6 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
             </Button>
           </div>
 
-          {/* Group Details Mobile - Full Screen */}
           <GroupDetailsMobile
             group={activeGroup}
             isOpen={isModalOpen}

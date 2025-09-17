@@ -151,7 +151,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
   /** --- CREATE MODE --- */
   if (mode === "create") {
     return (
-      <div className="h-full w-full">
+      <div className="h-full overflow-scroll hide-scrollbar w-full">
         <NoteEditor
           groupId={groupId}
           initialNote={draftNote || undefined}
@@ -168,7 +168,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
   /** --- EDIT MODE --- */
   if (mode === "edit" && editingNote) {
     return (
-      <div className="h-full w-full">
+      <div className="h-full overflow-scroll hide-scrollbar w-full">
         <NoteEditor
           groupId={groupId}
           initialNote={editingNote}
@@ -185,7 +185,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
   /** --- VIEW MODE --- */
   if (noteId && mode === "view") {
     return (
-      <div className="h-full w-full note-bg">
+      <div className="h-full overflow-scroll hide-scrollbar w-full note-bg">
         <NoteViewer
           noteId={noteId}
           onBack={handleBackToList}
@@ -200,7 +200,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
 
   /** --- LIST MODE --- */
   return (
-    <div className="h-full  w-full">
+    <div className="h-full overflow-scroll hide-scrollbar  w-full">
       <NotesList groupId={groupId} onSelectNote={handleSelectNote} onCreateNote={handleStartCreating} />
     </div>
   )

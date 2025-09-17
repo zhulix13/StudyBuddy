@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { useMessages, useCreateMessage } from "@/hooks/useMessages";
+import { useMessages, useCreateMessage, useReplyToMessage } from "@/hooks/useMessages";
 import { useMessageStatusesRealtime } from "@/services/realtime/messageStatus-realtime";
 import { useAuth } from "@/context/Authcontext";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +8,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { MessageSkeleton } from "./MessageSkeleton";
+import type { Message } from "@/services/supabase-messages";
 
 interface ChatViewProps {
   groupId: string;
@@ -17,6 +18,7 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
   const { profile } = useAuth();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   // Fetch messages
   const {
@@ -28,8 +30,9 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
     isRefetching,
   } = useMessages(groupId);
 
-  // Create message mutation
+  // Create message and reply mutations
   const createMessageMutation = useCreateMessage(groupId);
+  const replyToMessageMutation = useReplyToMessage(groupId);
 
   // Real-time subscriptions
   useMessageStatusesRealtime(groupId);
@@ -71,6 +74,32 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
     }
   };
 
+  const handleSendReply = async (replyToId: string, content: string) => {
+    try {
+      await replyToMessageMutation.mutateAsync({
+        messageId: replyToId,
+        replyContent: content,
+      });
+      setShouldAutoScroll(true);
+      setReplyingTo(null);
+    } catch (error) {
+      console.error("Failed to send reply:", error);
+    }
+  };
+
+  const handleReply = (message: Message) => {
+    setReplyingTo(message);
+    // Focus on input (optional, for better UX)
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      textarea?.focus();
+    }, 100);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -98,7 +127,7 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
           Failed to load messages
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-          {error?.message || "Something went wrong"}
+          {"Something went wrong"}
         </p>
         <Button
           onClick={() => refetch()}
@@ -122,7 +151,7 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
       {/* Messages Area */}
       <ScrollArea 
         ref={scrollAreaRef}
-        className="flex-1 px-4 py-6"
+        className="flex-1 px-4 py-6 overflow-hidden"
         onScroll={handleScroll}
       >
         <div className="space-y-4 pb-4">
@@ -145,6 +174,7 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
                 message={message}
                 isOwn={message.sender_id === profile?.id}
                 groupId={groupId}
+                onReply={handleReply}
               />
             ))
           )}
@@ -169,8 +199,11 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
       <div className="border-t border-slate-200/80 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
         <MessageInput
           onSendMessage={handleSendMessage}
-          disabled={createMessageMutation.isPending}
-          isLoading={createMessageMutation.isPending}
+          onSendReply={handleSendReply}
+          disabled={createMessageMutation.isPending || replyToMessageMutation.isPending}
+          isLoading={createMessageMutation.isPending || replyToMessageMutation.isPending}
+          replyingTo={replyingTo}
+          onCancelReply={handleCancelReply}
         />
       </div>
     </div>

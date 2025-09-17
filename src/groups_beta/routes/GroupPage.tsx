@@ -23,26 +23,11 @@ const GroupPage = () => {
       return getGroupById(groupId);
     },
     enabled: !!groupId,
-    staleTime: 1000 * 60 * 5, // cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // const SkeletonGroup = () => (
-  //   <div className="min-h-screen bg-gray-50 px-6 py-10">
-  //     <div className="space-y-6 max-w-4xl mx-auto animate-pulse">
-  //       <div className="h-6 w-1/3 bg-gray-200 rounded" />
-  //       <div className="h-4 w-2/3 bg-gray-200 rounded" />
-  //       <div className="h-4 w-1/2 bg-gray-200 rounded" />
-  //       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-  //         {[...Array(4)].map((_, i) => (
-  //           <div key={i} className="h-24 bg-gray-200 rounded-xl" />
-  //         ))}
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
-
   const ErrorState = () => (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="h-full flex items-center justify-center">
       <div className="text-center max-w-md mx-auto px-4">
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-10 h-10 text-red-500" />
@@ -63,31 +48,33 @@ const GroupPage = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="h-full flex flex-col">
         <MobileHeader group={null} />
-        <NotesSkeleton />
-       
+        <div className="flex-1">
+          <NotesSkeleton />
+        </div>
       </div>
     );
   }
 
   if (isError || !group) {
     return (
-      <div>
+      <div className="h-full flex flex-col">
         <MobileHeader group={null} />
-        <ErrorState />
+        <div className="flex-1">
+          <ErrorState />
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-    
-    <MobileHeader group={group} />
-      <GroupContent group={group} />
-    </>
-      
-    
+    <div className="h-full flex flex-col">
+      <MobileHeader group={group} />
+      <div className="flex-1 overflow-hidden">
+        <GroupContent group={group} />
+      </div>
+    </div>
   );
 };
 

@@ -71,55 +71,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // 3. Load profile if user is present
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) {
-        setProfile(null);
-        return;
+ useEffect(() => {
+  const loadProfile = async () => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Profile load error:", error);
       }
 
-      try {
-        const { data, error } = await supabase
+      if (!data) {
+        // Build profile from auth metadata or defaults
+        const meta = user.user_metadata;
+        const fullName = meta.full_name || user.email?.split("@")[0] || "Guest User";
+
+        const fallbackProfile: Profile = {
+          id: user.id,
+          full_name: fullName,
+          username:
+            meta.username ||
+            fullName.toLowerCase().replace(/\s+/g, "_") + "_" + Math.floor(Math.random() * 1000),
+          avatar_url: meta.avatar_url || "",
+          bio: "",
+          updated_at: new Date().toISOString(),
+        };
+
+        // 🔑 Upsert to ensure persistence
+        const { data: newProfile, error: upsertError } = await supabase
           .from("profiles")
+          .upsert(fallbackProfile, { onConflict: "id" })
           .select("*")
-          .eq("id", user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") {
-          console.error("Profile load error:", error);
-        }
-
-        if (!data) {
-          // fallback to user metadata if no profile row exists
-          const meta = user.user_metadata;
-          const fallbackProfile: Profile = {
-            id: user.id,
-            username: meta.username || meta.full_name || "Guest",
-            full_name: meta.full_name || "",
-            avatar_url: meta.avatar_url || "",
-            bio: "",
-            updated_at: new Date().toISOString(),
-          };
-          setProfile(fallbackProfile);
-          // await supabase
-          //   .from("profiles")
-          //   .upsert(fallbackProfile, { onConflict: "id" })
-          //   .eq("id", user.id)
-          //   .select("*") 
-            
-          //   .single(); // Ensure we create a profile if it doesn't exist
+        if (upsertError) {
+          console.error("Profile creation error:", upsertError);
+          setProfile(fallbackProfile); // fallback in-memory
         } else {
-          setProfile(data);
+          setProfile(newProfile);
         }
-
-    
-      } catch (err) {
-        console.error("Unexpected profile fetch error:", err);
+      } else {
+        setProfile(data);
       }
-    };
+    } catch (err) {
+      console.error("Unexpected profile fetch error:", err);
+    }
+  };
 
-    loadProfile();
-  }, [user]);
+  loadProfile();
+}, [user]);
+
 
   return (
     <AuthContext.Provider value={{ session, user, profile, loading }}>

@@ -3,12 +3,11 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera, Save, Trash2, Loader2, Upload, ArrowLeft } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { updateGroup, deleteOwnGroup } from "@/services/supabase-groups"
+import { useUpdateGroup } from "@/hooks/useGroups"
 import { uploadGroupAvatar } from "@/services/upload"
 
 const slideVariants = {
@@ -25,8 +24,20 @@ const slideVariants = {
   },
 }
 
-const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: any) => {
-  const queryClient = useQueryClient()
+const GroupDetailsEditMobile = ({
+  group,
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  group: any
+  isOpen: boolean
+  onClose: () => void
+  onSave?: (updatedGroup: any) => void
+  onDelete?: () => void
+}) => {
+  const updateGroupMutation = useUpdateGroup()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -38,57 +49,6 @@ const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: an
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState(group.avatar_url || null)
-
-  // Update group mutation
-  const updateGroupMutation = useMutation({
-    mutationFn: async (updateData) => {
-      const finalUpdateData: Record<string, any> = {
-        ...(typeof updateData === "object" && updateData !== null ? updateData : {}),
-      }
-
-      if (avatarFile) {
-        try {
-          const avatarResult = await uploadGroupAvatar(group.id, avatarFile)
-          finalUpdateData.avatar_url = avatarResult.publicUrl
-        } catch (error) {
-          const errorMessage =
-            typeof error === "object" && error !== null && "message" in error ? (error as any).message : String(error)
-          throw new Error(`Failed to upload avatar: ${errorMessage}`)
-        }
-      }
-
-      await updateGroup(group.id, finalUpdateData)
-      return finalUpdateData
-    },
-    onSuccess: (updatedData) => {
-      queryClient.invalidateQueries({ queryKey: ["user-groups"] })
-      queryClient.invalidateQueries({ queryKey: ["group", group.id] })
-      toast.success("Group updated successfully!")
-      onSave?.({ ...group, ...updatedData })
-    },
-    onError: (error: any) => {
-      console.error("Update group error:", error)
-      toast.error(error?.message || "Failed to update group")
-    },
-  })
-
-  // Delete group mutation
-  const deleteGroupMutation = useMutation({
-    mutationFn: () => deleteOwnGroup(group.id),
-    onSuccess: (result) => {
-      if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ["user-groups"] })
-        toast.success(result.message)
-        onDelete?.(group.id)
-      } else {
-        toast.error(result.message || "Failed to delete group")
-      }
-    },
-    onError: (error: any) => {
-      console.error("Delete group error:", error)
-      toast.error("Failed to delete group")
-    },
-  })
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -113,7 +73,7 @@ const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: an
     setAvatarPreview(previewUrl)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error("Group name is required")
       return
@@ -123,27 +83,35 @@ const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: an
       return
     }
 
-    const updateData = {
+    const updateData: any = {
       name: formData.name.trim(),
       subject: formData.subject.trim(),
       description: formData.description.trim(),
     }
 
-    updateGroupMutation.mutate(updateData)
-  }
+    // Handle avatar upload if there's a new file
+    if (avatarFile) {
+      try {
+        const avatarResult = await uploadGroupAvatar(group.id, avatarFile)
+        updateData.avatar_url = avatarResult.publicUrl
+      } catch (error) {
+        toast.error("Failed to upload avatar")
+        return
+      }
+    }
 
-  const handleDelete = () => {
-    toast.warning(`Are you sure you want to delete "${group.name}"?`, {
-      action: {
-        label: "Delete",
-        onClick: () => deleteGroupMutation.mutate(),
+    updateGroupMutation.mutate(
+      { groupId: group.id, updates: updateData },
+      {
+        onSuccess: (data) => {
+          toast.success("Group updated successfully!")
+          onSave?.({ ...group, ...updateData })
+        },
+        onError: (error: any) => {
+          toast.error(error?.message || "Failed to update group")
+        },
       },
-      cancel: {
-        label: "Cancel",
-        onClick: () => {},
-      },
-      duration: 10000,
-    })
+    )
   }
 
   // Prevent body scroll when modal is open
@@ -156,7 +124,7 @@ const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: an
     }
   }, [isOpen])
 
-  const isLoading = updateGroupMutation.isPending || deleteGroupMutation.isPending
+  const isLoading = updateGroupMutation.isPending
 
   return (
     <AnimatePresence>
@@ -166,40 +134,36 @@ const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: an
           animate="visible"
           exit="exit"
           variants={slideVariants}
-          className="fixed inset-0 bg-white z-60 flex flex-col"
+          className="fixed inset-0 bg-white dark:bg-[#111827] z-60 flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111827] sticky top-0 z-10 shadow-sm">
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-full hover:bg-gray-100 disabled:opacity-50"
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-lg font-semibold text-gray-900">Edit Group</h1>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Group</h1>
             </div>
             <button
               onClick={handleSave}
               disabled={isLoading || !formData.name.trim() || !formData.subject.trim()}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm flex items-center gap-2"
             >
-              {updateGroupMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {updateGroupMutation.isPending ? "Saving..." : "Save"}
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isLoading ? "Saving..." : "Save"}
             </button>
           </div>
 
           {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto">
             {/* Avatar Section */}
-            <div className="p-6 text-center border-b border-gray-100">
+            <div className="p-6 text-center border-b border-gray-100 dark:border-gray-700">
               <div className="relative inline-block mb-4">
-                <Avatar className="w-32 h-32 ring-4 ring-white shadow-lg">
+                <Avatar className="w-32 h-32 ring-4 ring-white dark:ring-gray-600 shadow-lg">
                   {avatarPreview ? (
                     <AvatarImage src={avatarPreview || "/placeholder.svg"} alt="Group avatar" />
                   ) : (
@@ -227,77 +191,77 @@ const GroupDetailsEditMobile = ({ group, isOpen, onClose, onSave, onDelete }: an
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50 font-medium hover:bg-blue-50 px-4 py-2 rounded-lg mx-auto"
+                className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-lg mx-auto"
               >
                 <Camera className="w-5 h-5" />
                 {avatarFile ? "Change Photo" : "Add Photo"}
               </button>
-              <p className="text-xs text-gray-500 mt-2">Max 5MB • JPG, PNG</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Max 5MB • JPG, PNG</p>
             </div>
 
             {/* Form Fields */}
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Group Name *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Group Name *
+                </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:opacity-50 transition-all"
+                  className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-50 transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   placeholder="Enter group name"
                   maxLength={50}
                 />
-                <div className="text-xs text-gray-500 mt-2 text-right">{formData.name.length}/50</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-right">
+                  {formData.name.length}/50
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Subject *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Subject *</label>
                 <input
                   type="text"
                   value={formData.subject}
                   onChange={(e) => handleInputChange("subject", e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:opacity-50 transition-all"
+                  className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-50 transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   placeholder="e.g., Mathematics, Physics, etc."
                   maxLength={30}
                 />
-                <div className="text-xs text-gray-500 mt-2 text-right">{formData.subject.length}/30</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-right">
+                  {formData.subject.length}/30
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Description</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange("description", e.target.value)}
                   disabled={isLoading}
                   rows={4}
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-50 disabled:opacity-50 transition-all"
+                  className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-50 transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   placeholder="Brief description of the study group..."
                   maxLength={200}
                 />
-                <div className="text-xs text-gray-500 mt-2 text-right">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-right">
                   {formData.description ? formData.description.length : 0}/200
                 </div>
               </div>
             </div>
 
             {/* Danger Zone */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Danger Zone</h3>
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Danger Zone</h3>
               <button
-                onClick={handleDelete}
+                onClick={onDelete}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 p-4 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 transition-colors rounded-lg border border-red-200 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-3 p-4 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors rounded-lg border border-red-200 dark:border-red-800 disabled:opacity-50"
               >
-                {deleteGroupMutation.isPending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Trash2 className="w-5 h-5" />
-                )}
-                <span className="font-medium">
-                  {deleteGroupMutation.isPending ? "Deleting Group..." : "Delete Group"}
-                </span>
+                <Trash2 className="w-5 h-5" />
+                <span className="font-medium">Delete Group</span>
               </button>
             </div>
 
