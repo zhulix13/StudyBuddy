@@ -71,7 +71,7 @@ const GroupMembersModal = ({ isOpen, onClose, groupId, groupName }: GroupMembers
           initial="hidden"
           animate="visible"
           exit="exit"
-          variants={modalVariants}
+          variants={modalVariants as any}
           className="bg-white dark:bg-[#111827] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md w-full max-h-[80vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >

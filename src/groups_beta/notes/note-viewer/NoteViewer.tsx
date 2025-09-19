@@ -104,7 +104,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
     
     await shareNoteToChat.mutateAsync({ 
       noteId: note.id, 
-      caption 
+      caption: caption ?? null
     })
     
     // Close modal and switch to chat

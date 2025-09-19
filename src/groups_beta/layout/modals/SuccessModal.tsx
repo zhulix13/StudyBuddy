@@ -27,7 +27,7 @@ export const SuccessModal = ({ isOpen, onClose, groupName, desktopBackdropVarian
             animate="visible"
             exit="exit"
             variants={modalVariants}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[250] w-full max-w-md mx-4 sm:mx-0"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[600] w-full max-w-md mx-4 sm:mx-0"
           >
             <div className="bg-white dark:bg-[#111827] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6">
               <div className="text-center">

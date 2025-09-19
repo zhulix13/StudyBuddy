@@ -453,7 +453,7 @@ export default function NoteEditor({
         pinned,
         status: "draft" as const,
       };
-      await onSaveDraft(noteData);
+      await onSaveDraft(noteData as any);
       clearLocalDraft(groupId);
     }
   }, [
@@ -478,7 +478,7 @@ export default function NoteEditor({
         pinned,
         status: "published" as const,
       };
-      await onSave(noteData);
+      await onSave(noteData as any);
       clearLocalDraft(groupId);
     }
   }, [

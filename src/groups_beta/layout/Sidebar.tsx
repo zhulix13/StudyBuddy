@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Search, Plus, Settings, ChevronLeft, ChevronRight, Users } from "lucide-react"
 import { GroupCard } from "./GroupCard"
-import { getGroupsWhereUserIsMember } from "@/services/supabase-groups"
+import { useUserMemberGroups } from "@/hooks/useGroups"
 import type { StudyGroup } from "@/types/groups"
 import { toast } from "sonner"
-import { useQuery } from "@tanstack/react-query"
 import Skeleton from "react-loading-skeleton"
 import "react-loading-skeleton/dist/skeleton.css"
 
@@ -27,8 +26,8 @@ interface SidebarProps {
   activeGroupId: string | null
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
-  isExpanded: boolean
-  setIsExpanded: (expanded: boolean) => void
+  isExpanded?: boolean
+  setIsExpanded?: (expanded: boolean) => void
 }
 
 export const Sidebar = ({
@@ -52,36 +51,13 @@ export const Sidebar = ({
     data: groups = [],
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["user-groups"],
-    queryFn: getGroupsWhereUserIsMember,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    onSuccess: (data: StudyGroup[]) => {
-      if (data.length === 0) {
-        toast.info("You have no groups yet. Join or create one to get started.")
-      } else {
-        toast.success("Groups loaded successfully")
-        console.log("Groups loaded:", data)
-      }
-      // Check if the current persisted activeGroup.id exists in the new fetched list
-      if (activeGroupId) {
-        const stillValid = data.find((group: StudyGroup) => group.id === activeGroupId)
-        if (stillValid) {
-          setActiveGroup(stillValid)
-        } else {
-          setActiveGroup(null) // or reset logic if the group was deleted or user removed
-        }
-      }
-    },
-    onError: (err: any) => {
-      toast.error("Failed to load groups")
-      console.error("Error fetching groups:", err)
-    },
-  })
+  } = useUserMemberGroups()
 
-  const filteredGroups: StudyGroup[] = groups.filter((group: StudyGroup) =>
-    group.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredGroups: StudyGroup[] = Array.isArray(groups)
+    ? groups.filter((group: StudyGroup) =>
+        group.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : []
 
   const { setMode, setNotes, setEditingNote, isDirty, clearLocalDraft } = useNoteStore()
 
@@ -182,7 +158,7 @@ export const Sidebar = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsExpanded(true)}
+                onClick={() => setIsExpanded?.(true)}
                 className="w-full h-10 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -274,7 +250,7 @@ export const Sidebar = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsExpanded(false)}
+            onClick={() => setIsExpanded?.(false)}
             className="p-2 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-800"
             title="Collapse sidebar"
           >
@@ -317,8 +293,8 @@ export const Sidebar = ({
       </div>
 
       {/* Groups List */}
-      <ScrollArea className="flex-1 pb-4 hide-scrollbar overflow-scroll">
-        <div className="p-4">
+      <ScrollArea className="flex-1 pb-14 hide-scrollbar overflow-hidden">
+        <div className="p-4 py-8">
           {isLoading ? (
             <LoadingState />
           ) : error ? (

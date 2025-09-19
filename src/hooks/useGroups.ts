@@ -9,12 +9,14 @@ import {
   getGroupMembers,
   getGroupById,
   deleteOwnGroup,
+  getGroupsWhereUserIsMember,
 } from "@/services/supabase-groups"
-import type { CreateGroupData, UpdateGroupData, GroupMember } from "@/types/groups"
+import type { CreateGroupData, UpdateGroupData, GroupMember, StudyGroup } from "@/types/groups"
 
 // Query keys
 export const groupKeys = {
   all: ["groups"] as const,
+  userGroups: ["user-groups"] as const,
   byId: (groupId: string) => [...groupKeys.all, "group", groupId] as const,
   members: (groupId: string) => [...groupKeys.all, "group", groupId, "members"] as const,
 }
@@ -24,6 +26,15 @@ export const useUserGroups = () => {
   return useQuery({
     queryKey: groupKeys.all,
     queryFn: getUserGroups,
+  })
+}
+
+// Fetch groups where user is a member - NEW HOOK
+export const useUserMemberGroups = () => {
+  return useQuery<StudyGroup[]>({
+    queryKey: groupKeys.userGroups,
+    queryFn: getGroupsWhereUserIsMember,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 
@@ -37,7 +48,6 @@ export const useGroupById = (groupId: string) => {
 }
 
 // Fetch group members
-
 export const useGroupMembers = (groupId: string) => {
   return useQuery<GroupMember[]>({
     queryKey: groupKeys.members(groupId),
@@ -59,15 +69,19 @@ export const useGroupMembers = (groupId: string) => {
   })
 }
 
-
 // Create a group
-export const useCreateGroup = (p0: { onSuccess: (newGroup: any) => void; onError: (error: any) => void }) => {
+export const useCreateGroup = (callbacks?: { onSuccess?: (newGroup: any) => void; onError?: (error: any) => void }) => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateGroupData) => createGroup(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.all })
+      queryClient.invalidateQueries({ queryKey: groupKeys.userGroups })
+      callbacks?.onSuccess?.(data)
     },
+    onError: (error) => {
+      callbacks?.onError?.(error)
+    }
   })
 }
 
@@ -78,6 +92,7 @@ export const useUpdateGroup = () => {
     mutationFn: ({ groupId, updates }: { groupId: string; updates: UpdateGroupData }) => updateGroup(groupId, updates),
     onSuccess: (_, { groupId }) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.byId(groupId) })
+      queryClient.invalidateQueries({ queryKey: groupKeys.userGroups })
     },
   })
 }
@@ -90,6 +105,7 @@ export const useJoinGroup = () => {
     onSuccess: (_, groupId) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.byId(groupId) })
       queryClient.invalidateQueries({ queryKey: groupKeys.members(groupId) })
+      queryClient.invalidateQueries({ queryKey: groupKeys.userGroups })
     },
   })
 }
@@ -101,6 +117,7 @@ export const useLeaveGroup = () => {
     mutationFn: (groupId: string) => leaveGroup(groupId),
     onSuccess: (_, groupId) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.all })
+      queryClient.invalidateQueries({ queryKey: groupKeys.userGroups })
       queryClient.invalidateQueries({ queryKey: groupKeys.byId(groupId) })
       queryClient.invalidateQueries({ queryKey: groupKeys.members(groupId) })
     },
@@ -114,6 +131,7 @@ export const useDeleteGroup = () => {
     mutationFn: (groupId: string) => deleteOwnGroup(groupId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupKeys.all })
+      queryClient.invalidateQueries({ queryKey: groupKeys.userGroups })
     },
   })
 }

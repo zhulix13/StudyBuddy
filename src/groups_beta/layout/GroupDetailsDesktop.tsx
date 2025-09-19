@@ -52,10 +52,12 @@ const GroupDetailsDesktop = ({
   isOpen,
   onClose,
   triggerRef,
+  onLeaveGroup
 }: {
   group: Partial<StudyGroupExtended>
   isOpen: boolean
   onClose: () => void
+  onLeaveGroup: () => void
   triggerRef: React.RefObject<HTMLButtonElement | null>
 }) => {
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -166,7 +168,7 @@ const GroupDetailsDesktop = ({
             initial="hidden"
             animate="visible"
             exit="exit"
-            variants={modalVariants}
+            variants={modalVariants as any}
             className="fixed z-[150]"
             style={{
               top: modalPosition.top,
@@ -174,7 +176,7 @@ const GroupDetailsDesktop = ({
             }}
           >
             <motion.div
-              variants={containerVariants}
+              variants={containerVariants as any}
               animate={isEditOpen ? "expanded" : "details"}
               className="bg-white dark:bg-[#111827] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex max-h-[80vh]"
             >
@@ -239,7 +241,7 @@ const GroupDetailsDesktop = ({
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-purple-900 dark:text-purple-300 mb-1">Created</span>
                         <span className="text-xs text-purple-700 dark:text-purple-400 font-medium">
-                          {new Date(group.created_at).toLocaleDateString()}
+                          {group.created_at ? String(new Date(group.created_at).toLocaleDateString()) : "N/A"}
                         </span>
                       </div>
                     </div>
@@ -287,7 +289,7 @@ const GroupDetailsDesktop = ({
                     className="w-[400px] border-l border-gray-200 dark:border-gray-700 flex-shrink-0"
                   >
                     <GroupDetailsEditDesktop
-                      group={group}
+                      group={group as any}
                       onClose={handleEditClose}
                       onSave={handleSaveEdit}
                       onDelete={() => setShowDeleteConfirm(true)}

@@ -87,9 +87,9 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
             group={activeGroup}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onLeaveGroup={handleLeaveGroup}
-            onSaveEdit={handleSaveEdit}
-            onDeleteGroup={handleDeleteGroup}
+            
+            
+            
           />
         </>
       )}

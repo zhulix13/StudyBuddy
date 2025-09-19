@@ -67,7 +67,7 @@ export function useShareNoteToChat(groupId: string) {
     }) => {
       return MessagesService.createMessage(
         groupId,          // ✅ required groupId
-        caption || null,  // ✅ content
+        caption ?? undefined,  // ✅ content
         noteId            // ✅ noteId
       );
     },

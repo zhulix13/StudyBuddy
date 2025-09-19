@@ -82,7 +82,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            variants={modalVariants}
+            variants={modalVariants as any}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] w-full max-w-md mx-4 sm:mx-0"
           >
             <div className="bg-white dark:bg-[#111827] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[90vh] flex flex-col">

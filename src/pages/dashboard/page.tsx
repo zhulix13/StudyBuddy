@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/Authcontext";
-import Profile  from '@/pages/dashboard/profile';
+import {Profile} from '@/pages/dashboard/profile';
 import SettingsPage from "./settings";
 import Sidebar from "./sidebar";
 import type { User as Usertype } from "@supabase/supabase-js";

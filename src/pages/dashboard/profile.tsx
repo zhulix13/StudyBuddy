@@ -1,7 +1,7 @@
 // src/components/Profile.tsx
 import React, { useState, useRef } from "react";
 import type { User } from "@supabase/supabase-js";
-import type { Profile } from "@/types/profile";
+import type { Profile as ProfileType } from "@/types/profile";
 import { uploadAvatar } from "@/services/upload";
 import { supabase } from "@/services/supabase";
 
@@ -12,10 +12,10 @@ import { toast } from "sonner";
 
 type ProfileProps = {
   user: User | null;
-  profile: Profile | null;
+  profile: ProfileType | null;
 };
 
-const Profile: React.FC<ProfileProps> = ({ user, profile }) => {
+export const Profile: React.FC<ProfileProps> = ({ user, profile }) => {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [bio, setBio] = useState(profile?.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
@@ -169,4 +169,4 @@ const Profile: React.FC<ProfileProps> = ({ user, profile }) => {
   );
 };
 
-export default Profile;
+

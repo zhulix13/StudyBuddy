@@ -118,9 +118,6 @@ export const TiptapImage = Node.create<ImageOptions>({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ResizableImageView, {
-      // Make sure the node view is selectable
-      selectable: true,
-    })
+    return ReactNodeViewRenderer(ResizableImageView)
   },
 })

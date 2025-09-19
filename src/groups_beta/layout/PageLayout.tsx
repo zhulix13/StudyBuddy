@@ -82,8 +82,8 @@ const GroupHeader = ({ group }: { group: StudyGroup }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onLeaveGroup={handleLeaveGroup}
-        onSaveEdit={handleSaveEdit}
-        onDeleteGroup={handleDeleteGroup}
+        
+       
         triggerRef={triggerRef}
       />
     </div>

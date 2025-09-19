@@ -58,7 +58,7 @@ const GroupMembersModalMobile = ({ isOpen, onClose, groupId, groupName }: GroupM
           initial="hidden"
           animate="visible"
           exit="exit"
-          variants={slideVariants}
+          variants={slideVariants as any}
           className="fixed inset-0 bg-white dark:bg-[#111827] z-60 flex flex-col"
         >
           {/* Header */}
