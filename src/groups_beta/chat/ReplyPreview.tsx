@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import type { Message } from "@/services/supabase-messages";
+import { useAuth } from "@/context/Authcontext";
 
 interface ReplyPreviewProps {
   message: Message;
@@ -9,6 +10,7 @@ interface ReplyPreviewProps {
 }
 
 export const ReplyPreview = ({ message, onCancel }: ReplyPreviewProps) => {
+  const { profile } = useAuth();
   const renderPreviewContent = () => {
     if (message.note) {
       return (
@@ -36,7 +38,11 @@ export const ReplyPreview = ({ message, onCancel }: ReplyPreviewProps) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-              Replying to {message.sender?.username || "Unknown"}
+              Replying to {
+                message.sender_id === profile?.id
+                  ? "You"
+                  : message.sender?.username || "Unknown"
+              }
             </span>
           </div>
           {renderPreviewContent()}

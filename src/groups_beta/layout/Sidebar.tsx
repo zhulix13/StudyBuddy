@@ -15,8 +15,9 @@ import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import Skeleton from "react-loading-skeleton"
 import "react-loading-skeleton/dist/skeleton.css"
-import CreateGroupModal from "./CreateGroupModal"
-import SettingsModal from "./SettingsModal"
+
+import { CreateGroupSliderPanel } from "./modals/CreateGroupModal"
+import SettingsModal from "./modals/SettingsModal"
 import { useIsMobile } from "@/hooks/useIsMobile"
 import { useNoteStore } from "@/store/noteStore"
 import { UnsavedChangesModal } from "../notes/UnsavedChangesModal"
@@ -366,7 +367,7 @@ export const Sidebar = ({
       </aside>
 
       {/* Modals */}
-      <CreateGroupModal
+      <CreateGroupSliderPanel
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleCreateSuccess}

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns"
 import TipTapContent from "../tiptap-content"
 import EngagementSection from "./Engagements"
 import CommentsSection from "./Comments"
+import ShareNoteModal from "./ShareNoteModal" // New import
 import { 
   MoreHorizontal, 
   Calendar, 
@@ -15,7 +16,8 @@ import {
   Loader2,
   AlertTriangle,
   Share2,
-  Bookmark
+  Bookmark,
+  MessageCircle
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -40,38 +42,47 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useNoteById } from "@/hooks/useNotes"
 import { useCommentsByNoteId } from "@/hooks/useComments"
+import { useShareNoteToChat } from "@/hooks/useMessages" // New import
 import type { Note } from "@/types/notes"
 
 interface NoteViewerProps {
   noteId: string
   currentUserId: string
+  groupId: string // Add groupId prop for sharing
   isUserAdmin?: boolean
   onBookmark?: (noteId: string) => void
   onShare?: (noteId: string) => void
   onEdit?: (note: Note) => void
   onDelete?: (noteId: string) => void
   onBack?: () => void
+  onSwitchToChat?: () => void // New prop for switching to chat after share
   showComments?: boolean
 }
 
 const NoteViewer: React.FC<NoteViewerProps> = ({ 
   noteId,
   currentUserId,
+  groupId, // New prop
   isUserAdmin,
   onBookmark,
   onShare,
   onEdit,
   onDelete,
   onBack,
+  onSwitchToChat, // New prop
   showComments = true 
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false) // New state
   
   // Fetch note data using the hook
   const { data: note, isLoading, error } = useNoteById(noteId)
   
   // Get comments count for engagement section
   const { data: comments = [] } = useCommentsByNoteId(noteId)
+
+  // Share to chat mutation
+  const shareNoteToChat = useShareNoteToChat(groupId)
 
   const canEditOrDelete = currentUserId === note?.author?.id || isUserAdmin 
   const currentUserRole = isUserAdmin ? 'admin' : 'user'
@@ -82,10 +93,23 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
     }
   }
 
+  // Updated share handler - opens modal instead of calling onShare
   const handleShare = () => {
-    if (note) {
-      onShare?.(note.id)
-    }
+    setShowShareModal(true)
+  }
+
+  // New handler for sharing to chat
+  const handleShareToChat = async (caption?: string) => {
+    if (!note) return
+    
+    await shareNoteToChat.mutateAsync({ 
+      noteId: note.id, 
+      caption 
+    })
+    
+    // Close modal and switch to chat
+    setShowShareModal(false)
+    onSwitchToChat?.()
   }
 
   const handleDelete = () => {
@@ -226,7 +250,12 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  {/* Updated Share to Chat option */}
                   <DropdownMenuItem onClick={handleShare}>
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Share to Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onShare?.(note.id)}>
                     <Share2 className="w-4 h-4 mr-2" />
                     Share Note
                   </DropdownMenuItem>
@@ -320,6 +349,15 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
           />
         )}
       </div>
+
+      {/* Share Note Modal */}
+      <ShareNoteModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        note={note}
+        onShare={handleShareToChat}
+        isLoading={shareNoteToChat.isPending}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

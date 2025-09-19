@@ -9,7 +9,6 @@ export const messageQueryKeys = {
   byGroup: (groupId: string) => [...messageQueryKeys.all, "group", groupId] as const,
   single: (messageId: string) => [...messageQueryKeys.all, "single", messageId] as const,
 };
-console.log("messageQueryKeys:", messageQueryKeys);
 
 // 🔹 Fetch messages for a group
 export function useMessages(groupId: string) {
@@ -37,27 +36,47 @@ export function useMessage(messageId: string) {
   });
 }
 
-// 🔹 Create message (senderId auto from profile)
+// 🔹 Create regular text message
+// 🔹 Create regular text message
 export function useCreateMessage(groupId: string) {
   const queryClient = useQueryClient();
-  const { profile } = useAuth();
   
   return useMutation({
-    mutationFn: ({
-      content,
-      noteId,
-    }: {
-      content?: string;
-      noteId?: string;
-    }) => {
-      if (!profile) throw new Error("User profile not loaded");
-      return MessagesService.createMessage(groupId, profile.id, content, noteId);
+    mutationFn: ({ content }: { content: string }) => {
+      return MessagesService.createMessage(groupId, content);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: messageQueryKeys.byGroup(groupId) });
     },
   });
 }
+
+
+// 🔹 Share note to chat (with optional caption)
+// 🔹 Share note to chat (with optional caption)
+export function useShareNoteToChat(groupId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      noteId,
+      caption
+    }: {
+      noteId: string;
+      caption: string | null;
+    }) => {
+      return MessagesService.createMessage(
+        groupId,          // ✅ required groupId
+        caption || null,  // ✅ content
+        noteId            // ✅ noteId
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: messageQueryKeys.byGroup(groupId) });
+    },
+  });
+}
+
 
 // 🔹 Reply to message
 export function useReplyToMessage(groupId: string) {
@@ -89,7 +108,37 @@ export function useReplyToMessage(groupId: string) {
   });
 }
 
-// 🔹 Update
+// 🔹 Reply to message with note (for replying with a note reference)
+export function useReplyWithNote(groupId: string) {
+  const queryClient = useQueryClient();
+  const { profile } = useAuth();
+  
+  return useMutation({
+    mutationFn: ({
+      messageId,
+      noteId,
+      caption,
+    }: {
+      messageId: string;
+      noteId: string;
+      caption?: string;
+    }) => {
+      if (!profile) throw new Error("User profile not loaded");
+      return MessagesService.replyToMessage(
+        groupId, 
+        profile.id, 
+        messageId, 
+        caption || "", // Empty string if no caption
+        noteId
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: messageQueryKeys.byGroup(groupId) });
+    },
+  });
+}
+
+// 🔹 Update message
 export function useUpdateMessage(groupId: string) {
   const queryClient = useQueryClient();
   
@@ -102,7 +151,7 @@ export function useUpdateMessage(groupId: string) {
   });
 }
 
-// 🔹 Delete
+// 🔹 Delete message
 export function useDeleteMessage(groupId: string) {
   const queryClient = useQueryClient();
   

@@ -12,9 +12,10 @@ import type { Message } from "@/services/supabase-messages";
 
 interface ChatViewProps {
   groupId: string;
+  onNoteClick?: (noteId: string) => void; // New prop for note navigation
 }
 
-export const ChatView = ({ groupId }: ChatViewProps) => {
+export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
   const { profile } = useAuth();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -175,6 +176,7 @@ export const ChatView = ({ groupId }: ChatViewProps) => {
                 isOwn={message.sender_id === profile?.id}
                 groupId={groupId}
                 onReply={handleReply}
+                onNoteClick={onNoteClick}
               />
             ))
           )}

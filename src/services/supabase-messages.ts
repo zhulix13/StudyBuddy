@@ -46,6 +46,9 @@ class MessagesService {
 
     if (error) throw error;
 
+    
+      
+
     // ✅ Mark all messages as delivered for current user (except own messages)
     if (data?.length) {
       const deliverable = data.filter((m) => m.sender_id !== currentUserId);
@@ -91,42 +94,25 @@ class MessagesService {
     return data as Message | null;
   }
 
-  // 🔹 Create a new message (text or note)
-  static async createMessage(
-    groupId: string,
-    senderId: string,
-    content?: string,
-    noteId?: string
-  ): Promise<Message> {
-    const { data, error } = await supabase
-      .from("group_messages")
-      .insert([
-        {
-          group_id: groupId,
-          sender_id: senderId,
-          content: content ?? null,
-          note_id: noteId ?? null,
-        },
-      ])
-      .select(
-        `
-        *,
-        sender:profiles(*),
-        note:notes(*),
-        statuses:message_statuses(*)
-      `
-      )
-      .single();
+  // 🔹 Create a new message (text or note share)
+ static async createMessage(
+  groupId: string,
+  content?: string,
+  noteId?: string
+): Promise<Message> {
+  const { data, error } = await supabase.rpc("send_message", {
+    p_group_id: groupId,        // must be UUID
+    p_content: content ?? null, // string for text/caption
+    p_note_id: noteId ?? null   // UUID for note if provided
+  });
 
-    if (error) throw error;
+  if (error) throw error;
+  console.log("Message created:", data);
+  return data as Message;
+  
+}
 
-    // ✅ Record "sent" status for sender
-    if (data) {
-      await MessageStatusesService.createStatus(data.id, senderId, "sent");
-    }
 
-    return data as Message;
-  }
 
   // 🔹 Reply to a message
   static async replyToMessage(

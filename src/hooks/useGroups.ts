@@ -37,6 +37,7 @@ export const useGroupById = (groupId: string) => {
 }
 
 // Fetch group members
+
 export const useGroupMembers = (groupId: string) => {
   return useQuery<GroupMember[]>({
     queryKey: groupKeys.members(groupId),
@@ -44,20 +45,23 @@ export const useGroupMembers = (groupId: string) => {
       const rawMembers = await getGroupMembers(groupId)
       return rawMembers.map((member: any) => ({
         ...member,
-        profiles: member.profiles.map((profile: any) => ({
-          id: String(profile.id),
-          avatar_url: profile.avatar_url ?? undefined,
-          username: profile.username ?? null,
-          full_name: profile.full_name ?? null,
-        })),
+        profile: member.profiles
+          ? {
+              id: String(member.profiles.id),
+              avatar_url: member.profiles.avatar_url ?? undefined,
+              username: member.profiles.username ?? null,
+              full_name: member.profiles.full_name ?? null,
+            }
+          : null,
       }))
     },
     enabled: !!groupId,
   })
 }
 
+
 // Create a group
-export const useCreateGroup = () => {
+export const useCreateGroup = (p0: { onSuccess: (newGroup: any) => void; onError: (error: any) => void }) => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateGroupData) => createGroup(data),

@@ -8,6 +8,7 @@ import { NotesView } from "../notes/NotesViews";
 import { useGroupStore } from "@/store/groupStore";
 import GroupDetailsDesktop from "./GroupDetailsDesktop";
 import { useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { StudyGroup } from "@/types/groups";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNoteStore } from "@/store/noteStore";
@@ -93,9 +94,28 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const activeTab = useGroupStore((s) => s.activeTab);
   const setActiveTab = useGroupStore((s) => s.setActiveTab);
   const mode = useNoteStore((s) => s.mode);
+  const setMode = useNoteStore((s) => s.setMode);
+  const [searchParams, setSearchParams] = useSearchParams();
   useAutoMarkSeen(group.id, activeTab);
   
   const hideUI = mode === "create" || mode === "edit" || mode === "view";
+
+  // Handle note click from chat - switches to notes tab and navigates to note
+  const handleNoteClick = (noteId: string) => {
+    // Switch to notes tab
+    setActiveTab("notes");
+    
+    // Set note viewing mode
+    setMode("view");
+    
+    // Update URL params to show the specific note
+    setSearchParams({ n: noteId, m: "view" });
+  };
+
+  // Handle switching to chat after sharing a note
+  const handleSwitchToChat = () => {
+    setActiveTab("chat");
+  };
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-slate-50/30 via-white to-slate-50/20 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
@@ -176,7 +196,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             className="h-full m-0 p-0 focus-visible:outline-none"
           >
             <div className="h-full bg-gradient-to-b from-transparent via-slate-50/20 chat-bg to-transparent dark:via-slate-900/20">
-              <ChatView groupId={group.id} />
+              <ChatView groupId={group.id} onNoteClick={handleNoteClick} />
             </div>
           </TabsContent>
         </Tabs>

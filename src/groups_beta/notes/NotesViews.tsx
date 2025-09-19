@@ -1,4 +1,3 @@
-
 import { NotesList } from "./noteslist/NotesList"
 import NoteEditor from "./NoteEditor"
 import NoteViewer from "./note-viewer/NoteViewer"
@@ -6,6 +5,7 @@ import type { Note, NewNote } from "@/types/notes"
 import { useSearchParams } from "react-router-dom"
 import { useNoteStore } from "@/store/noteStore"
 import { useCreateNote, useUpdateNote, useDeleteNote } from "@/hooks/useNotes"
+import { useGroupStore } from "@/store/groupStore"
 import { toast } from "sonner"
 import { useAuth } from "@/context/Authcontext"
 import type { StudyGroup } from "@/types/groups"
@@ -20,6 +20,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const { mode, setMode, editingNote, setEditingNote, draftNote, clearLocalDraft } = useNoteStore()
+  const setActiveTab = useGroupStore((s) => s.setActiveTab)
 
   const { user } = useAuth()
 
@@ -141,6 +142,11 @@ export const NotesView = ({ group }: NotesViewProps) => {
     setEditingNote(null)
   }
 
+  // Handle switching to chat after sharing a note
+  const handleSwitchToChat = () => {
+    setActiveTab("chat")
+  }
+
   /** --- Restore local draft when starting create --- */
   useEffect(() => {
     if (mode === "create" && draftNote) {
@@ -191,8 +197,10 @@ export const NotesView = ({ group }: NotesViewProps) => {
           onBack={handleBackToList}
           onEdit={handleStartEditing}
           currentUserId={user?.id || ""}
+          groupId={groupId}
           isUserAdmin={isUserAdmin}
           onDelete={handleDeleteNote}
+          onSwitchToChat={handleSwitchToChat}
         />
       </div>
     )
@@ -200,7 +208,7 @@ export const NotesView = ({ group }: NotesViewProps) => {
 
   /** --- LIST MODE --- */
   return (
-    <div className="h-full overflow-scroll hide-scrollbar  w-full">
+    <div className="h-full overflow-scroll hide-scrollbar w-full">
       <NotesList groupId={groupId} onSelectNote={handleSelectNote} onCreateNote={handleStartCreating} />
     </div>
   )
