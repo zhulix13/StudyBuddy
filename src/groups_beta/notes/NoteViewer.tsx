@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
+
 import TipTapContent from "./tiptap-content"
 import { 
   Heart, 
@@ -146,6 +147,8 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   
   // Fetch note data using the hook
   const { data: note, isLoading, error } = useNoteById(noteId)
+
+ 
   
   // Use mock comments if none provided
   const comments = note?.comments || mockComments
@@ -199,6 +202,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
     ? comments 
     : comments?.slice(0, 3)
 
+    
   // Loading state
   if (isLoading) {
     return (

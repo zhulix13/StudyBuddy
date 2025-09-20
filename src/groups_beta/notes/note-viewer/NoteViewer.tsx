@@ -6,6 +6,7 @@ import TipTapContent from "../tiptap-content"
 import EngagementSection from "./Engagements"
 import CommentsSection from "./Comments"
 import ShareNoteModal from "./ShareNoteModal" // New import
+import { useEffect } from "react"
 import { 
   MoreHorizontal, 
   Calendar, 
@@ -44,6 +45,7 @@ import { useNoteById } from "@/hooks/useNotes"
 import { useCommentsByNoteId } from "@/hooks/useComments"
 import { useShareNoteToChat } from "@/hooks/useMessages" // New import
 import type { Note } from "@/types/notes"
+import useUiStore from "@/store/uiStore"
 
 interface NoteViewerProps {
   noteId: string
@@ -75,6 +77,8 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false) // New state
   
+   const hideUI = useUiStore((s) => s.hideUI)
+  const setHideUI = useUiStore((s) => s.setHideUI)
   // Fetch note data using the hook
   const { data: note, isLoading, error } = useNoteById(noteId)
   
@@ -124,6 +128,16 @@ const NoteViewer: React.FC<NoteViewerProps> = ({
       onEdit?.(note)
     }
   }
+
+  useEffect(() => {
+    const handleHideUI = () => {
+      setHideUI(true);
+    };
+
+    handleHideUI()
+    return () => { setHideUI(false) }
+    }, [hideUI])
+
 
   // Loading state
   if (isLoading) {

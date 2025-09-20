@@ -258,6 +258,7 @@ const GroupDetailsMobile = ({
               group={group}
               isOpen={isEditOpen}
               onClose={handleEditClose}
+            
               onSave={handleSaveEdit}
               onDelete={() => setShowDeleteConfirm(true)}
             />

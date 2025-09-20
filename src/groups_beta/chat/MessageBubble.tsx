@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,8 +76,10 @@ export const MessageBubble = ({
     if (window.confirm("Are you sure you want to delete this message?")) {
       try {
         await deleteMessageMutation.mutateAsync(message.id);
+        toast.success("Message deleted");
       } catch (error) {
         console.error("Failed to delete message:", error);
+        toast.error("Failed to delete message");
       }
     }
   };

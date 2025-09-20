@@ -242,7 +242,7 @@ export const Sidebar = ({
   )
 
   const ExpandedSidebar = () => (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900/95 border-r border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">
+    <div className="flex flex-col  h-full bg-white dark:bg-gray-900/95 border-r border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700/50">
         <div className="flex items-center justify-between mb-4">

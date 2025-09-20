@@ -13,6 +13,7 @@ import type { StudyGroup } from "@/types/groups";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNoteStore } from "@/store/noteStore";
 import { useAutoMarkSeen } from "@/hooks/useAutoMarkSeen";
+import useUiStore from "@/store/uiStore";
 
 // Main Group Header Component
 const GroupHeader = ({ group }: { group: StudyGroup }) => {
@@ -98,7 +99,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   useAutoMarkSeen(group.id, activeTab);
   
-  const hideUI = mode === "create" || mode === "edit" || mode === "view";
+  const hideUI = useUiStore((s) => s.hideUI);
 
   // Handle note click from chat - switches to notes tab and navigates to note
   const handleNoteClick = (noteId: string) => {

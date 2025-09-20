@@ -10,6 +10,8 @@ import { FilterSidebar, type ViewFilter, type SortOption, type SortDirection } f
 import { ViewModeSelector, type ViewMode } from "./ViewModeSelector"
 import { NoteCard } from "./NoteCard"
 import { useAuth } from "@/context/Authcontext"
+  import useUiStore from "@/store/uiStore";
+
 
 interface NotesListProps {
   groupId: string
@@ -27,10 +29,20 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   const [isFilterCollapsed, setIsFilterCollapsed] = useState(true)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const hideUI = useUiStore((s) => s.hideUI);
+  const setHideUI = useUiStore((s) => s.setHideUI);
 
   const { data: notes = [], isLoading, error } = useNotesByGroup(groupId)
   const { user } = useAuth()
 
+  useEffect(() => {
+      const handleHideUI = () => {
+        setHideUI(false);
+      };
+  
+      handleHideUI()
+      }, [hideUI])
+  
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024)

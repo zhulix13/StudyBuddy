@@ -112,6 +112,7 @@ const GroupDetailsDesktop = ({
       onSuccess: () => {
         setShowLeaveConfirm(false)
         onClose()
+        localStorage.removeItem("group-ui-store")
       },
     })
   }

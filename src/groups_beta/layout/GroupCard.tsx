@@ -36,7 +36,7 @@ export const GroupCard = ({ group, isActive, onClick }: GroupCardProps) => {
   return (
     <div
       onClick={onClick}
-      className={`group p-4 mb-2 rounded-xl cursor-pointer transition-all duration-200 border backdrop-blur-sm ${
+      className={`group p-4 mb-2  rounded-xl cursor-pointer transition-all duration-200 border backdrop-blur-sm ${
         isActive
           ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-blue-200 dark:border-blue-700/50 shadow-md shadow-blue-100/50 dark:shadow-blue-900/20"
           : "bg-white/80 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/30 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 hover:border-gray-300/50 dark:hover:border-gray-600/50 hover:shadow-sm"

@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useEffect, useState, useCallback, useRef } from "react";
+import useUiStore from "@/store/uiStore";
 
 // TipTap imports
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -136,6 +137,10 @@ export default function NoteEditor({
   const [uiTick, setUiTick] = useState(0);
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  // for hiding ui
+
+  const setHideUI =  useUiStore((s) => s.setHideUI);
 
   // New UI state for collapsible sections
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
@@ -272,6 +277,17 @@ export default function NoteEditor({
       },
     },
   });
+
+  useEffect(() => {
+    
+    const handleHideUI = () => {
+      
+      setHideUI(true);
+    };
+
+    handleHideUI();
+    return () => { setHideUI(false); }
+  }, []);
 
   // Initialize component once
   useEffect(() => {
