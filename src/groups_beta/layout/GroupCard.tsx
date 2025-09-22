@@ -46,7 +46,7 @@ export const GroupCard = ({ group, isActive, onClick }: GroupCardProps) => {
         <div className="relative">
           <Avatar className="w-12 h-12 ring-2 ring-white/50 dark:ring-gray-700/50 group-hover:ring-gray-200 dark:group-hover:ring-gray-600 transition-all duration-200">
             <AvatarImage src={group.avatar_url || "/placeholder.svg"} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white font-semibold text-sm shadow-inner">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 via-slate-700 to-indigo-600 text-white font-semibold text-sm shadow-inner">
               {group.name.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

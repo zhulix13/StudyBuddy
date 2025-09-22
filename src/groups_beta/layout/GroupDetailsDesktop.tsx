@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { Users, Crown, LogOut, Edit3, X } from "lucide-react"
+import { Users, Crown, LogOut, Edit3, X, Mail } from "lucide-react"
 import { FileText } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -12,6 +12,7 @@ import { createPortal } from "react-dom"
 import { useUpdateGroup, useLeaveGroup, useDeleteGroup, useGroupMembers } from "@/hooks/useGroups"
 import ConfirmationModal from "./modals/ConfirmationModal"
 import GroupMembersModal from "./modals/GroupMembersModal"
+import InvitesModal from "./modals/InvitesModal"
 
 interface StudyGroupExtended extends StudyGroup {
   member_count: number
@@ -65,6 +66,7 @@ const GroupDetailsDesktop = ({
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [showInvitesModal, setShowInvitesModal] = useState(false)
 
   const updateGroupMutation = useUpdateGroup()
   const leaveGroupMutation = useLeaveGroup()
@@ -188,13 +190,22 @@ const GroupDetailsDesktop = ({
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Group Details</h3>
                   <div className="flex items-center gap-2">
                     {group.user_role === "admin" && (
-                      <button
-                        onClick={() => setIsEditOpen(true)}
-                        className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50"
-                        title="Edit Group"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setShowInvitesModal(true)}
+                          className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50"
+                          title="Manage Invites"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setIsEditOpen(true)}
+                          className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50"
+                          title="Edit Group"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={onClose}
@@ -328,6 +339,14 @@ const GroupDetailsDesktop = ({
           <GroupMembersModal
             isOpen={showMembersModal}
             onClose={() => setShowMembersModal(false)}
+            groupId={group.id || ""}
+            groupName={group.name || ""}
+          />
+
+          {/* Invites Modal */}
+          <InvitesModal
+            isOpen={showInvitesModal}
+            onClose={() => setShowInvitesModal(false)}
             groupId={group.id || ""}
             groupName={group.name || ""}
           />

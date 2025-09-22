@@ -215,13 +215,13 @@ export const Sidebar = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => handleGroupClick(group)}
-                  className={`w-full h-10 p-0 relative ${
+                  className={`w-full h-10 p-0 relative cursor-pointer ${
                     group.id === activeGroupId
                       ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
                       : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-700 flex items-center justify-center text-white text-sm font-medium">
                     {group.name.substring(0, 2).toUpperCase()}
                   </div>
                   {group.unreadCount && group.unreadCount > 0 && (

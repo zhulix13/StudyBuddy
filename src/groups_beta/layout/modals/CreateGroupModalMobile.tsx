@@ -348,7 +348,7 @@ export const MobileCreateGroupPanel = ({ isOpen, onClose, onSuccess }: {
                       {avatarPreview ? (
                         <img src={avatarPreview} alt="Group avatar" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold text-3xl flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500 via-slate-700 to-indigo-600 text-white font-semibold text-3xl flex items-center justify-center">
                           {formData.name.charAt(0).toUpperCase() || "G"}
                         </div>
                       )}
