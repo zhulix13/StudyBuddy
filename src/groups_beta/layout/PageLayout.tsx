@@ -196,7 +196,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
             value="chat"
             className="h-full m-0 p-0 focus-visible:outline-none"
           >
-            <div className="h-full bg-gradient-to-b from-transparent via-slate-50/20 chat-bg to-transparent dark:via-slate-900/20">
+            <div className="h-full bg-gradient-to-b from-transparent via-slate-50/20 chat-bg  to-transparent dark:via-slate-900/20">
               <ChatView groupId={group.id} onNoteClick={handleNoteClick} />
             </div>
           </TabsContent>

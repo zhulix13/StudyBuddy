@@ -53,6 +53,7 @@ const InvitesPage: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
   const [redirectMessage, setRedirectMessage] = useState<string>("");
   const [showRedirectMessage, setShowRedirectMessage] = useState(false);
+  const [hasValidatedToken, setHasValidatedToken] = useState(false);
   
   const [toast, setToast] = useState<ToastState>({
     isOpen: false,
@@ -105,28 +106,45 @@ const InvitesPage: React.FC = () => {
     setConfirmModal(prev => ({ ...prev, isOpen: false, type: null }));
   };
 
-  // Token handling effect
+  // Token handling effect - only set token, don't save to localStorage yet
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem(INVITE_LS_KEY) : null;
-
     if (urlToken) {
-      try {
-        localStorage.setItem(INVITE_LS_KEY, urlToken);
-      } catch {
-        // ignore storage errors
-      }
       setToken(urlToken);
       return;
     }
 
+    // Only check localStorage if no URL token
+    const stored = typeof window !== "undefined" ? localStorage.getItem(INVITE_LS_KEY) : null;
     if (stored) {
       setToken(stored);
+      setHasValidatedToken(true); // Assume previously validated if in localStorage
     }
   }, [urlToken]);
 
-  // Redirect to signup effect
+  // Validate invite hook
+  const validateQuery = useValidateInvite(token ?? "");
+  const invite = useMemo(() => {
+    const d = validateQuery.data as any;
+    if (!d) return null;
+    return Array.isArray(d) ? d[0] : d;
+  }, [validateQuery.data]);
+
+  // Handle successful validation
   useEffect(() => {
-    if (!user && token) {
+    if (validateQuery.isSuccess && invite && token && !hasValidatedToken) {
+      // Save token to localStorage only after successful validation
+      try {
+        localStorage.setItem(INVITE_LS_KEY, token);
+        setHasValidatedToken(true);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [validateQuery.isSuccess, invite, token, hasValidatedToken]);
+
+  // Redirect to signup effect - only after successful validation
+  useEffect(() => {
+    if (!user && token && hasValidatedToken && invite) {
       setRedirectMessage("Please sign up or log in to accept this group invitation. You'll be redirected back here after authentication.");
       setShowRedirectMessage(true);
       
@@ -139,15 +157,7 @@ const InvitesPage: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [user, token, navigate]);
-
-  // Validate invite hook
-  const validateQuery = useValidateInvite(token ?? "");
-  const invite = useMemo(() => {
-    const d = validateQuery.data as any;
-    if (!d) return null;
-    return Array.isArray(d) ? d[0] : d;
-  }, [validateQuery.data]);
+  }, [user, token, hasValidatedToken, invite, navigate]);
 
   // Accept & Decline mutations
   const acceptMutation = useAcceptInvite();
@@ -248,9 +258,9 @@ const InvitesPage: React.FC = () => {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center"
+            className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center"
           >
-            <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <Loader2 className="w-8 h-8 text-slate-600 dark:text-slate-400" />
           </motion.div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Authentication Required
@@ -374,12 +384,12 @@ const InvitesPage: React.FC = () => {
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-slate-700 dark:from-blue-700 dark:to-slate-800 p-6 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <Users className="w-8 h-8" />
                 <h1 className="text-2xl font-bold">Group Invitation</h1>
               </div>
-              <p className="text-blue-100">You've been invited to join a study group</p>
+              <p className="text-blue-100 dark:text-slate-200">You've been invited to join a study group</p>
             </div>
 
             {/* Group Info */}
@@ -390,10 +400,10 @@ const InvitesPage: React.FC = () => {
                     <img 
                       src={group_avatar} 
                       alt={group_name} 
-                      className="w-16 h-16 rounded-xl object-cover ring-4 ring-blue-100 dark:ring-blue-900/30" 
+                      className="w-16 h-16 rounded-xl object-cover ring-4 ring-blue-100 dark:ring-slate-700" 
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold ring-4 ring-blue-100 dark:ring-blue-900/30">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-slate-600 dark:from-blue-600 dark:to-slate-700 flex items-center justify-center text-white text-2xl font-bold ring-4 ring-blue-100 dark:ring-slate-700">
                       {(group_name || "G").charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -438,7 +448,7 @@ const InvitesPage: React.FC = () => {
               </div>
 
               {/* Description */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6">
+              <div className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-4 mb-6">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">About this group</h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                   {group_description || "No description provided for this study group."}
@@ -494,7 +504,7 @@ const InvitesPage: React.FC = () => {
                     <Button 
                       onClick={handleAccept} 
                       disabled={isProcessing}
-                      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-700 hover:to-slate-800 dark:from-blue-700 dark:to-slate-800 dark:hover:from-blue-800 dark:hover:to-slate-900 transition-all duration-200"
                     >
                       {acceptMutation.isPending ? (
                         <>
@@ -533,14 +543,14 @@ const InvitesPage: React.FC = () => {
               )}
 
               {/* Info Note */}
-              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                 <div className="flex items-start gap-3">
-                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <User className="w-5 h-5 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-1">
+                    <h4 className="font-medium text-slate-900 dark:text-slate-200 mb-1">
                       New to our platform?
                     </h4>
-                    <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
+                    <p className="text-sm text-slate-700 dark:text-slate-400 leading-relaxed">
                       If you're not signed up yet, you'll be redirected to create an account first. 
                       Don't worry - we'll bring you right back here to accept your invitation!
                     </p>
@@ -562,16 +572,18 @@ const InvitesPage: React.FC = () => {
       />
 
       {/* Confirmation Modal */}
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        onClose={closeConfirmModal}
-        onConfirm={confirmModal.type === "accept" ? handleAcceptConfirm : handleDeclineConfirm}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        confirmText={confirmModal.confirmText}
-        confirmVariant={confirmModal.confirmVariant}
-        isLoading={isProcessing}
-      />
+      <div className="flex items-center justify-center">
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={closeConfirmModal}
+          onConfirm={confirmModal.type === "accept" ? handleAcceptConfirm : handleDeclineConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          confirmVariant={confirmModal.confirmVariant}
+          isLoading={isProcessing}
+        />
+      </div>
     </>
   );
 };
