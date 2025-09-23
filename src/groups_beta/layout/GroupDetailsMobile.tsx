@@ -1,6 +1,6 @@
 "use client"
 
-import { Users, Crown, LogOut, Edit3, ArrowLeft } from "lucide-react"
+import { Users, Crown, LogOut, Edit3, ArrowLeft, Mail } from "lucide-react"
 import { FileText } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -8,6 +8,7 @@ import GroupDetailsEditMobile from "./GroupDetailsEditMobile"
 import { useUpdateGroup, useLeaveGroup, useDeleteGroup, useGroupMembers } from "@/hooks/useGroups"
 import ConfirmationModalMobile from "./modals/ConfirmationModalMobile"
 import GroupMembersModalMobile from "./modals/GroupMembersModalMobile"
+import InvitesModalMobile from "./modals/invites/InvitesModalMobile"
 
 const slideVariants = {
   hidden: { x: "100%", opacity: 0 },
@@ -36,6 +37,7 @@ const GroupDetailsMobile = ({
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [showInvitesModal, setShowInvitesModal] = useState(false)
 
   const updateGroupMutation = useUpdateGroup()
   const leaveGroupMutation = useLeaveGroup()
@@ -135,13 +137,22 @@ const GroupDetailsMobile = ({
                 <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Group Info</h1>
               </div>
               {group.user_role === "admin" && (
-                <button
-                  onClick={() => setIsEditOpen(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                  title="Edit Group"
-                >
-                  <Edit3 className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowInvitesModal(true)}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    title="Manage Invites"
+                  >
+                    <Mail className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsEditOpen(true)}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    title="Edit Group"
+                  >
+                    <Edit3 className="w-5 h-5" />
+                  </button>
+                </div>
               )}
             </div>
 
@@ -258,7 +269,6 @@ const GroupDetailsMobile = ({
               group={group}
               isOpen={isEditOpen}
               onClose={handleEditClose}
-            
               onSave={handleSaveEdit}
               onDelete={() => setShowDeleteConfirm(true)}
             />
@@ -292,6 +302,13 @@ const GroupDetailsMobile = ({
       <GroupMembersModalMobile
         isOpen={showMembersModal}
         onClose={() => setShowMembersModal(false)}
+        groupId={group.id || ""}
+        groupName={group.name || ""}
+      />
+
+      <InvitesModalMobile
+        isOpen={showInvitesModal}
+        onClose={() => setShowInvitesModal(false)}
         groupId={group.id || ""}
         groupName={group.name || ""}
       />

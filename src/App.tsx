@@ -12,10 +12,13 @@ import GroupHome from "./groups_beta/routes/GroupHome";
 import GroupPage from "./groups_beta/routes/GroupPage";
 import GroupLayout from "./groups_beta/routes/GroupLayout";
 import ProtectedRoutes from "./pages/protected/ProtectedRoutes";
+import InvitesPage from "./pages/invites";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const App = () => {
   return (
     <AuthProvider>
+      <ThemeProvider>
       <Router>
         <Toaster />
         <Header />
@@ -25,6 +28,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/invites/:token" element={<InvitesPage />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoutes />}>
@@ -37,6 +41,7 @@ const App = () => {
           </Route>
         </Routes>
       </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 };

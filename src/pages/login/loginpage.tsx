@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Mail, Lock, Eye, EyeOff, Github, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { BookOpen, Mail, Lock, Eye, EyeOff, Github, CheckCircle, AlertCircle, X, Users } from 'lucide-react';
 import { auth } from '../../services/supabase'; 
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -8,6 +8,8 @@ interface Notification {
   type: 'success' | 'error' | 'info';
   message: string;
 }
+
+const INVITE_LS_KEY = "pending_invite_token";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +23,16 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [pendingInvite, setPendingInvite] = useState<string | null>(null);
+
+  // Check for pending invite
+  useEffect(() => {
+    const inviteToken = localStorage.getItem(INVITE_LS_KEY);
+    if (inviteToken) {
+      setPendingInvite(inviteToken);
+      addNotification('info', 'Complete login to join your study group');
+    }
+  }, []);
 
   // Handle messages from signup redirect
   useEffect(() => {
@@ -86,6 +98,25 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleSuccessfulLogin = (user: any) => {
+    addNotification('success', 'Welcome back! Redirecting...');
+    
+    // Determine redirect destination
+    let redirectTo = '/dashboard';
+    
+    if (pendingInvite) {
+      // If there's a pending invite, redirect to invites page
+      redirectTo = '/invites';
+    } else if (location.state?.from?.pathname) {
+      // If there's a specific page they were trying to access
+      redirectTo = location.state.from.pathname;
+    }
+
+    setTimeout(() => {
+      navigate(redirectTo, { replace: true });
+    }, 1000);
+  };
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -117,13 +148,7 @@ const LoginPage: React.FC = () => {
       }
 
       if (data?.user) {
-        addNotification('success', 'Welcome back! Redirecting to dashboard...');
-        
-        // Redirect to dashboard or intended page
-        const redirectTo = location.state?.from?.pathname || '/dashboard';
-        setTimeout(() => {
-          navigate(redirectTo, { replace: true });
-        }, 1000);
+        handleSuccessfulLogin(data.user);
       }
 
     } catch (error: any) {
@@ -138,10 +163,15 @@ const LoginPage: React.FC = () => {
     try {
       setIsLoading(true);
       
+      // Determine redirect URL based on pending invite
+      const redirectTo = pendingInvite 
+        ? `${window.location.origin}/invites`
+        : `${window.location.origin}/dashboard`;
+      
       const { data, error } = await auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -242,11 +272,16 @@ const LoginPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-indigo-700/90"></div>
         <div className="relative z-10 text-center space-y-6">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mx-auto">
-            <BookOpen className="w-10 h-10 text-white" />
+            {pendingInvite ? <Users className="w-10 h-10 text-white" /> : <BookOpen className="w-10 h-10 text-white" />}
           </div>
-          <h1 className="text-4xl font-bold">Welcome Back!</h1>
+          <h1 className="text-4xl font-bold">
+            {pendingInvite ? 'Join Your Study Group!' : 'Welcome Back!'}
+          </h1>
           <p className="text-blue-100 text-lg max-w-md">
-            Continue your learning journey with thousands of students worldwide.
+            {pendingInvite 
+              ? 'Sign in to accept your group invitation and start collaborating with your study partners.'
+              : 'Continue your learning journey with thousands of students worldwide.'
+            }
           </p>
           <div className="flex items-center gap-4 text-blue-100">
             <div className="flex items-center gap-2">
@@ -258,6 +293,18 @@ const LoginPage: React.FC = () => {
               <span className="text-sm">10K+ Study Groups</span>
             </div>
           </div>
+          
+          {pendingInvite && (
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">Group Invitation Pending</span>
+              </div>
+              <p className="text-xs text-blue-100">
+                Complete your login to join the study group that invited you!
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -266,9 +313,11 @@ const LoginPage: React.FC = () => {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="lg:hidden w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="w-8 h-8 text-white" />
+              {pendingInvite ? <Users className="w-8 h-8 text-white" /> : <BookOpen className="w-8 h-8 text-white" />}
             </div>
-            <h2 className="text-3xl font-bold text-slate-800">Sign in to your account</h2>
+            <h2 className="text-3xl font-bold text-slate-800">
+              {pendingInvite ? 'Sign in to join group' : 'Sign in to your account'}
+            </h2>
             <p className="text-slate-600 mt-2">
               Don't have an account?{' '}
               <Link
@@ -398,7 +447,7 @@ const LoginPage: React.FC = () => {
                 disabled={isLoading}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? 'Signing in...' : (pendingInvite ? 'Sign In & Join Group' : 'Sign In')}
               </button>
             </div>
           </form>

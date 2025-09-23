@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Mail, Lock, Eye, EyeOff, Github, User, CheckCircle, AlertCircle, X } from "lucide-react";
+import { BookOpen, Mail, Lock, Eye, EyeOff, Github, User, CheckCircle, AlertCircle, X, Users } from "lucide-react";
 import { auth } from "../../services/supabase";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -9,8 +9,11 @@ interface Notification {
   message: string;
 }
 
+const INVITE_LS_KEY = "pending_invite_token";
+
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,6 +26,24 @@ const SignupPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [pendingInvite, setPendingInvite] = useState<string | null>(null);
+
+  // Check for pending invite and URL params
+  useEffect(() => {
+    const inviteToken = localStorage.getItem(INVITE_LS_KEY);
+    const urlParams = new URLSearchParams(location.search);
+    const redirectTo = urlParams.get('redirectTo');
+    
+    if (inviteToken) {
+      setPendingInvite(inviteToken);
+      addNotification('info', 'Create your account to join the study group');
+    }
+    
+    // If coming from invites page, show appropriate message
+    if (redirectTo === '/invites') {
+      addNotification('info', 'Sign up to accept your group invitation');
+    }
+  }, [location.search]);
 
   // Auto-remove notifications after 5 seconds
   useEffect(() => {
@@ -99,6 +120,33 @@ const SignupPage: React.FC = () => {
     }
   };
 
+  const handleSuccessfulSignup = (user: any) => {
+    const successMessage = pendingInvite 
+      ? 'Account created! Please verify your email to join your study group.'
+      : 'Account created successfully! Please check your email to verify your account.';
+      
+    addNotification('success', successMessage);
+    
+    // Redirect based on pending invite
+    setTimeout(() => {
+      if (pendingInvite) {
+        navigate('/login', { 
+          state: { 
+            message: 'Please check your email and verify your account, then sign in to join your study group.',
+            email: formData.email 
+          }
+        });
+      } else {
+        navigate('/login', { 
+          state: { 
+            message: 'Please check your email and verify your account before signing in.',
+            email: formData.email 
+          }
+        });
+      }
+    }, 2000);
+  };
+
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -126,17 +174,7 @@ const SignupPage: React.FC = () => {
       }
 
       if (data?.user) {
-        addNotification('success', 'Account created successfully! Please check your email to verify your account.');
-        
-        // Redirect to login after successful signup
-        setTimeout(() => {
-          navigate('/login', { 
-            state: { 
-              message: 'Please check your email and verify your account before signing in.',
-              email: formData.email 
-            }
-          });
-        }, 2000);
+        handleSuccessfulSignup(data.user);
       }
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -150,10 +188,15 @@ const SignupPage: React.FC = () => {
     try {
       setIsLoading(true);
       
+      // Determine redirect URL based on pending invite
+      const redirectTo = pendingInvite 
+        ? `${window.location.origin}/invites`
+        : `${window.location.origin}/dashboard`;
+      
       const { data, error } = await auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -231,10 +274,10 @@ const SignupPage: React.FC = () => {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="lg:hidden w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="w-8 h-8 text-white" />
+              {pendingInvite ? <Users className="w-8 h-8 text-white" /> : <BookOpen className="w-8 h-8 text-white" />}
             </div>
             <h2 className="text-3xl font-bold text-slate-800">
-              Create your account
+              {pendingInvite ? 'Join the study group' : 'Create your account'}
             </h2>
             <p className="text-slate-600 mt-2">
               Already have an account?{" "}
@@ -453,7 +496,7 @@ const SignupPage: React.FC = () => {
                 disabled={isLoading}
                 className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Creating account..." : "Create Account"}
+                {isLoading ? "Creating account..." : (pendingInvite ? "Create Account & Join Group" : "Create Account")}
               </button>
             </div>
           </form>
@@ -465,12 +508,16 @@ const SignupPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/90 to-purple-700/90"></div>
         <div className="relative z-10 text-center space-y-6">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mx-auto">
-            <BookOpen className="w-10 h-10 text-white" />
+            {pendingInvite ? <Users className="w-10 h-10 text-white" /> : <BookOpen className="w-10 h-10 text-white" />}
           </div>
-          <h1 className="text-4xl font-bold">Join StudyBuddy</h1>
+          <h1 className="text-4xl font-bold">
+            {pendingInvite ? 'Join Your Study Group!' : 'Join StudyBuddy'}
+          </h1>
           <p className="text-indigo-100 text-lg max-w-md">
-            Start your collaborative learning journey with students from around
-            the world.
+            {pendingInvite 
+              ? 'Create your account to accept the group invitation and start collaborating with your study partners.'
+              : 'Start your collaborative learning journey with students from around the world.'
+            }
           </p>
           <div className="grid grid-cols-2 gap-4 text-indigo-100 text-sm">
             <div className="flex items-center gap-2">
@@ -490,6 +537,18 @@ const SignupPage: React.FC = () => {
               <span>24/7 support</span>
             </div>
           </div>
+          
+          {pendingInvite && (
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">Group Invitation Waiting</span>
+              </div>
+              <p className="text-xs text-indigo-100">
+                Complete your signup to accept the study group invitation!
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

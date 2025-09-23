@@ -12,7 +12,7 @@ import { createPortal } from "react-dom"
 import { useUpdateGroup, useLeaveGroup, useDeleteGroup, useGroupMembers } from "@/hooks/useGroups"
 import ConfirmationModal from "./modals/ConfirmationModal"
 import GroupMembersModal from "./modals/GroupMembersModal"
-import InvitesModal from "./modals/InvitesModal"
+import InvitesModal from "./modals/invites/InviteModal"
 
 interface StudyGroupExtended extends StudyGroup {
   member_count: number

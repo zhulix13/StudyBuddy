@@ -27,40 +27,52 @@ export type Message = {
 
 class MessagesService {
   // 🔹 Fetch all messages in a group (with sender + note + statuses info)
-  static async getMessagesByGroupId(
-    groupId: string,
-    currentUserId: string
-  ): Promise<Message[]> {
-    const { data, error } = await supabase
-      .from("group_messages")
-      .select(
-        `
-        *,
-        sender:profiles(*),
-        note:notes(*),
-        statuses:message_statuses(*)
+
+static async getMessagesByGroupId(
+  groupId: string,
+  currentUserId: string
+): Promise<Message[]> {
+  // 1️⃣ Get the user's joined_at timestamp from group_members
+  const { data: membership, error: membershipError } = await supabase
+    .from("group_members")
+    .select("joined_at")
+    .eq("group_id", groupId)
+    .eq("user_id", currentUserId)
+    .single();
+
+  if (membershipError) throw membershipError;
+  if (!membership) throw new Error("User is not a member of this group");
+
+  // 2️⃣ Fetch messages created on/after joined_at
+  const { data, error } = await supabase
+    .from("group_messages")
+    .select(
       `
+      *,
+      sender:profiles(*),
+      note:notes(*),
+      statuses:message_statuses(*)
+    `
+    )
+    .eq("group_id", groupId)
+    .gte("created_at", membership.joined_at) // 👈 filter by join date
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  // 3️⃣ Mark messages as delivered (except own messages)
+  if (data?.length) {
+    const deliverable = data.filter((m) => m.sender_id !== currentUserId);
+    await Promise.all(
+      deliverable.map((m) =>
+        MessageStatusesService.updateStatus(m.id, currentUserId, "delivered")
       )
-      .eq("group_id", groupId)
-      .order("created_at", { ascending: true });
-
-    if (error) throw error;
-
-    
-      
-
-    // ✅ Mark all messages as delivered for current user (except own messages)
-    if (data?.length) {
-      const deliverable = data.filter((m) => m.sender_id !== currentUserId);
-      await Promise.all(
-        deliverable.map((m) =>
-          MessageStatusesService.updateStatus(m.id, currentUserId, "delivered")
-        )
-      );
-    }
-
-    return data as Message[];
+    );
   }
+
+  return data as Message[];
+}
+
 
   // 🔹 Fetch single message by ID
   static async getMessageById(

@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: { session },
           error,
         } = await supabase.auth.getSession();
+       
 
         // Retry in case hydration delay occurs
         if (!session) {
@@ -60,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (_event === "SIGNED_OUT"  ) {
         localStorage.clear();
       }
-      console.log("Auth state changed:", _event);
+     
       setSession(session);
       setUser(session?.user ?? null);
     });
@@ -78,49 +79,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    try {
+    try{
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+  .from("profiles")
+  .select("*")
+  .eq("id", user.id)
+  .maybeSingle(); // 👈 use maybeSingle() instead of single()
 
-      if (error && error.code !== "PGRST116") {
-        console.error("Profile load error:", error);
-      }
+if (error && error.code !== "PGRST116") {
+  console.error("Profile load error:", error);
+}
 
-      if (!data) {
-        // Build profile from auth metadata or defaults
-        const meta = user.user_metadata;
-        const fullName = meta.full_name || user.email?.split("@")[0] || "Guest User";
+// only log when we *have* data
+if (data) {
+  
+  setProfile(data);
+} else {
+ 
+  // Build fallback + upsert 
+  const meta = user.user_metadata;
+  const email = user.email || "";
+  const fullName = meta.full_name || user.email?.split("@")[0] || "Guest User";
 
-        const fallbackProfile: Profile = {
-          id: user.id,
-          full_name: fullName,
-          username:
-            meta.username ||
-            fullName.toLowerCase().replace(/\s+/g, "_") + "_" + Math.floor(Math.random() * 1000),
-          avatar_url: meta.avatar_url || "",
-          bio: "",
-          updated_at: new Date().toISOString(),
-        };
+  const fallbackProfile: Profile = {
+    id: user.id,
+    full_name: fullName,
+    email,
+    username:
+      meta.username ||
+      fullName.toLowerCase().replace(/\s+/g, "_") + "_" + Math.floor(Math.random() * 1000),
+    avatar_url: meta.avatar_url || "",
+    bio: "",
+    updated_at: new Date().toISOString(),
+  };
 
-        // 🔑 Upsert to ensure persistence
-        const { data: newProfile, error: upsertError } = await supabase
-          .from("profiles")
-          .upsert(fallbackProfile, { onConflict: "id" })
-          .select("*")
-          .single();
+  const { data: newProfile, error: upsertError } = await supabase
+    .from("profiles")
+    .upsert(fallbackProfile, { onConflict: "id" })
+    .select("*")
+    .maybeSingle();
 
-        if (upsertError) {
-          console.error("Profile creation error:", upsertError);
-          setProfile(fallbackProfile); // fallback in-memory
-        } else {
-          setProfile(newProfile);
-        }
-      } else {
-        setProfile(data);
-      }
+  if (upsertError) {
+    
+    setProfile(fallbackProfile); // in-memory fallback
+  } else {
+    setProfile(newProfile);
+    
+  }
+}
     } catch (err) {
       console.error("Unexpected profile fetch error:", err);
     }
@@ -138,3 +144,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+

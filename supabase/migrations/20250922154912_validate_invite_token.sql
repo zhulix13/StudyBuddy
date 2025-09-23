@@ -9,7 +9,11 @@ RETURNS TABLE (
   email text,
   status text,
   expires_at timestamptz,
-  created_at timestamptz
+  created_at timestamptz,
+  group_name text,
+  group_description text,
+  group_subject text,
+  group_avatar text
 ) AS $$
 BEGIN
   RETURN QUERY
@@ -21,8 +25,13 @@ BEGIN
     gi.email,
     gi.status,
     gi.expires_at,
-    gi.created_at
+    gi.created_at,
+    g.name AS group_name,
+    g.description AS group_description,
+    g.subject AS group_subject,
+    g.avatar_url AS group_avatar
   FROM group_invites gi
+  JOIN study_groups g ON g.id = gi.group_id
   WHERE gi.token = token
     AND gi.status = 'pending'
     AND gi.expires_at > now()
@@ -37,3 +46,4 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+

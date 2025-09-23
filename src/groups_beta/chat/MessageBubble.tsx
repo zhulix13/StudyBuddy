@@ -35,7 +35,7 @@ interface MessageBubbleProps {
   isOwn: boolean;
   groupId: string;
   onReply?: (message: Message) => void;
-  onNoteClick?: (noteId: string) => void; // New prop for note navigation
+  onNoteClick?: (noteId: string) => void;
 }
 
 export const MessageBubble = ({
@@ -49,6 +49,14 @@ export const MessageBubble = ({
   const updateMessageMutation = useUpdateMessage(groupId);
   const deleteMessageMutation = useDeleteMessage(groupId);
   const { profile } = useAuth();
+
+  // 🔹 FIXED: Always call hooks at the top level
+  // Get note author profile if message has a note, otherwise pass null
+  const noteAuthorId = message.note?.user_id || null;
+  const { data: noteAuthor } = useProfile(noteAuthorId || "");
+
+  // Get replied message if exists
+  const { data: originalMessage } = useMessage(message.reply_to || "");
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -166,9 +174,6 @@ export const MessageBubble = ({
   const renderRepliedMessage = () => {
     if (!message.reply_to) return null;
 
-    // Fetch the original message
-    const { data: originalMessage } = useMessage(message.reply_to);
-
     const getOriginalMessageContent = () => {
       if (!originalMessage)
         return <em className="text-slate-400">Loading...</em>;
@@ -201,11 +206,11 @@ export const MessageBubble = ({
       if (!originalMessage?.sender) return "User";
       return originalMessage.sender_id === profile?.id
         ? "You"
-        : message.sender?.username || "Unknown";
+        : originalMessage.sender?.username || "Unknown";
     };
 
     return (
-      <div className="mb-2 pl-3 border-l-2 border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30 rounded-r-lg py-2 px-3">
+      <div className="mb-3 pl-3 border-l-2 border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30 rounded-r-lg py-2 px-3">
         <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
           Replying to {getOriginalSenderName()}
         </div>
@@ -217,77 +222,110 @@ export const MessageBubble = ({
   };
 
   const renderMessageContent = () => {
-    // Enhanced note rendering with caption support
+    // 🔹 IMPROVED: Enhanced note rendering with better UI and editing support
     if (message.note) {
-      const { data: noteAuthor } = useProfile(message.note.user_id);
-
       return (
-        <div className="flex flex-col gap-2">
-          {/* 🔹 Caption (if exists) */}
-          {message.content && (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
+        <div className="flex flex-col gap-3">
+          {/* 🔹 Caption Section - Now editable */}
+          {(message.content || isEditing) && (
+            <div className="space-y-2">
+              {isEditing ? (
+                <MessageEditor
+                  initialContent={message.content || ""}
+                  onSave={handleEdit}
+                  onCancel={() => setIsEditing(false)}
+                  isLoading={updateMessageMutation.isPending}
+                />
+              ) : (
+                <div className="group/caption relative">
+                  {message.content && (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-slate-700 dark:text-slate-300">
+                      {message.content}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* 🔹 Note card */}
+          {/* 🔹 Enhanced Note Card */}
           <div
-            className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border-l-4 border-blue-500 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors group/note"
+            className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/20 dark:to-slate-800/50 rounded-xl p-4 border border-blue-200/50 dark:border-blue-800/30 cursor-pointer hover:shadow-md hover:shadow-blue-500/10 dark:hover:shadow-blue-400/5 transition-all duration-200 group/note"
             onClick={handleNoteClick}
           >
             {/* Note Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                <div className="p-1.5 bg-blue-500 rounded-lg shadow-sm">
+                  <FileText className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
                   Shared Note
                 </span>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover/note:opacity-100 transition-opacity">
-                <ExternalLink className="w-3 h-3 text-slate-400" />
+                <div className="text-xs text-slate-500 dark:text-slate-400 mr-2">
+                  Click to open
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
               </div>
             </div>
 
             {/* Author Info */}
-            <div className="flex items-center gap-2 mb-3">
-              <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-blue-500 text-white text-xs">
-                  {noteAuthor?.full_name
-                    ? noteAuthor.full_name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                    : noteAuthor?.username?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-xs text-slate-600 dark:text-slate-400">
-                by {noteAuthor?.username || "Unknown"}
-              </span>
-            </div>
+            {noteAuthor && (
+              <div className="flex items-center gap-2 mb-4">
+                <Avatar className="w-7 h-7 border-2 border-white dark:border-slate-700 shadow-sm">
+                  {noteAuthor.avatar_url ? (
+                    <img
+                      src={noteAuthor.avatar_url}
+                      alt={noteAuthor.username || "Avatar"}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-medium">
+                      {noteAuthor.full_name
+                        ? noteAuthor.full_name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                        : noteAuthor.username?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {noteAuthor.full_name || noteAuthor.username || "Unknown"}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    Note author
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Note Content */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {message.note.title && (
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 text-sm">
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 text-base leading-snug">
                   {message.note.title}
                 </h4>
               )}
 
               {message.note.content && (
-                <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
                   {getNotePreview(message.note.content)}
                 </p>
               )}
 
               {/* Tags */}
               {message.note.tags && message.note.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-3">
                   {message.note.tags.slice(0, 3).map((tag, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="text-xs bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 px-1.5 py-0.5"
+                      className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 font-medium"
                     >
                       #{tag}
                     </Badge>
@@ -295,22 +333,25 @@ export const MessageBubble = ({
                   {message.note.tags.length > 3 && (
                     <Badge
                       variant="secondary"
-                      className="text-xs px-1.5 py-0.5"
+                      className="text-xs bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5"
                     >
-                      +{message.note.tags.length - 3}
+                      +{message.note.tags.length - 3} more
                     </Badge>
                   )}
                 </div>
               )}
             </div>
 
-            {/* View Note CTA */}
-            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span className="group-hover/note:text-blue-600 dark:group-hover/note:text-blue-400 transition-colors">
-                  Click to view full note
+            {/* Enhanced CTA */}
+            <div className="mt-4 pt-3 border-t border-blue-200/50 dark:border-blue-800/30">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400 group-hover/note:text-blue-600 dark:group-hover/note:text-blue-400 transition-colors font-medium">
+                  Tap to view full note
                 </span>
-                <span>📝</span>
+                <div className="flex items-center gap-1 text-slate-400">
+                  <span className="text-sm">📝</span>
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full opacity-60"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -318,7 +359,7 @@ export const MessageBubble = ({
       );
     }
 
-    // Regular text message fallback...
+    // Regular text message
     if (isEditing) {
       return (
         <MessageEditor
@@ -377,7 +418,7 @@ export const MessageBubble = ({
             className={`rounded-2xl shadow-sm transition-all duration-200 ${
               message.note
                 ? "p-0 bg-transparent" // No padding/background for note messages
-                : `px-4 py-2.5 ${
+                : `px-4 py-3 ${
                     isOwn
                       ? "bg-blue-600 text-white rounded-br-md shadow-blue-500/20"
                       : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50 rounded-bl-md shadow-slate-500/10"
@@ -462,10 +503,10 @@ export const MessageBubble = ({
                   <>
                     <DropdownMenuItem
                       onClick={() => setIsEditing(true)}
-                      disabled={!!message.note_id}
+                      disabled={isEditing}
                     >
                       <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
+                      {message.note ? "Edit Caption" : "Edit"}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDelete}

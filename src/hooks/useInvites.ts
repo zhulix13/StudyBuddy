@@ -55,11 +55,15 @@ export const useCreateInvite = () => {
         inviterName?: string
       }
     }) => InvitesService.createInvite(groupId, options),
-    onSuccess: (newInvite) => {
-      queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(newInvite.group_id) })
-      queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(newInvite.group_id) })
+    onSuccess: ({ invite, warning }) => {
+      if (warning) {
+        console.warn("Invite created with warning:", warning)
+        // maybe toast.warn(warning)
+      }
+      queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(invite.group_id) })
+      queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(invite.group_id) })
       queryClient.invalidateQueries({ queryKey: inviteKeys.mine })
-      queryClient.invalidateQueries({ queryKey: groupKeys.members(newInvite.group_id) })
+      queryClient.invalidateQueries({ queryKey: groupKeys.members(invite.group_id) })
     },
   })
 }
@@ -88,6 +92,20 @@ export const useDeclineInvite = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (token: string) => InvitesService.declineInvite(token),
+    onSuccess: (invite) => {
+      queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(invite.group_id) })
+      queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(invite.group_id) })
+      queryClient.invalidateQueries({ queryKey: inviteKeys.mine })
+      queryClient.invalidateQueries({ queryKey: groupKeys.members(invite.group_id) })
+    },
+  })
+}
+
+// 🔹 Revoke invite 
+export const useRevokeInvite = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (token: string) => InvitesService.revokeInvite(token),
     onSuccess: (invite) => {
       queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(invite.group_id) })
       queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(invite.group_id) })

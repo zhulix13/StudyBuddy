@@ -1,4 +1,4 @@
-export type GroupInviteStatus = "pending" | "accepted" | "declined" | "expired";
+export type GroupInviteStatus = "pending" | "accepted" | "declined" | "expired" | "revoked";
 
 export interface GroupInvite {
   id: string;
