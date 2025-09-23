@@ -106,7 +106,7 @@ const LoginPage: React.FC = () => {
     
     if (pendingInvite) {
       // If there's a pending invite, redirect to invites page
-      redirectTo = `/invites/${pendingInvite}`;u
+      redirectTo = `/invites/${pendingInvite}`;
     } else if (location.state?.from?.pathname) {
       // If there's a specific page they were trying to access
       redirectTo = location.state.from.pathname;
