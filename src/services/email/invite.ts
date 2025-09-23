@@ -21,7 +21,7 @@ export async function sendInviteViaEmail(payload: {
   console.log('User authenticated:', session.user.email);
 
   try {
-    const { data, error } = await supabase.functions.invoke("send-invite", {
+    const { data, error } = await supabase.functions.invoke("send-invite-email", {
       body: payload,
       headers: {
         Authorization: `Bearer ${session.access_token}`,
