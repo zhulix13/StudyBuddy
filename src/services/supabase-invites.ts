@@ -129,7 +129,7 @@ export class InvitesService {
     if (options?.email && options.groupName) {
       const appUrl = import.meta.env.VITE_APP_URL;
       const inviteLink = `${
-        appUrl || "http://localhost:5173"
+        appUrl
       }/invites/${token}`;
 
       const emailPayload = {
