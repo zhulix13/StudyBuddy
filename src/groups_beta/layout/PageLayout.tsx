@@ -35,7 +35,7 @@ const GroupHeader = ({ group }: { group: StudyGroup }) => {
   };
 
   return (
-    <div className="border-b border-slate-200/80 dark:border-slate-700/60 hidden md:block bg-gradient-to-r from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 sticky top-0 backdrop-blur-md shadow-sm dark:shadow-black/10">
+    <div className="border-b border-slate-200/80 dark:border-slate-700/60 hidden md:block sidebar-bg sticky top-0 backdrop-blur-md shadow-sm dark:shadow-black/10">
       <div className="p-6 w-full">
         <div className="flex items-center justify-between">
           {/* Left side - Group info */}
