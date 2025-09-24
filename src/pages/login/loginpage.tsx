@@ -44,12 +44,12 @@ const LoginPage: React.FC = () => {
     }
   }, [location.state]);
 
-  // Auto-remove notifications after 5 seconds
+  // Auto-remove notifications after 3 seconds
   useEffect(() => {
     notifications.forEach(notification => {
       setTimeout(() => {
         removeNotification(notification.id);
-      }, 5000);
+      }, 3000);
     });
   }, [notifications]);
 

@@ -190,7 +190,7 @@ const SignupPage: React.FC = () => {
       
       // Determine redirect URL based on pending invite
       const redirectTo = pendingInvite 
-        ? `${window.location.origin}/invites`
+        ? `${window.location.origin}/invites/${pendingInvite}`
         : `${window.location.origin}/dashboard`;
       
       const { data, error } = await auth.signInWithOAuth({
