@@ -157,7 +157,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   if (isLoading) {
     return (
       <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-[#fefeff] dark:bg-gray-900/95 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Notes</h1>
             <Button
@@ -184,7 +184,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   if (error) {
     return (
       <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-[#fefeff]] dark:bg-gray-900/95 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Notes</h1>
             <Button
@@ -209,7 +209,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
   }
 
   return (
-    <div className="h-full flex  dark:note-bg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative">
+    <div className="h-full flex  note-bg relative">
       {/* Mobile filter overlay */}
       {isMobile && isMobileFilterOpen && (
         <div 
@@ -255,7 +255,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-[#fcfcfd] dark:bg-gray-900/95 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {isMobile && (

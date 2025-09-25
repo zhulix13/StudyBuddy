@@ -33,7 +33,7 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
   }
 
   return (
-    <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
+    <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sidebar-bg flex-shrink-0">
       <Button 
         variant="ghost" 
         size="sm" 

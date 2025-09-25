@@ -153,7 +153,7 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.2 },
             }}
-            className="flex-shrink-0 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/80 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-700/60 backdrop-blur-md shadow-sm dark:shadow-black/10"
+            className="flex-shrink-0 sidebar-bg border-b border-slate-200/80 dark:border-slate-700/60 backdrop-blur-md shadow-sm dark:shadow-black/10"
           >
             <Tabs
               value={activeTab}
