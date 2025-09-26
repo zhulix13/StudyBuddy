@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Mail, Lock, Eye, EyeOff, Github, CheckCircle, AlertCircle, X, Users } from 'lucide-react';
 import { auth } from '@/services/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
@@ -9,6 +10,7 @@ interface Notification {
 }
 
 const INVITE_LS_KEY = "pending_invite_token";
+
 
 // Notification Component
 const NotificationContainer = ({ notifications, removeNotification }: { 
@@ -151,7 +153,7 @@ const LoginForm = ({
       setIsLoading(true);
       
       const redirectTo = pendingInvite 
-        ? `${window.location.origin}/invites`
+        ? `${window.location.origin}/invites/${pendingInvite}`
         : `${window.location.origin}/dashboard`;
       
       const { data, error } = await auth.signInWithOAuth({
@@ -414,7 +416,7 @@ export const LoginPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [pendingInvite, setPendingInvite] = useState<string | null>(null);
-
+const navigate = useNavigate();
   // Check for pending invite
   useEffect(() => {
     const inviteToken = localStorage.getItem(INVITE_LS_KEY);
@@ -442,16 +444,18 @@ export const LoginPage: React.FC = () => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const handleSuccessfulLogin = (user: any) => {
+ const handleSuccessfulLogin = (user: any) => {
     addNotification('success', 'Welcome back! Redirecting...');
     
     setTimeout(() => {
       if (pendingInvite) {
         addNotification('info', 'Redirecting to your study group...');
+        navigate(`/invites/${pendingInvite}`);
       } else {
         addNotification('info', 'Redirecting to dashboard...');
+        navigate('/dashboard');
       }
-    }, 1000);
+    }, 1500);
   };
 
   return (

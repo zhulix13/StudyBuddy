@@ -34,9 +34,6 @@ interface Profile {
   avatar_url?: string
 }
 
-// Mock auth hook - replace with your actual auth hook
-
-
 // Profile Dropdown Component
 const ProfileDropdown: React.FC<{
   isOpen: boolean
@@ -74,10 +71,14 @@ const ProfileDropdown: React.FC<{
       </div>
 
       <div className="p-2">
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+        <Link
+          to="/profile"
+          onClick={onClose}
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        >
           <UserIcon className="w-4 h-4" />
           Profile Settings
-        </button>
+        </Link>
         <button
           onClick={onSignOut}
           className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -102,6 +103,14 @@ const MobileNavigation: React.FC<{
     { path: "/groups", label: "Groups", icon: Users },
     { path: "/discover", label: "Discover", icon: Compass },
   ]
+
+  // Helper function to check if path is active
+  const isPathActive = (navPath: string, currentPath: string) => {
+    if (navPath === "/") {
+      return currentPath === "/"
+    }
+    return currentPath.startsWith(navPath)
+  }
 
   if (!isOpen) return null
 
@@ -131,7 +140,7 @@ const MobileNavigation: React.FC<{
                 to={path}
                 onClick={onClose}
                 className={`flex items-center gap-4 px-4 py-3 rounded-xl text-lg transition-colors ${
-                  currentPath === path || currentPath.startsWith(path)
+                  isPathActive(path, currentPath)
                     ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
@@ -158,6 +167,38 @@ export const Header: React.FC = () => {
 
   const fullName = user?.user_metadata?.full_name
 
+  // Update current path on mount and when location changes
+  useEffect(() => {
+    setCurrentPath(window.location.pathname)
+    
+    // Listen for route changes (if using React Router)
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname)
+    }
+    
+    window.addEventListener('popstate', handleLocationChange)
+    
+    // Also listen for pushstate/replacestate changes
+    const originalPushState = window.history.pushState
+    const originalReplaceState = window.history.replaceState
+    
+    window.history.pushState = function(...args) {
+      originalPushState.apply(window.history, args)
+      handleLocationChange()
+    }
+    
+    window.history.replaceState = function(...args) {
+      originalReplaceState.apply(window.history, args)
+      handleLocationChange()
+    }
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.history.pushState = originalPushState
+      window.history.replaceState = originalReplaceState
+    }
+  }, [])
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -174,16 +215,33 @@ export const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
+      // Clear localStorage first
       localStorage.clear()
 
-      await auth.signOut()
+      // Sign out from Supabase
+      const { error } = await auth.signOut()
+      
+      if (error) {
+        console.error("Logout error:", error)
+        // Still redirect even if there's an error
+      }
 
-      // Redirect to login or home page after sign out
-      window.location.href = "/"
-      console.log("Signing out...")
+      // Redirect to login page
+      window.location.href = "/login"
+      
     } catch (error) {
       console.error("Logout error:", error)
+      // Force redirect even if there's an error
+      window.location.href = "/login"
     }
+  }
+
+  // Helper function to check if path is active
+  const isPathActive = (navPath: string, currentPath: string) => {
+    if (navPath === "/") {
+      return currentPath === "/"
+    }
+    return currentPath.startsWith(navPath)
   }
 
   const navItems = [
@@ -215,7 +273,7 @@ export const Header: React.FC = () => {
                   key={path}
                   to={path}
                   className={`font-medium transition-colors ${
-                    currentPath === path
+                    isPathActive(path, currentPath)
                       ? "text-blue-600 dark:text-blue-400 font-semibold"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                   }`}
@@ -283,12 +341,18 @@ export const Header: React.FC = () => {
               ) : (
                 <>
                   <ThemeToggle />
-                  <button className="hidden sm:block px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+                  <Link 
+                    to="/login"
+                    className="hidden sm:block px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                  >
                     Sign In
-                  </button>
-                  <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                  </Link>
+                  <Link 
+                    to="/signup"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
                     Get Started
-                  </button>
+                  </Link>
                 </>
               )}
 
