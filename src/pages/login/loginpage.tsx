@@ -455,7 +455,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex overflow-y-auto">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex overflow-y-scroll hide-scrollbar">
       <style>{`
         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
