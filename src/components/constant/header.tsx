@@ -19,6 +19,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationsDropdown } from "@/components/NoticationsDropdown"
 import { useAuth } from "@/context/Authcontext"
+import {auth} from '@/services/supabase'
 
 // Mock auth context - replace with your actual auth implementation
 interface AuthUser {
@@ -173,7 +174,12 @@ export const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      // Replace with your actual sign out logic
+      localStorage.clear()
+
+      await auth.signOut()
+
+      // Redirect to login or home page after sign out
+      window.location.href = "/"
       console.log("Signing out...")
     } catch (error) {
       console.error("Logout error:", error)

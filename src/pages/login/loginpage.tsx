@@ -111,6 +111,7 @@ const LoginForm = ({
     if (!validateForm()) {
       addNotification('error', 'Please fix the errors below');
       return;
+      
     }
 
     setIsLoading(true);

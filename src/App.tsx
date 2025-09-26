@@ -13,6 +13,7 @@ import GroupPage from "./groups_beta/routes/GroupPage";
 import GroupLayout from "./groups_beta/routes/GroupLayout";
 import ProtectedRoutes from "./pages/protected/ProtectedRoutes";
 import InvitesPage from "./pages/invites";
+import ForgotPassword from "./pages/forgot-password";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/invites/:token" element={<InvitesPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoutes />}>
