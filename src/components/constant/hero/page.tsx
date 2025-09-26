@@ -1,30 +1,61 @@
 import { Users, BookOpen, ArrowRight, Globe, Sparkles } from 'lucide-react';
 import React from 'react';
+import GridBackground from '@/components/ui/gridbackground';
+
+// Grid Background Component
+// const GridBackground = ({ className = "", gridSize = 40, fadeIntensity = 20, children }) => {
+//   const gridStyles = {
+//     backgroundSize: `${gridSize}px ${gridSize}px`,
+//     backgroundImage: [
+//       'linear-gradient(to right, rgba(148, 163, 184, 0.2) 1px, transparent 1px)',
+//       'linear-gradient(to bottom, rgba(148, 163, 184, 0.2) 1px, transparent 1px)'
+//     ].join(', ')
+//   };
+
+//   const darkGridStyles = {
+//     backgroundSize: `${gridSize}px ${gridSize}px`,
+//     backgroundImage: [
+//       'linear-gradient(to right, rgba(71, 85, 105, 0.4) 1px, transparent 1px)',
+//       'linear-gradient(to bottom, rgba(71, 85, 105, 0.4) 1px, transparent 1px)'
+//     ].join(', ')
+//   };
+
+//   return (
+//     <div className={`relative ${className}`}>
+//       {/* Light mode grid */}
+//       <div className="absolute inset-0 dark:hidden" style={gridStyles} />
+      
+//       {/* Dark mode grid */}  
+//       <div className="absolute inset-0 hidden dark:block" style={darkGridStyles} />
+      
+//       {/* Radial fade overlay */}
+//       <div 
+//         className="pointer-events-none absolute inset-0 bg-white dark:bg-gray-900"
+//         style={{
+//           maskImage: `radial-gradient(ellipse at center, transparent ${fadeIntensity}%, black)`
+//         }}
+//       />
+      
+//       {children}
+//     </div>
+//   );
+// };
 
 const Hero = () => {
   return (
     <div className="relative min-h-screen bg-white dark:bg-gray-900 overflow-hidden">
-      {/* Animated Grid Background */}
+      {/* Grid Background */}
+      <GridBackground className="absolute inset-0" gridSize={50} fadeIntensity={25} />
+      
+      {/* Animated gradient orbs - reduced intensity */}
       <div className="absolute inset-0">
-        <div 
-          className="absolute inset-0 opacity-30 dark:opacity-20"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px)
-            `,
-            backgroundSize: '50px 50px'
-          }}
-        />
-        
-        {/* Animated gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-slate-400/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-gradient-to-r from-slate-400/20 to-emerald-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-2000" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/15 to-slate-400/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-gradient-to-r from-slate-400/15 to-emerald-400/15 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-gradient-to-r from-emerald-400/15 to-blue-400/15 rounded-full blur-3xl animate-pulse delay-2000" />
       </div>
 
-      {/* Spotlight effect overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-slate-50/50 dark:from-blue-950/30 dark:via-transparent dark:to-slate-950/30" />
+      {/* Spotlight effect overlay - reduced intensity */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30 dark:from-blue-950/30 dark:via-transparent dark:to-slate-950/30" />
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="max-w-6xl mx-auto">
