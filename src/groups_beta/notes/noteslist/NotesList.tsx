@@ -338,7 +338,7 @@ export const NotesList = ({ groupId, onSelectNote, onCreateNote }: NotesListProp
         </div>
 
         {/* Notes Grid/List */}
-        <div className="flex-1 overflow-y-auto  p-4 sm:p-6">
+        <div className="flex-1 overflow-y-scroll hide-scrollbar  p-4 sm:p-6">
           {processedNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 px-4">
               <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-6 mb-6">

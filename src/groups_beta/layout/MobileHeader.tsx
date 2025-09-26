@@ -51,7 +51,7 @@ export const MobileHeader = ({ group: activeGroup }: { group: StudyGroup | null 
               onClick={() => setIsModalOpen(true)}
             >
               <Avatar className="w-8 h-8 ring-1 ring-gray-200 dark:ring-gray-700">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 via-slate-700 to-indigo-600 text-white text-sm font-semibold">
                   {activeGroup.avatar_url ? (
                     <img
                       src={activeGroup.avatar_url || "/placeholder.svg"}

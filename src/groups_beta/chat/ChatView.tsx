@@ -9,6 +9,7 @@ import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { MessageSkeleton } from "./MessageSkeleton";
 import type { Message } from "@/services/supabase-messages";
+import { useMessagesRealtime } from "@/services/realtime/messages-realtime";
 
 interface ChatViewProps {
   groupId: string;
@@ -37,6 +38,7 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
 
   // Real-time subscriptions
   useMessageStatusesRealtime(groupId);
+  useMessagesRealtime(groupId);
 
   // Auto-scroll to bottom
   const scrollToBottom = (smooth = true) => {

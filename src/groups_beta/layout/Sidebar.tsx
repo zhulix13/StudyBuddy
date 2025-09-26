@@ -117,8 +117,8 @@ export const Sidebar = ({
     <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
         <div key={i} className="p-3 border rounded-xl dark:border-gray-700">
-          <Skeleton height={20} width={`60%`} />
-          <Skeleton height={15} width={`40%`} className="mt-2" />
+          <Skeleton height={20} width={`60%`} className="dark:bg-gray-800" />
+          <Skeleton height={15} width={`40%`} className="mt-2 dark:bg-gray-800" />
         </div>
       ))}
     </div>
