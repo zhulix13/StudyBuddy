@@ -70,9 +70,9 @@ const Hero = () => {
           {/* Main Headline */}
           <div className="text-center mb-8">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              <span className="text-gray-900 dark:text-white">Study</span>
-              <br />
-              <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-slate-800 dark:from-blue-400 dark:via-blue-300 dark:to-slate-200 bg-clip-text text-transparent">
+              <span className="text-gray-900 mr-3 dark:text-white">Study</span>
+              
+              <span className="bg-gradient-to-r ml-3 from-blue-600 via-blue-700 to-slate-800 dark:from-blue-400 dark:via-blue-300 dark:to-slate-200 bg-clip-text text-transparent">
                 Together
               </span>
               <br />
