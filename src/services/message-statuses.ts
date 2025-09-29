@@ -49,7 +49,7 @@ class MessageStatusesService {
     return data;
   }
 
-  // 🔹 Get all statuses for a given message (useful for ticks)
+  // 🔹 Get all statuses for a given message 
   static async getStatusesForMessage(messageId: string) {
     const { data, error } = await supabase
       .from("message_statuses")

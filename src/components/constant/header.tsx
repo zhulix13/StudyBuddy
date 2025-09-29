@@ -20,8 +20,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationsDropdown } from "@/components/NoticationsDropdown"
 import { useAuth } from "@/context/Authcontext"
 import {auth} from '@/services/supabase'
+import type { Profile } from "@/types/profile"
 
-// Mock auth context - replace with your actual auth implementation
 interface AuthUser {
   user_metadata?: {
     full_name?: string
@@ -29,10 +29,7 @@ interface AuthUser {
   email?: string
 }
 
-interface Profile {
-  username?: string
-  avatar_url?: string
-}
+
 
 // Profile Dropdown Component
 const ProfileDropdown: React.FC<{

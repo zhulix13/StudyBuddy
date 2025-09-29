@@ -113,9 +113,9 @@ static async getMessagesByGroupId(
   noteId?: string
 ): Promise<Message> {
   const { data, error } = await supabase.rpc("send_message", {
-    p_group_id: groupId,        // must be UUID
-    p_content: content ?? null, // string for text/caption
-    p_note_id: noteId ?? null   // UUID for note if provided
+    p_group_id: groupId,        
+    p_content: content ?? null, 
+    p_note_id: noteId ?? null   
   });
 
   if (error) throw error;

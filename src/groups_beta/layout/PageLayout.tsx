@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNoteStore } from "@/store/noteStore";
 import { useAutoMarkSeen } from "@/hooks/useAutoMarkSeen";
 import useUiStore from "@/store/uiStore";
+import { useEffect, useCallback } from "react";
 
 // Main Group Header Component
 const GroupHeader = ({ group }: { group: StudyGroup }) => {
@@ -97,7 +98,16 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const mode = useNoteStore((s) => s.mode);
   const setMode = useNoteStore((s) => s.setMode);
   const [searchParams, setSearchParams] = useSearchParams();
-  useAutoMarkSeen(group.id, activeTab);
+  
+  const markSeen = useCallback(() => {
+    useAutoMarkSeen(group.id, activeTab);
+  }, [group.id]);
+
+  // Run only when group.id changes
+  useEffect(() => {
+    markSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [group.id]);
   
   const hideUI = useUiStore((s) => s.hideUI);
 

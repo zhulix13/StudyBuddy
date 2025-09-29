@@ -185,7 +185,7 @@ const InteractiveDemoSection = () => {
   }, []);
 
   return (
-    <section className="relative py-10 bg-white dark:bg-gray-900 overflow-hidden">
+    <section className="relative py-14 bg-white dark:bg-gray-900 overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
