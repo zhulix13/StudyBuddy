@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useMessages, useCreateMessage, useReplyToMessage } from "@/hooks/useMessages";
 import { useMessageStatusesRealtime } from "@/services/realtime/messageStatus-realtime";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useAuth } from "@/context/Authcontext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { AlertCircle, RefreshCw, ChevronUp, Loader2 } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { MessageSkeleton } from "./MessageSkeleton";
+import { TypingIndicator } from "./TypingIndicator";
 import type { Message } from "@/services/supabase-messages";
 import { useMessagesRealtime } from "@/services/realtime/messages-realtime";
 
@@ -23,7 +25,7 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const previousScrollHeightRef = useRef(0);
 
-  // 🔹 UPDATED: Use infinite query
+  // Fetch messages
   const {
     data,
     isLoading,
@@ -47,6 +49,9 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
   useMessageStatusesRealtime(groupId);
   useMessagesRealtime(groupId);
 
+  // 🆕 Typing indicator
+  const { typingUsers, startTyping, stopTyping } = useTypingIndicator(groupId);
+
   // Get scroll container
   const getScrollContainer = () => {
     return scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
@@ -63,12 +68,12 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
     }
   };
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages OR when typing indicator appears
   useEffect(() => {
-    if (messages.length > 0 && shouldAutoScroll) {
+    if ((messages.length > 0 || typingUsers.length > 0) && shouldAutoScroll) {
       setTimeout(() => scrollToBottom(), 100);
     }
-  }, [messages.length, shouldAutoScroll]);
+  }, [messages.length, typingUsers.length, shouldAutoScroll]);
 
   // Handle scroll to detect if user scrolled up
   const handleScroll = (event: React.UIEvent) => {
@@ -77,20 +82,18 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
     setShouldAutoScroll(isNearBottom);
   };
 
-  // 🔹 Load older messages when scrolling to top
+  // Load older messages
   const handleLoadMore = async () => {
     if (!hasNextPage || isFetchingNextPage) return;
 
     const scrollContainer = getScrollContainer();
     if (!scrollContainer) return;
 
-    // Save current scroll position
     const previousScrollHeight = scrollContainer.scrollHeight;
     previousScrollHeightRef.current = previousScrollHeight;
 
     await fetchNextPage();
 
-    // Restore scroll position after new messages load
     setTimeout(() => {
       const newScrollHeight = scrollContainer.scrollHeight;
       const scrollDiff = newScrollHeight - previousScrollHeight;
@@ -186,7 +189,7 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
         className="flex-1 px-4 py-6 overflow-hidden"
         onScroll={handleScroll}
       >
-        {/* 🔹 Load More Button */}
+        {/* Load More Button */}
         {hasNextPage && (
           <div className="flex justify-center mb-4">
             <Button
@@ -236,6 +239,9 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
               />
             ))
           )}
+
+          {/* 🆕 Typing Indicator */}
+          <TypingIndicator typingUsers={typingUsers} />
         </div>
       </ScrollArea>
 
@@ -262,6 +268,8 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
           isLoading={createMessageMutation.isPending || replyToMessageMutation.isPending}
           replyingTo={replyingTo}
           onCancelReply={handleCancelReply}
+          onStartTyping={startTyping}
+          onStopTyping={stopTyping}
         />
       </div>
     </div>

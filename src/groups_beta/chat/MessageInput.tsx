@@ -1,162 +1,165 @@
-import React, { useState, useRef } from "react";
+// src/components/chat/MessageInput.tsx (UPDATED)
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Send, 
-  Paperclip, 
-  Smile, 
-  Mic,
-  Loader2 
-} from "lucide-react";
+import { Send, X, Loader2 } from "lucide-react";
 import type { Message } from "@/services/supabase-messages";
-import { ReplyPreview } from "./ReplyPreview";
 
 interface MessageInputProps {
-  onSendMessage: (message: string) => void;
-  onSendReply?: (replyToId: string, message: string) => void;
+  onSendMessage: (content: string) => void;
+  onSendReply?: (replyToId: string, content: string) => void;
   disabled?: boolean;
   isLoading?: boolean;
-  placeholder?: string;
   replyingTo?: Message | null;
   onCancelReply?: () => void;
+  // 🆕 Typing indicator callbacks
+  onStartTyping?: () => void;
+  onStopTyping?: () => void;
 }
 
-export const MessageInput = ({ 
-  onSendMessage, 
+export const MessageInput = ({
+  onSendMessage,
   onSendReply,
   disabled = false,
   isLoading = false,
-  placeholder = "Type a message...",
-  replyingTo = null,
-  onCancelReply
+  replyingTo,
+  onCancelReply,
+  onStartTyping,
+  onStopTyping,
 }: MessageInputProps) => {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSend = async () => {
-    const trimmedMessage = message.trim();
-    if (trimmedMessage && !disabled) {
-      if (replyingTo && onSendReply) {
-        onSendReply(replyingTo.id, trimmedMessage);
-        onCancelReply?.();
-      } else {
-        onSendMessage(trimmedMessage);
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [message]);
+
+  // 🆕 Handle typing indicator
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+
+    // Start typing
+    if (value.trim() && onStartTyping) {
+      onStartTyping();
+      
+      // Reset stop timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
       }
       
-      setMessage("");
-      
-      // Reset textarea height
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
+      // Stop typing after 3 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        if (onStopTyping) {
+          onStopTyping();
+        }
+      }, 3000);
+    } else if (!value.trim() && onStopTyping) {
+      // Stop typing if input is empty
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
       }
+      onStopTyping();
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleSend = () => {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || disabled || isLoading) return;
+
+    // Stop typing
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    if (onStopTyping) {
+      onStopTyping();
+    }
+
+    if (replyingTo && onSendReply) {
+      onSendReply(replyingTo.id, trimmedMessage);
+    } else {
+      onSendMessage(trimmedMessage);
+    }
+
+    setMessage("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-    
-    // Auto-resize textarea
-    const textarea = e.target;
-    textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
-  };
-
-  const canSend = message.trim().length > 0 && !disabled && !isLoading;
-  const currentPlaceholder = replyingTo ? `Reply to ${replyingTo.sender?.username || "Unknown"}...` : placeholder;
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (onStopTyping) {
+        onStopTyping();
+      }
+    };
+  }, [onStopTyping]);
 
   return (
-    <div>
+    <div className="p-4 space-y-3">
       {/* Reply Preview */}
-      {replyingTo && onCancelReply && (
-        <ReplyPreview 
-          message={replyingTo} 
-          onCancel={onCancelReply} 
-        />
+      {replyingTo && (
+        <div className="flex items-start gap-2 bg-slate-100 dark:bg-slate-800 rounded-lg p-3 border-l-4 border-blue-500">
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+              Replying to {replyingTo.sender?.username || "User"}
+            </div>
+            <div className="text-sm text-slate-600 dark:text-slate-400 truncate">
+              {replyingTo.content || (replyingTo.note ? "📝 Note" : "Message")}
+            </div>
+          </div>
+          <Button
+            onClick={onCancelReply}
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 hover:bg-slate-200 dark:hover:bg-slate-700"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       )}
 
-      {/* Message Input */}
-      <div className="p-4">
-        <div className="flex items-end gap-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm focus-within:border-blue-500 dark:focus-within:border-blue-400 transition-colors">
-          
-          {/* Left actions */}
-          <div className="flex items-center gap-1 pl-4 pb-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-8 h-8 p-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-              disabled={disabled}
-              title="Attach file (coming soon)"
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Text input */}
+      {/* Input Area */}
+      <div className="flex items-end gap-2">
+        <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
-            placeholder={currentPlaceholder}
             value={message}
-            onChange={handleTextareaChange}
-            onKeyPress={handleKeyPress}
-            disabled={disabled}
-            className="min-h-[40px] max-h-[120px] resize-none hide-scrollbar border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 py-3 px-0 text-sm leading-relaxed scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600"
-            style={{ height: "40px" }}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            disabled={disabled || isLoading}
+            className="min-h-[44px] max-h-[200px] resize-none pr-12 py-3 rounded-2xl border-slate-300 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm"
+            rows={1}
           />
-
-          {/* Right actions */}
-          <div className="flex items-center gap-1 pr-4 pb-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-8 h-8 p-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-              disabled={disabled}
-              title="Emojis (coming soon)"
-            >
-              <Smile className="w-4 h-4" />
-            </Button>
-
-            {message.trim() ? (
-              <Button 
-                onClick={handleSend}
-                disabled={!canSend}
-                size="sm"
-                className="w-8 h-8 p-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
-            ) : (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="w-8 h-8 p-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                disabled={disabled}
-                title="Voice message (coming soon)"
-              >
-                <Mic className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
         </div>
-
-        {/* Character counter (optional) */}
-        {message.length > 1000 && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-right">
-            {message.length}/2000
-          </div>
-        )}
+        
+        <Button
+          onClick={handleSend}
+          disabled={!message.trim() || disabled || isLoading}
+          size="icon"
+          className="h-11 w-11 rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none flex-shrink-0"
+        >
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
+        </Button>
       </div>
     </div>
   );
 };
-
