@@ -99,15 +99,9 @@ const GroupContent = ({ group }: { group: StudyGroup }) => {
   const setMode = useNoteStore((s) => s.setMode);
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const markSeen = useCallback(() => {
-    useAutoMarkSeen(group.id, activeTab);
-  }, [group.id]);
+  useAutoMarkSeen(group.id, activeTab);
 
-  // Run only when group.id changes
-  useEffect(() => {
-    markSeen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [group.id]);
+ 
   
   const hideUI = useUiStore((s) => s.hideUI);
 

@@ -4,7 +4,7 @@ import { useMessageStatusesRealtime } from "@/services/realtime/messageStatus-re
 import { useAuth } from "@/context/Authcontext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, ChevronUp, Loader2 } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { MessageSkeleton } from "./MessageSkeleton";
@@ -13,7 +13,7 @@ import { useMessagesRealtime } from "@/services/realtime/messages-realtime";
 
 interface ChatViewProps {
   groupId: string;
-  onNoteClick?: (noteId: string) => void; // New prop for note navigation
+  onNoteClick?: (noteId: string) => void;
 }
 
 export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
@@ -21,16 +21,23 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const previousScrollHeightRef = useRef(0);
 
-  // Fetch messages
+  // 🔹 UPDATED: Use infinite query
   const {
-    data: messages = [],
+    data,
     isLoading,
     isError,
     error,
     refetch,
     isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useMessages(groupId);
+
+  // Flatten all pages into single messages array
+  const messages = data?.pages.flatMap((page) => page.messages) ?? [];
 
   // Create message and reply mutations
   const createMessageMutation = useCreateMessage(groupId);
@@ -40,32 +47,55 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
   useMessageStatusesRealtime(groupId);
   useMessagesRealtime(groupId);
 
+  // Get scroll container
+  const getScrollContainer = () => {
+    return scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+  };
+
   // Auto-scroll to bottom
   const scrollToBottom = (smooth = true) => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        scrollContainer.scrollTo({
-          top: scrollContainer.scrollHeight,
-          behavior: smooth ? 'smooth' : 'auto'
-        });
-      }
+    const scrollContainer = getScrollContainer();
+    if (scrollContainer) {
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
     }
   };
 
   // Scroll to bottom on new messages
   useEffect(() => {
     if (messages.length > 0 && shouldAutoScroll) {
-      // Small delay to ensure DOM is updated
       setTimeout(() => scrollToBottom(), 100);
     }
-  }, [messages, shouldAutoScroll]);
+  }, [messages.length, shouldAutoScroll]);
 
   // Handle scroll to detect if user scrolled up
   const handleScroll = (event: React.UIEvent) => {
     const target = event.target as HTMLElement;
     const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
     setShouldAutoScroll(isNearBottom);
+  };
+
+  // 🔹 Load older messages when scrolling to top
+  const handleLoadMore = async () => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const scrollContainer = getScrollContainer();
+    if (!scrollContainer) return;
+
+    // Save current scroll position
+    const previousScrollHeight = scrollContainer.scrollHeight;
+    previousScrollHeightRef.current = previousScrollHeight;
+
+    await fetchNextPage();
+
+    // Restore scroll position after new messages load
+    setTimeout(() => {
+      const newScrollHeight = scrollContainer.scrollHeight;
+      const scrollDiff = newScrollHeight - previousScrollHeight;
+      scrollContainer.scrollTop = scrollDiff;
+    }, 100);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -92,7 +122,6 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
 
   const handleReply = (message: Message) => {
     setReplyingTo(message);
-    // Focus on input (optional, for better UX)
     setTimeout(() => {
       const textarea = document.querySelector('textarea');
       textarea?.focus();
@@ -130,7 +159,7 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
           Failed to load messages
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-          {"Something went wrong"}
+          Something went wrong
         </p>
         <Button
           onClick={() => refetch()}
@@ -157,6 +186,31 @@ export const ChatView = ({ groupId, onNoteClick }: ChatViewProps) => {
         className="flex-1 px-4 py-6 overflow-hidden"
         onScroll={handleScroll}
       >
+        {/* 🔹 Load More Button */}
+        {hasNextPage && (
+          <div className="flex justify-center mb-4">
+            <Button
+              onClick={handleLoadMore}
+              disabled={isFetchingNextPage}
+              variant="outline"
+              size="sm"
+              className="shadow-sm"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Loading older messages...
+                </>
+              ) : (
+                <>
+                  <ChevronUp className="w-4 h-4 mr-2" />
+                  Load older messages
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
         <div className="space-y-4 pb-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
