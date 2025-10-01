@@ -3,6 +3,10 @@ import type { User } from "@supabase/supabase-js";
 import type { Profile as ProfileType } from "@/types/profile";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/Authcontext";
+import { useGroupStore } from "@/store/groupStore";
+import { useNoteStore } from "@/store/noteStore";
+import { useSearchParams } from "react-router-dom"
+
 
 const DashboardStats = () => {
   const stats = [
@@ -126,6 +130,10 @@ const RecentActivity = () => {
 
 const QuickActions = () => {
   const navigate = useNavigate();
+  const {activeTab, setActiveTab} = useGroupStore();
+
+  const {mode, setMode} = useNoteStore();
+
   
   const actions = [
     { label: "Create Group", icon: Plus, color: "from-blue-500 to-blue-600", action: () => navigate('/groups') },

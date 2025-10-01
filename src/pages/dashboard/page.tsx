@@ -49,7 +49,7 @@ export default function DashboardLayout() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen mx-auto p-4 max-w-7xl lg:ml-72">
+      <div className="flex-1 flex flex-col min-h-screen mx-auto p-4 max-w-full md:max-w-[80%] lg:ml-72">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
