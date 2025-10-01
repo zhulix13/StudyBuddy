@@ -148,11 +148,11 @@ export const NotesView = ({ group }: NotesViewProps) => {
   }
 
   /** --- Restore local draft when starting create --- */
-  useEffect(() => {
-    if (mode === "create" && draftNote) {
-      toast.info("Restored draft from local storage.")
-    }
-  }, [mode, draftNote])
+  // useEffect(() => {
+  //   if (mode === "create" && draftNote) {
+  //     toast.info("Restored draft from local storage.")
+  //   }
+  // }, [mode, draftNote])
 
   /** --- CREATE MODE --- */
   if (mode === "create") {

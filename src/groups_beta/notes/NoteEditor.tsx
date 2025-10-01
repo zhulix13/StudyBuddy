@@ -137,10 +137,10 @@ export default function NoteEditor({
   const [uiTick, setUiTick] = useState(0);
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-
+  const [showBackModal, setShowBackModal] = useState(false);
   // for hiding ui
 
-  const setHideUI =  useUiStore((s) => s.setHideUI);
+  const setHideUI = useUiStore((s) => s.setHideUI);
 
   // New UI state for collapsible sections
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
@@ -279,14 +279,14 @@ export default function NoteEditor({
   });
 
   useEffect(() => {
-    
     const handleHideUI = () => {
-      
       setHideUI(true);
     };
 
     handleHideUI();
-    return () => { setHideUI(false); }
+    return () => {
+      setHideUI(false);
+    };
   }, []);
 
   // Initialize component once
@@ -592,7 +592,13 @@ export default function NoteEditor({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onCancel}
+            onClick={() => {
+              if (isDirty) {
+                setShowBackModal(true);
+              } else {
+                onCancel();
+              }
+            }}
             disabled={isLoading}
             className="h-8 w-8 p-2 cursor-pointer hover:dark:text-slate-100 hover:bg-gray-200 dark:text-gray-400 border rounded-2xl dark:hover:bg-gray-700"
           >
@@ -874,13 +880,13 @@ export default function NoteEditor({
         )}
       </div>
 
-     {/* Optimized Editor Content */}
-<div className="flex-1 max-w-full bg-white dark:bg-gray-900/80">
-  <EditorContent
-    editor={editor}
-    className="w-full p-3 hide-scrollbar dark:dark:text-gray-400 [&_.ProseMirror]:outline-none min-h-[550px] sm:min-h-[calc(100vh-20px)] max-h-[600px] overflow-y-auto"
-  />
-</div>
+      {/* Optimized Editor Content */}
+      <div className="flex-1 max-w-full bg-white dark:bg-gray-900/80">
+        <EditorContent
+          editor={editor}
+          className="w-full p-3 hide-scrollbar dark:dark:text-gray-400 [&_.ProseMirror]:outline-none min-h-[550px] sm:min-h-[calc(100vh-20px)] max-h-[600px] overflow-y-auto"
+        />
+      </div>
 
       {/* Minimal Footer Status */}
       <div className="px-3 py-1 border-t max-h- border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-800/30 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
@@ -924,6 +930,24 @@ export default function NoteEditor({
         onSaveDraft={handleSaveDraftAndLeave}
         onDiscardChanges={handleDiscardChanges}
         onCancel={handleCancelNavigation}
+        isLoading={isLoading}
+      />
+
+      <UnsavedChangesModal
+        isOpen={showBackModal}
+        onSaveDraft={async () => {
+          setShowBackModal(false);
+          if (title.trim() && editor?.getJSON()) {
+            await handleSaveDraft();
+          }
+          onCancel();
+        }}
+        onDiscardChanges={() => {
+          setShowBackModal(false);
+          clearLocalDraft(groupId);
+          onCancel();
+        }}
+        onCancel={() => setShowBackModal(false)}
         isLoading={isLoading}
       />
     </div>

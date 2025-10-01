@@ -82,37 +82,50 @@ export const useNoteStore = create<NoteStore>()(
             set({ draftNote: null })
           }
         },
-        checkIfDirty: (currentTitle, currentContent, currentTags, currentIsPrivate, currentPinned) => {
-          const { originalContent } = get()
+       checkIfDirty: (currentTitle, currentContent, currentTags, currentIsPrivate, currentPinned) => {
+  const { originalContent } = get()
 
-          if (!originalContent) {
-            // If no original content, check if current content is empty
-            const isEmpty =
-              !currentTitle.trim() &&
-              (!currentContent ||
-                JSON.stringify(currentContent) === '{"type":"doc","content":[]}' ||
-                !currentContent.content?.length) &&
-              currentTags.length === 0
-            const { isDirty: currentIsDirty } = get()
-            if (currentIsDirty !== !isEmpty) {
-              set({ isDirty: !isEmpty })
-            }
-            return
-          }
+  if (!originalContent) {
+    // If no original content, check if current content has ACTUAL content
+    const hasTitle = currentTitle.trim().length > 0
+    const hasContent = currentContent?.content?.some((node: any) => {
+      if (node.type === 'paragraph') {
+        return node.content?.some((child: any) => child.text?.trim().length > 0)
+      }
+      if (node.type === 'heading' || node.type === 'blockquote') {
+        return node.content?.some((child: any) => child.text?.trim().length > 0)
+      }
+      if (node.type === 'bulletList' || node.type === 'orderedList' || node.type === 'taskList') {
+        return true // Lists count as content
+      }
+      if (node.type === 'image' || node.type === 'table' || node.type === 'horizontalRule') {
+        return true // Media/structural elements count
+      }
+      return false
+    })
+    const hasTags = currentTags.length > 0
+    
+    const hasActualContent = hasTitle || hasContent || hasTags
+    const { isDirty: currentIsDirty } = get()
+    if (currentIsDirty !== hasActualContent) {
+      set({ isDirty: hasActualContent })
+    }
+    return
+  }
 
-          // Compare current content with original
-          const titleChanged = currentTitle !== originalContent.title
-          const contentChanged = JSON.stringify(currentContent) !== JSON.stringify(originalContent.content)
-          const tagsChanged = JSON.stringify(currentTags.sort()) !== JSON.stringify(originalContent.tags.sort())
-          const privateChanged = currentIsPrivate !== originalContent.is_private
-          const pinnedChanged = currentPinned !== originalContent.pinned
+  // Compare current content with original
+  const titleChanged = currentTitle.trim() !== originalContent.title.trim()
+  const contentChanged = JSON.stringify(currentContent) !== JSON.stringify(originalContent.content)
+  const tagsChanged = JSON.stringify(currentTags.sort()) !== JSON.stringify(originalContent.tags.sort())
+  const privateChanged = currentIsPrivate !== originalContent.is_private
+  const pinnedChanged = currentPinned !== originalContent.pinned
 
-          const hasChanges = titleChanged || contentChanged || tagsChanged || privateChanged || pinnedChanged
-          const { isDirty: currentIsDirty } = get()
-          if (currentIsDirty !== hasChanges) {
-            set({ isDirty: hasChanges })
-          }
-        },
+  const hasChanges = titleChanged || contentChanged || tagsChanged || privateChanged || pinnedChanged
+  const { isDirty: currentIsDirty } = get()
+  if (currentIsDirty !== hasChanges) {
+    set({ isDirty: hasChanges })
+  }
+},
       }
     },
     {

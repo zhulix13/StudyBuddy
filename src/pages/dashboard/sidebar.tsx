@@ -1,14 +1,14 @@
+// src/pages/dashboard/sidebar.tsx
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   User,
-  Target,
-  Calendar,
-  Award,
   Bell,
   Settings,
   BookOpen,
   ChevronRight,
   X,
+  Award,
 } from "lucide-react";
 import type { User as Usertype } from "@supabase/supabase-js";
 import type { Profile } from "@/types/profile";
@@ -16,37 +16,35 @@ import type { Profile } from "@/types/profile";
 const Sidebar = ({
   isOpen,
   toggleSidebar,
-  currentPage,
-  setCurrentPage,
   user,
-  profile
+  profile,
 }: {
   isOpen: boolean;
   toggleSidebar: () => void;
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
   user: Usertype | null;
   profile: Profile | null;
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/dashboard" },
-    { id: "profile", label: "Profile", icon: User, path: "/profile" },
-    { id: "goals", label: "Study Goals", icon: Target, path: "/goals" },
-    { id: "schedule", label: "Schedule", icon: Calendar, path: "/schedule" },
-    {
-      id: "achievements",
-      label: "Achievements",
-      icon: Award,
-      path: "/achievements",
-    },
+    { id: "profile", label: "Profile", icon: User, path: "/dashboard/profile" },
     {
       id: "notifications",
       label: "Notifications",
       icon: Bell,
-      path: "/notifications",
+      path: "/dashboard/notifications",
     },
-    { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
+    { id: "settings", label: "Settings", icon: Settings, path: "/dashboard/settings" },
   ];
+
+  const isActivePath = (path: string) => {
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <>
@@ -61,15 +59,15 @@ const Sidebar = ({
       {/* Sidebar */}
       <div
         className={`
-        fixed bottom-0  inset-y-0 lg:top-[73px] left-0 w-72 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 
-  shadow-xl transform transition-transform duration-300 ease-in-out z-50 lg:z-20
-  flex flex-col
-  ${isOpen ? "translate-x-0" : "-translate-x-full"}
-  lg:translate-x-0
+        fixed bottom-0 inset-y-0 lg:top-[55px] left-0 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl 
+        border-r border-gray-200/50 dark:border-gray-700/50 shadow-xl transform transition-transform 
+        duration-300 ease-in-out z-50 lg:z-20 flex flex-col
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0
       `}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200/50 lg:hidden">
+        <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50 lg:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -81,15 +79,15 @@ const Sidebar = ({
             </div>
             <button
               onClick={toggleSidebar}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-gray-900 dark:text-gray-100" />
             </button>
           </div>
         </div>
 
         {/* User Profile Section */}
-        <div className="p-6 border-b border-gray-200/50">
+        <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center space-x-3">
             <img
               src={
@@ -101,11 +99,12 @@ const Sidebar = ({
               className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-500/20"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {profile?.full_name || user?.user_metadata.name || "User"}
-                
               </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {user?.email}
+              </p>
             </div>
           </div>
         </div>
@@ -114,13 +113,13 @@ const Sidebar = ({
         <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPage === item.id;
+            const isActive = isActivePath(item.path);
 
             return (
               <button
                 key={item.id}
                 onClick={() => {
-                  setCurrentPage(item.id);
+                  navigate(item.path);
                   if (window.innerWidth < 1024) toggleSidebar();
                 }}
                 className={`
@@ -129,7 +128,7 @@ const Sidebar = ({
                   ${
                     isActive
                       ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                   }
                 `}
               >
@@ -137,7 +136,7 @@ const Sidebar = ({
                   className={`w-5 h-5 ${
                     isActive
                       ? "text-white"
-                      : "text-gray-500 group-hover:text-blue-600"
+                      : "text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                   }`}
                 />
                 <span className="font-medium">{item.label}</span>
@@ -148,7 +147,7 @@ const Sidebar = ({
         </nav>
 
         {/* Bottom Section */}
-        <div className="p-6 bg-gradient-to-t from-gray-50 to-transparent">
+        <div className="p-6 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white">
             <div className="flex items-center space-x-2 mb-2">
               <Award className="w-5 h-5" />
