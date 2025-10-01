@@ -3,6 +3,9 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
+import Logo from '/mainlogo.png'
+import Logo2 from '/logo1.png'
+
 import {
   BookOpen,
   Bell,
@@ -118,8 +121,8 @@ const MobileNavigation: React.FC<{
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
             <Link to="/" className="flex items-center gap-3" onClick={onClose}>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <BookOpen className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-transparent rounded-2xl border border-blue-600 flex items-center justify-center shadow-lg">
+                <img src={Logo2} alt="Logo" className="w-fit h-fit" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
                 StudyBuddy
@@ -255,8 +258,8 @@ export const Header: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 flex-shrink-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-transparent rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                <img src={Logo2} alt="Logo" className="w-fit h-fit" />
               </div>
               <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent hidden xs:block">
                 StudyBuddy
