@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { createGroup } from "@/services/supabase-groups"
 import { uploadGroupAvatar } from "@/services/upload"
-import { supabase } from "@/services/supabase" // Import supabase client
+import { supabase } from "@/services/supabase" 
 import type { StudyGroup } from "@/types/groups"
 import { createPortal } from "react-dom"
 

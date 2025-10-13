@@ -1,11 +1,8 @@
-// services/ProfilesService.ts
+// services/supabase-profiles.ts
 import { supabase } from "./supabase";
 import type { Profile } from "@/types/profile";
 
-
 export default class ProfilesService {
- 
-
   // 🔹 Fetch a user profile by ID
   static async getProfileById(userId: string): Promise<Profile> {
     const { data, error } = await supabase
@@ -42,6 +39,34 @@ export default class ProfilesService {
     const { data, error } = await supabase
       .from("profiles")
       .update(updates)
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Profile;
+  }
+
+  // 🔹 Check if username is available
+  static async checkUsernameAvailability(username: string, currentUserId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .neq("id", currentUserId)
+      .maybeSingle();
+
+    if (error) throw error;
+    
+    // If data exists, username is taken
+    return !data;
+  }
+
+  // 🔹 Update avatar URL
+  static async updateAvatar(userId: string, avatarUrl: string): Promise<Profile> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: avatarUrl })
       .eq("id", userId)
       .select()
       .single();

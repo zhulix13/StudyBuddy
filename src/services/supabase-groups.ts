@@ -280,7 +280,7 @@ export async function deleteOwnGroup(groupId: string): Promise< { success: boole
       };
     }
 
-    // Verify user is the creator (optional check, RLS will handle this too)
+    // Verify user is the creator 
     if (groupData.created_by !== user.id) {
       return {
         success: false,
@@ -288,7 +288,7 @@ export async function deleteOwnGroup(groupId: string): Promise< { success: boole
       };
     }
 
-    // Delete the group - RLS policy will handle permission check
+
     // CASCADE DELETE will automatically remove group_members
     const { error: deleteError } = await supabase
       .from('study_groups')

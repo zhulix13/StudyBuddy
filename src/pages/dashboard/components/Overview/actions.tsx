@@ -36,13 +36,9 @@ const QuickActions = () => {
   };
 
   const handleCreateGroupSuccess = (newGroup: StudyGroup) => {
-    // Optionally set the new group as active
     setActiveGroup(newGroup);
-    
-    // Navigate to the groups page or the new group's page
     navigate(`/groups/${newGroup.id}`);
     
-    // Modal will close automatically via the onClose callback in the modal component
   };
 
   const actions = [

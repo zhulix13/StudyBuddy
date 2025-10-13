@@ -13,6 +13,11 @@ import { useUpdateGroup, useLeaveGroup, useDeleteGroup, useGroupMembers } from "
 import ConfirmationModal from "./modals/ConfirmationModal"
 import GroupMembersModal from "./modals/GroupMembersModal"
 import InvitesModal from "./modals/invites/InviteModal"
+import { useGroupStore } from "@/store/groupStore"
+import { useNavigate } from "react-router-dom"
+
+
+
 
 interface StudyGroupExtended extends StudyGroup {
   member_count: number
@@ -61,13 +66,14 @@ const GroupDetailsDesktop = ({
   onLeaveGroup: () => void
   triggerRef: React.RefObject<HTMLButtonElement | null>
 }) => {
+  const { setActiveGroup } = useGroupStore();
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 })
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [showInvitesModal, setShowInvitesModal] = useState(false)
-
+  const navigate = useNavigate()
   const updateGroupMutation = useUpdateGroup()
   const leaveGroupMutation = useLeaveGroup()
   const deleteGroupMutation = useDeleteGroup()
@@ -114,7 +120,10 @@ const GroupDetailsDesktop = ({
       onSuccess: () => {
         setShowLeaveConfirm(false)
         onClose()
+        setActiveGroup(null)
         localStorage.removeItem("group-ui-store")
+        navigate('/groups')
+        
       },
     })
   }
@@ -126,6 +135,8 @@ const GroupDetailsDesktop = ({
       onSuccess: () => {
         setShowDeleteConfirm(false)
         onClose()
+        setActiveGroup(null)
+        navigate('/groups')
       },
     })
   }

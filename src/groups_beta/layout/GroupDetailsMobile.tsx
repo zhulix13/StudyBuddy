@@ -3,13 +3,14 @@
 import { Users, Crown, LogOut, Edit3, ArrowLeft, Mail } from "lucide-react"
 import { FileText } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import GroupDetailsEditMobile from "./GroupDetailsEditMobile"
 import { useUpdateGroup, useLeaveGroup, useDeleteGroup, useGroupMembers } from "@/hooks/useGroups"
 import ConfirmationModalMobile from "./modals/ConfirmationModalMobile"
 import GroupMembersModalMobile from "./modals/GroupMembersModalMobile"
 import InvitesModalMobile from "./modals/invites/InvitesModalMobile"
-
+import { useGroupStore } from "@/store/groupStore"
 const slideVariants = {
   hidden: { x: "100%", opacity: 0 },
   visible: {
@@ -33,12 +34,13 @@ const GroupDetailsMobile = ({
   isOpen: boolean
   onClose: () => void
 }) => {
+  const { setActiveGroup } = useGroupStore();
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [showInvitesModal, setShowInvitesModal] = useState(false)
-
+  const navigate = useNavigate()
   const updateGroupMutation = useUpdateGroup()
   const leaveGroupMutation = useLeaveGroup()
   const deleteGroupMutation = useDeleteGroup()
@@ -70,6 +72,8 @@ const GroupDetailsMobile = ({
       onSuccess: () => {
         setShowLeaveConfirm(false)
         onClose()
+        setActiveGroup(null)
+        navigate('/groups')
       },
     })
   }
@@ -81,6 +85,8 @@ const GroupDetailsMobile = ({
       onSuccess: () => {
         setShowDeleteConfirm(false)
         onClose()
+        setActiveGroup(null)
+        navigate('/groups')
       },
     })
   }
