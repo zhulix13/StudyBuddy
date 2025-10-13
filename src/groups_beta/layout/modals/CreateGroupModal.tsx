@@ -2,27 +2,14 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { DesktopCreateGroupPanel } from "./DesktopCreateGroupPanel";
-import {
-  X,
-  Camera,
-  Upload,
-  Loader2,
-  Info,
-  Lock,
-  Globe,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+
 import { createPortal } from "react-dom";
-import { useCreateGroup } from "@/hooks/useGroups";
-import type { CreateGroupData } from "@/types/groups";
+
 import { MobileCreateGroupPanel } from "./CreateGroupModalMobile";
-import { SuccessModal } from "./SuccessModal";
-import { ErrorModal } from "./ErrorModal";
+
 // Desktop Panel Variants
 const desktopPanelVariants = {
   hidden: {

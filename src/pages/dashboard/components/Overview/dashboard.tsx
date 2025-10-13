@@ -1,4 +1,13 @@
-import { Clock, Users, FileText, Target, Bell, Calendar, Plus, TrendingUp } from "lucide-react";
+import {
+  Clock,
+  Users,
+  FileText,
+  Target,
+  Bell,
+  Calendar,
+  Plus,
+  TrendingUp,
+} from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import type { Profile as ProfileType } from "@/types/profile";
 import { useNavigate } from "react-router-dom";
@@ -8,17 +17,10 @@ import QuickActions from "./actions";
 import DashboardStats from "./stats";
 import RecentActivity from "./activity";
 
-
-
-
-
-
-
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
-  
+
   return (
     <div className="space-y-6 max-w-full w-full sm:space-y-8">
       {/* Header */}
@@ -28,12 +30,16 @@ const Dashboard = () => {
             Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            Welcome back, {profile?.username.toUpperCase() || user?.user_metadata?.name || "User"}! Here's your study overview.
+            Welcome back,{" "}
+            {profile?.username.toUpperCase() ||
+              user?.user_metadata?.name ||
+              "User"}
+            ! Here's your study overview.
           </p>
         </div>
         <div className="flex items-center space-x-3 sm:space-x-4">
-          <button 
-            onClick={() => navigate('/dashboard/notifications')}
+          <button
+            onClick={() => navigate("/dashboard/notifications")}
             className="p-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all"
           >
             <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />

@@ -25,7 +25,7 @@ export const DesktopCreateGroupPanel = ({
   modalVariants: any;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showPrivateInfo, setShowPrivateInfo] = useState(false);
+  const [showPrivateInfo, setShowPrivateInfo] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [createdGroup, setCreatedGroup] = useState(null); // Store created group
