@@ -9,6 +9,7 @@ import {
   ChevronRight,
   X,
   Award,
+  Mail
 } from "lucide-react";
 import type { User as Usertype } from "@supabase/supabase-js";
 import type { Profile } from "@/types/profile";
@@ -30,6 +31,7 @@ const Sidebar = ({
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/dashboard" },
     { id: "profile", label: "Profile", icon: User, path: "/dashboard/profile" },
+    { id: "invites", label: "My Invites", icon: Mail, path: "/dashboard/invites" },  
     {
       id: "notifications",
       label: "Notifications",
@@ -70,10 +72,10 @@ const Sidebar = ({
         <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50 lg:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-slate-600 rounded-lg flex items-center justify-center">
+                <img src="/logo.png" alt="logo" className="h-8 w-auto" />
               </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-slate-600 bg-clip-text text-transparent">
                 StudyBuddy
               </h1>
             </div>
@@ -127,7 +129,7 @@ const Sidebar = ({
                   transition-all duration-200 group
                   ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                      ? "bg-gradient-to-r from-blue-500 to-slate-600 text-white shadow-lg"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                   }
                 `}
@@ -148,7 +150,7 @@ const Sidebar = ({
 
         {/* Bottom Section */}
         <div className="p-6 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white">
+          <div className="bg-gradient-to-r from-blue-500 to-slate-600 rounded-xl p-4 text-white">
             <div className="flex items-center space-x-2 mb-2">
               <Award className="w-5 h-5" />
               <span className="font-semibold">Study Streak</span>

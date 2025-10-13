@@ -1,0 +1,5 @@
+export {default as Notifications} from './components/Notifications'
+export {default as Profile} from './components/Profile'
+export {default as DashboardOverview} from './components/Overview'
+export {default as Settings}  from './components/Settings'
+export {default as MyInvites}  from './components/MyInvites'

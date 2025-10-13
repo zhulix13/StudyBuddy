@@ -2,7 +2,10 @@
 import { supabase } from "./supabase";
 import type { Profile } from "@/types/profile";
 
+
 export default class ProfilesService {
+ 
+
   // 🔹 Fetch a user profile by ID
   static async getProfileById(userId: string): Promise<Profile> {
     const { data, error } = await supabase

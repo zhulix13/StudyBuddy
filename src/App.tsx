@@ -17,11 +17,17 @@ import ForgotPassword from "./pages/forgot-password";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 // New imports
-import DashboardLayout from "./pages/dashboard/page";
-import DashboardHome from "./pages/dashboard/dashboard";
-import { Profile } from "./pages/dashboard/profile";
-import SettingsPage from "./pages/dashboard/settings";
-import NotificationsPage from "./pages/dashboard/notifications";
+import DashboardLayout from "./pages/dashboard/layout";
+// import DashboardHome from "./pages/dashboard/components/Overview/dashboard";
+// import { Profile } from "./pages/dashboard/components/Profile/profile";
+// import SettingsPage from "./pages/dashboard/components/Settings/settings";
+// import NotificationsPage from "./pages/dashboard/components/Notifications/notifications";
+
+import { Notifications } from "./pages/dashboard";
+import {Profile }from "./pages/dashboard";
+import {DashboardOverview} from "./pages/dashboard";
+import {Settings} from "./pages/dashboard";
+import {MyInvites }from "./pages/dashboard";
 
 const App = () => {
   return (
@@ -43,10 +49,13 @@ const App = () => {
             <Route element={<ProtectedRoutes />}>
               {/* Dashboard routes with nested layout */}
               <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<DashboardHome />} />
+                <Route index element={<DashboardOverview />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
+                
+                <Route path="invites" element={<MyInvites />} />
+
+                <Route path="settings" element={<Settings />} />
+                <Route path="notifications" element={<Notifications />} />
               </Route>
 
               <Route path="/discover" element={<Groups />} />
