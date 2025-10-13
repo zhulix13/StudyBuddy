@@ -68,7 +68,7 @@ export const Profile: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               {/* Avatar */}
               <div className="relative group">
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 bg-gradient-to-br from-blue-500 to-purple-600">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 bg-gradient-to-br from-blue-500 to-slate-600">
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -173,7 +173,7 @@ export const Profile: React.FC = () => {
           {/* Activity Summary */}
           <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Briefcase className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               Profile Stats
             </h2>
             <div className="space-y-3">
@@ -191,7 +191,7 @@ export const Profile: React.FC = () => {
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-full transition-all duration-500"
+                  className="bg-gradient-to-r from-red-500 to-green-600 h-full transition-all duration-500"
                   style={{
                     width: `${(() => {
                       let score = 40;

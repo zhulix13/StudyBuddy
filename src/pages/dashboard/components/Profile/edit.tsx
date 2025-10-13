@@ -206,9 +206,9 @@ export const EditProfileModal = ({
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200"
         >
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-slate-50 dark:from-blue-900/20 dark:to-slate-900/20">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -234,7 +234,7 @@ export const EditProfileModal = ({
             {/* Avatar Upload */}
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 bg-gradient-to-br from-blue-500 to-purple-600">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 bg-gradient-to-br from-blue-500 to-slate-600">
                   {avatarPreview || profile?.avatar_url ? (
                     <img
                       src={avatarPreview || profile?.avatar_url}
