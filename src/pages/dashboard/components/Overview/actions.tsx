@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 const QuickActions = () => {
   const navigate = useNavigate();
-  const { setActiveGroup } = useGroupStore();
+  const { setActiveGroup, setActiveTab } = useGroupStore();
   const { setMode } = useNoteStore();
   
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
@@ -29,6 +29,7 @@ const QuickActions = () => {
 
   const handleGroupSelect = (group: StudyGroup) => {
     setActiveGroup(group);
+    setActiveTab('notes')
     setMode("create");
     setIsGroupModalOpen(false);
     navigate(`/groups/${group.id}`);
