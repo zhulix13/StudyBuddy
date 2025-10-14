@@ -29,6 +29,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ConfirmationModal from "@/groups_beta/layout/modals/invites/ConfirmationModal";
+import { useGroupStore } from "@/store/groupStore";
 
 type GroupInviteStatus = "pending" | "accepted" | "declined" | "expired" | "revoked";
 
@@ -65,6 +66,8 @@ const InvitesPage = () => {
   const acceptInviteMutation = useAcceptInvite();
   const declineInviteMutation = useDeclineInvite();
   const deleteInviteMutation = useDeleteInvite();
+
+  const setActiveGroup = useGroupStore((s) => s.setActiveGroup)
 
   // Filter and search invites
   const filteredInvites = useMemo(() => {
@@ -119,6 +122,7 @@ const InvitesPage = () => {
       // Navigate to the group after accepting
       if (result?.group_id) {
         setTimeout(() => {
+         setActiveGroup(result.study_groups)
           navigate(`/groups/${result.group_id}`);
         }, 1000);
       }
@@ -219,7 +223,7 @@ const InvitesPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 hover:shadow-lg transition-all duration-200"
+        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-1 sm:p-5 hover:shadow-lg transition-all duration-200"
       >
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Group Avatar */}
@@ -309,7 +313,9 @@ const InvitesPage = () => {
 
               {!isPending && invite.status === "accepted" && (
                 <button
-                  onClick={() => navigate(`/groups/${invite.group_id}`)}
+                  onClick={() => {
+                     setActiveGroup(null)
+                     navigate(`/groups/${invite.group_id}`)}}
                   className="flex-1 sm:flex-none px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ExternalLink className="w-4 h-4" />
