@@ -279,7 +279,7 @@ const InvitesModal: React.FC<InvitesModalProps> = ({
         avatar: null
       }
     } else if (invite.invited_profile) {
-      console.log(invite.invited_profile)
+      
       return {
         name: invite.invited_profile.full_name || invite.invited_profile.username,
         subtitle: invite.invited_profile.username ? `@${invite.invited_profile.username}` : "User Invitation",

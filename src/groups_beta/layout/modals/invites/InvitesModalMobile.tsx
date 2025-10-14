@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useAuth } from "@/context/Authcontext"
+import type React from "react";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/Authcontext";
 import {
   ArrowLeft,
   Mail,
@@ -19,18 +19,26 @@ import {
   User,
   Search,
   X,
-} from "lucide-react"
-import { useGroupInvites, useNonMembers, useCreateInvite, useDeclineInvite } from "@/hooks/useInvites"
-import type { GroupInvite } from "@/types/invites"
+} from "lucide-react";
+import {
+  useGroupInvites,
+  useNonMembers,
+  useCreateInvite,
+  useDeclineInvite,
+  useRevokeInvite,
+  useDeleteInvite
+} from "@/hooks/useInvites";
+import type { GroupInvite } from "@/types/invites";
+import ConfirmationModal from "./ConfirmationModal";
 
 interface InvitesModalMobileProps {
-  isOpen: boolean
-  onClose: () => void
-  groupId: string
-  groupName: string
+  isOpen: boolean;
+  onClose: () => void;
+  groupId: string;
+  groupName: string;
 }
 
-type TabType = "all" | "users" | "email"
+type TabType = "all" | "users" | "email";
 
 const slideVariants = {
   hidden: { x: "100%", opacity: 0 },
@@ -44,43 +52,70 @@ const slideVariants = {
     opacity: 0,
     transition: { type: "spring", stiffness: 400, damping: 40 },
   },
-}
+};
 
-const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose, groupId, groupName }) => {
-  const [activeTab, setActiveTab] = useState<TabType>("all")
-  const [emailInput, setEmailInput] = useState("")
-  const [selectedUser, setSelectedUser] = useState<any>(null)
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSearch, setShowSearch] = useState(false)
+const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({
+  isOpen,
+  onClose,
+  groupId,
+  groupName,
+}) => {
+  const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [emailInput, setEmailInput] = useState("");
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
 
-  const { data: invites = [], isLoading: invitesLoading } = useGroupInvites(groupId)
-  const { data: nonMembers = [], isLoading: usersLoading } = useNonMembers(groupId)
-  const createInviteMutation = useCreateInvite()
-  const declineInviteMutation = useDeclineInvite()
-  const { profile } = useAuth()
+  const { data: invites = [], isLoading: invitesLoading } =
+    useGroupInvites(groupId);
+  const { data: nonMembers = [], isLoading: usersLoading } =
+    useNonMembers(groupId);
+  const createInviteMutation = useCreateInvite();
+  const declineInviteMutation = useDeclineInvite();
+  const revokeInviteMutation = useRevokeInvite()
+  const deleteInviteMututaion = useDeleteInvite()
+  const { profile } = useAuth();
 
+
+  const [confirmModal, setConfirmModal] = useState<{
+      isOpen: boolean
+      type: "revoke" | "delete"
+      invite?: GroupInvite
+    }>({ isOpen: false, type: "revoke" })
   const filteredInvites = useMemo(() => {
-    if (!searchQuery.trim()) return invites
+    if (!searchQuery.trim()) return invites;
     return invites.filter(
       (invite) =>
         invite.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invite.invitee_name?.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-  }, [invites, searchQuery])
+        invite.invitee_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [invites, searchQuery]);
+
+    const [toast, setToast] = useState<{
+      isOpen: boolean
+      type: "success" | "error" | "warning" | "info"
+      title: string
+      message?: string
+    }>({ isOpen: false, type: "success", title: "" })
+
+   const showToast = (type: "success" | "error" | "warning" | "info", title: string, message?: string) => {
+    setToast({ isOpen: true, type, title, message })
+  }
+
 
   const filteredNonMembers = useMemo(() => {
-    if (!searchQuery.trim()) return nonMembers
+    if (!searchQuery.trim()) return nonMembers;
     return nonMembers.filter(
       (user) =>
         user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-  }, [nonMembers, searchQuery])
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [nonMembers, searchQuery]);
 
   const handleEmailInvite = () => {
-    if (!emailInput.trim()) return
+    if (!emailInput.trim()) return;
 
     createInviteMutation.mutate(
       {
@@ -93,11 +128,11 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
       },
       {
         onSuccess: () => {
-          setEmailInput("")
+          setEmailInput("");
         },
-      },
-    )
-  }
+      }
+    );
+  };
 
   const handleUserInvite = (user: any) => {
     createInviteMutation.mutate(
@@ -111,61 +146,101 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
       },
       {
         onSuccess: () => {
-          setSelectedUser(null)
+          setSelectedUser(null);
         },
-      },
-    )
+      }
+    );
+  };
+
+  const handleRevokeInvite = async (invite: GroupInvite) => {
+    try {
+      await revokeInviteMutation.mutateAsync(invite.token)
+      showToast("success", "Invite Revoked", "The invitation has been successfully revoked")
+      setConfirmModal({ isOpen: false, type: "revoke" })
+      setOpenDropdown(null)
+    } catch (error: any) {
+      showToast("error", "Failed to Revoke Invite", error.message || "Please try again")
+    }
   }
 
-  const handleRevokeInvite = (invite: GroupInvite) => {
-    declineInviteMutation.mutate(invite.token, {
-      onSuccess: () => {
-        setOpenDropdown(null)
-      },
-    })
+  const handleDeleteInvite = async (invite: GroupInvite) => {
+    
+   try {
+      await deleteInviteMututaion.mutateAsync(invite.token)
+      showToast("success", "Invite Deleted", "The invitation has been successfully revoked")
+      setConfirmModal({ isOpen: false, type: "delete" })
+      setOpenDropdown(null)
+    } catch (error: any) {
+      showToast("error", "Failed to Delete Invite", error.message || "Please try again")
+    }
   }
 
   const getInviteStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20"
+        return "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20";
       case "accepted":
-        return "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+        return "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20";
       case "declined":
-        return "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
+        return "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20";
       case "expired":
-        return "text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20"
+        return "text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20";
       default:
-        return "text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20"
+        return "text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20";
     }
-  }
+  };
 
   const getInviteStatusIcon = (status: string) => {
     switch (status) {
       case "pending":
-        return <Clock className="w-3 h-3" />
+        return <Clock className="w-3 h-3" />;
       case "accepted":
-        return <Check className="w-3 h-3" />
+        return <Check className="w-3 h-3" />;
       case "declined":
-        return <XCircle className="w-3 h-3" />
+        return <XCircle className="w-3 h-3" />;
       case "expired":
-        return <CalendarX className="w-3 h-3" />
+        return <CalendarX className="w-3 h-3" />;
       default:
-        return <AlertCircle className="w-3 h-3" />
+        return <AlertCircle className="w-3 h-3" />;
     }
-  }
+  };
+
+  const getInviteDisplayInfo = (invite: GroupInvite) => {
+    if (invite.email) {
+      return {
+        name: invite.email,
+        subtitle: "Email Invitation",
+        avatar: null,
+      };
+    } else if (invite.invited_profile) {
+      return {
+        name:
+          invite.invited_profile.full_name || invite.invited_profile.username,
+        subtitle: invite.invited_profile.username
+          ? `@${invite.invited_profile.username}`
+          : "User Invitation",
+        avatar: invite.invited_profile.avatar_url,
+      };
+    } else {
+      return {
+        name: "Unknown User",
+        subtitle: "User Invitation",
+        avatar: null,
+      };
+    }
+  };
 
   const isExpired = (expiresAt: string) => {
-    return new Date(expiresAt) < new Date()
-  }
+    return new Date(expiresAt) < new Date();
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   return (
     <AnimatePresence>
@@ -186,8 +261,12 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Manage Invites</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{groupName}</p>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Manage Invites
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {groupName}
+              </p>
             </div>
             <button
               onClick={() => setShowSearch(!showSearch)}
@@ -275,31 +354,48 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                       {searchQuery ? "No invites found" : "No invites yet"}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                      {searchQuery ? "Try adjusting your search" : "Start inviting users to your group"}
+                      {searchQuery
+                        ? "Try adjusting your search"
+                        : "Start inviting users to your group"}
                     </p>
                   </div>
                 ) : (
                   filteredInvites.map((invite) => {
-                    const expired = isExpired(invite.expires_at)
-                    const actualStatus = expired && invite.status === "pending" ? "expired" : invite.status
-
+                    const expired = isExpired(invite.expires_at);
+                    const actualStatus =
+                      expired && invite.status === "pending"
+                        ? "expired"
+                        : invite.status;
+                    const displayInfo = getInviteDisplayInfo(invite);
                     return (
                       <div
                         key={invite.id}
                         className="flex items-center gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                       >
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-slate-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          {displayInfo.avatar ? (
+                            <img
+                              src={displayInfo.avatar}
+                              alt={displayInfo.name}
+                              className="w-full h-full object-cover rounded-full "
+                            />
+                          ) : (
+                            <User className="w-6 h-6 text-white" />
+                          )}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-900 dark:text-white truncate">
-                              {invite.email || invite.invited_profile.full_name || "User Invite"}
+                              {invite.email ||
+                                displayInfo.name ||
+                                "User Invite"}
                             </span>
                           </div>
                           <div
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mb-1 ${getInviteStatusColor(actualStatus)}`}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mb-1 ${getInviteStatusColor(
+                              actualStatus
+                            )}`}
                           >
                             {getInviteStatusIcon(actualStatus)}
                             {actualStatus}
@@ -311,7 +407,11 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
 
                         <div className="relative">
                           <button
-                            onClick={() => setOpenDropdown(openDropdown === invite.id ? null : invite.id)}
+                            onClick={() =>
+                              setOpenDropdown(
+                                openDropdown === invite.id ? null : invite.id
+                              )
+                            }
                             className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                           >
                             <MoreHorizontal className="w-4 h-4" />
@@ -329,7 +429,9 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                                 </button>
                               )}
                               <button
-                                onClick={() => console.log("Delete invite", invite.id)}
+                                onClick={() =>
+                                  handleDeleteInvite(invite)
+                                }
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors"
                               >
                                 Delete Invite
@@ -338,7 +440,7 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                           )}
                         </div>
                       </div>
-                    )
+                    );
                   })
                 )}
               </div>
@@ -360,7 +462,9 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                       {searchQuery ? "No users found" : "No available users"}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                      {searchQuery ? "Try adjusting your search" : "All registered users are already in this group"}
+                      {searchQuery
+                        ? "Try adjusting your search"
+                        : "All registered users are already in this group"}
                     </p>
                   </div>
                 ) : (
@@ -386,7 +490,9 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                           {user.full_name || user.username || "Unknown User"}
                         </p>
                         {user.username && user.full_name && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">@{user.username}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            @{user.username}
+                          </p>
                         )}
                       </div>
 
@@ -409,10 +515,13 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    <h4 className="font-medium text-blue-900 dark:text-blue-300">Invite by Email</h4>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-300">
+                      Invite by Email
+                    </h4>
                   </div>
                   <p className="text-sm text-blue-700 dark:text-blue-400 mb-4">
-                    Send an invitation to someone who doesn't have an account yet
+                    Send an invitation to someone who doesn't have an account
+                    yet
                   </p>
 
                   <div className="space-y-4">
@@ -431,11 +540,15 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
 
                     <button
                       onClick={handleEmailInvite}
-                      disabled={!emailInput.trim() || createInviteMutation.isPending}
+                      disabled={
+                        !emailInput.trim() || createInviteMutation.isPending
+                      }
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
                     >
                       <Send className="w-4 h-4" />
-                      {createInviteMutation.isPending ? "Sending..." : "Send Invite"}
+                      {createInviteMutation.isPending
+                        ? "Sending..."
+                        : "Send Invite"}
                     </button>
                   </div>
                 </div>
@@ -450,7 +563,9 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                     >
                       <div className="flex items-center gap-2">
                         <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        <p className="text-green-800 dark:text-green-300 font-medium">Invite sent successfully!</p>
+                        <p className="text-green-800 dark:text-green-300 font-medium">
+                          Invite sent successfully!
+                        </p>
                       </div>
                       <p className="text-sm text-green-700 dark:text-green-400 mt-1">
                         They'll receive an email with instructions to join.
@@ -467,7 +582,9 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                     >
                       <div className="flex items-center gap-2">
                         <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                        <p className="text-red-800 dark:text-red-300 font-medium">Failed to send invite</p>
+                        <p className="text-red-800 dark:text-red-300 font-medium">
+                          Failed to send invite
+                        </p>
                       </div>
                       <p className="text-sm text-red-700 dark:text-red-400 mt-1">
                         Please check the email address and try again.
@@ -482,6 +599,33 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
             <div className="h-8" />
           </div>
 
+           {/* Confirmation Modal */}
+                {confirmModal.isOpen && confirmModal.invite && (
+                  <ConfirmationModal
+                    isOpen={confirmModal.isOpen}
+                    onClose={() => setConfirmModal({ isOpen: false, type: "revoke" })}
+                    onConfirm={() =>
+                      confirmModal.type === "revoke"
+                        ? handleRevokeInvite(confirmModal.invite!)
+                        : handleDeleteInvite(confirmModal.invite!)
+                    }
+                    title={
+                      confirmModal.type === "revoke"
+                        ? "Revoke Invitation"
+                        : "Delete Invitation"
+                    }
+                    message={
+                      confirmModal.type === "revoke"
+                        ? "Are you sure you want to revoke this invitation? The user will no longer be able to join using this link."
+                        : "Are you sure you want to permanently delete this invitation? This action cannot be undone."
+                    }
+                    type={confirmModal.type === "revoke" ? "warning" : "danger" }
+                    confirmText={confirmModal.type === "revoke" ? "Revoke" : "Delete"}
+                    cancelText="Cancel"
+                    isLoading={revokeInviteMutation.isPending}
+                  />
+                )}
+
           {/* User Confirmation Modal */}
           {selectedUser && (
             <div className="fixed inset-0 bg-black/50 z-70 flex items-center justify-center p-4">
@@ -492,13 +636,21 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                 onClick={(e) => e.stopPropagation()}
                 className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl mx-4"
               >
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirm Invitation</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Confirm Invitation
+                </h4>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   Do you want to invite{" "}
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {selectedUser.full_name || selectedUser.username || "this user"}
+                    {selectedUser.full_name ||
+                      selectedUser.username ||
+                      "this user"}
                   </span>{" "}
-                  to <span className="font-medium text-gray-900 dark:text-white">{groupName}</span>?
+                  to{" "}
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {groupName}
+                  </span>
+                  ?
                 </p>
 
                 <div className="flex gap-3 justify-end">
@@ -513,7 +665,9 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                     disabled={createInviteMutation.isPending}
                     className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {createInviteMutation.isPending ? "Inviting..." : "Send Invite"}
+                    {createInviteMutation.isPending
+                      ? "Inviting..."
+                      : "Send Invite"}
                   </button>
                 </div>
               </motion.div>
@@ -522,7 +676,7 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
         </motion.div>
       )}
     </AnimatePresence>
-  )
-}
+  );
+};
 
-export default InvitesModalMobile
+export default InvitesModalMobile;
