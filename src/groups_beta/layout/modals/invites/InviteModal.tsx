@@ -29,7 +29,8 @@ import {
   useGroupInvites, 
   useNonMembers, 
   useCreateInvite,
-  useRevokeInvite
+  useRevokeInvite,
+  useDeleteInvite
 } from "@/hooks/useInvites"
 import ConfirmationModal from "./ConfirmationModal"
 import Toast from "./SuccessToast"
@@ -37,28 +38,28 @@ import Toast from "./SuccessToast"
 // Types
 type GroupInviteStatus = "pending" | "accepted" | "declined" | "expired" | "revoked"
 
-interface GroupInvite {
-  id: string
-  group_id: string
-  invited_by: string
-  invitee_id?: string | null
-  email?: string | null
-  token: string
-  status: GroupInviteStatus
-  created_at: string
-  expires_at: string
-  deleted_at: string,
-  invited_profile?: {
-    full_name: string
-    username: string
-    avatar_url?: string
+  interface GroupInvite {
+    id: string
+    group_id: string
+    invited_by: string
+    invitee_id?: string | null
+    email?: string | null
+    token: string
+    status: GroupInviteStatus
+    created_at: string
+    expires_at: string
+    deleted_at: string,
+    invited_profile?: {
+      full_name: string
+      username: string
+      avatar_url?: string
+    }
+    study_groups?: {
+      name: string
+      subject: string
+      avatar_url?: string
+    }
   }
-  study_groups?: {
-    name: string
-    subject: string
-    avatar_url?: string
-  }
-}
 
 interface InvitesModalProps {
   isOpen: boolean
@@ -123,6 +124,7 @@ const InvitesModal: React.FC<InvitesModalProps> = ({
   const { data: nonMembers = [], isLoading: usersLoading } = useNonMembers(groupId)
   const createInviteMutation = useCreateInvite()
   const revokeInviteMutation = useRevokeInvite()
+  const deleteInviteMututaion = useDeleteInvite()
   const { profile } = useAuth()
 
   // Auto-hide toast
@@ -221,12 +223,16 @@ const InvitesModal: React.FC<InvitesModalProps> = ({
     }
   }
 
-  const handleDeleteInvite = (invite: GroupInvite) => {
-    // TODO: Implement delete functionality when API is ready
-    console.log("Delete invite:", invite.id)
-    showToast("info", "Delete Feature", "Delete functionality will be implemented soon")
-    setConfirmModal({ isOpen: false, type: "delete" })
-    setOpenDropdown(null)
+  const handleDeleteInvite = async (invite: GroupInvite) => {
+    
+   try {
+      await deleteInviteMututaion.mutateAsync(invite.token)
+      showToast("success", "Invite Deleted", "The invitation has been successfully revoked")
+      setConfirmModal({ isOpen: false, type: "delete" })
+      setOpenDropdown(null)
+    } catch (error: any) {
+      showToast("error", "Failed to Delete Invite", error.message || "Please try again")
+    }
   }
 
   const getInviteStatusColor = (status: string) => {
@@ -273,6 +279,7 @@ const InvitesModal: React.FC<InvitesModalProps> = ({
         avatar: null
       }
     } else if (invite.invited_profile) {
+      console.log(invite.invited_profile)
       return {
         name: invite.invited_profile.full_name || invite.invited_profile.username,
         subtitle: invite.invited_profile.username ? `@${invite.invited_profile.username}` : "User Invitation",

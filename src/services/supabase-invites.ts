@@ -156,7 +156,7 @@ export class InvitesService {
       .select(
         `
         *,
-        invited_profile:profiles!fk_invited_by_profiles(full_name, username, avatar_url),
+        invited_profile:profiles!group_invites_invitee_id_fkey(full_name, username, avatar_url),
         study_groups(name, subject, avatar_url)
       `
       )
@@ -176,19 +176,42 @@ export class InvitesService {
     } = await supabase.auth.getUser();
     if (authError || !user) throw authError ?? new Error("Not authenticated");
 
+    // First, let's try without the join to see if we get the invites
     const { data: invites, error } = await supabase
       .from("group_invites")
-      .select(
-        `
-        *,
-        study_groups(name, avatar_url, subject)
-      `
-      )
+      .select("*")
       .eq("invitee_id", user.id)
-      .is("deleted_at", null) // 🔹 Filter out deleted invites
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching invites:", error);
+      throw error;
+    }
+
+    // If we have invites, fetch the group details separately
+    if (invites && invites.length > 0) {
+      const groupIds = invites.map(inv => inv.group_id);
+      const { data: groups, error: groupError } = await supabase
+        .from("study_groups")
+        .select("id, name, avatar_url, subject")
+        .in("id", groupIds);
+
+      if (groupError) {
+        console.error("Error fetching groups:", groupError);
+        // Return invites without group data if group fetch fails
+        return invites;
+      }
+
+      // Merge group data into invites
+      const invitesWithGroups = invites.map(invite => ({
+        ...invite,
+        study_groups: groups?.find(g => g.id === invite.group_id) || null
+      }));
+
+      return invitesWithGroups;
+    }
+
     return invites ?? [];
   }
 

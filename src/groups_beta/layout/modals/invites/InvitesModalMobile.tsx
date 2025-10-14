@@ -295,7 +295,7 @@ const InvitesModalMobile: React.FC<InvitesModalMobileProps> = ({ isOpen, onClose
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-900 dark:text-white truncate">
-                              {invite.email || invite.invitee_name || "User Invite"}
+                              {invite.email || invite.invited_profile.full_name || "User Invite"}
                             </span>
                           </div>
                           <div
