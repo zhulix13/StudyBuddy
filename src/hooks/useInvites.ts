@@ -30,7 +30,7 @@ export const useNonMembers = (groupId: string) => {
   });
 };
 
-// 🔹 Fetch invites for logged-in user
+// 🔹 Fetch invites for logged-in user (excluding deleted ones)
 export const useMyInvites = () => {
   return useQuery({
     queryKey: inviteKeys.mine,
@@ -58,7 +58,7 @@ export const useCreateInvite = () => {
     onSuccess: ({ invite, warning }) => {
       if (warning) {
         console.warn("Invite created with warning:", warning)
-        // maybe toast.warn(warning)
+        
       }
       queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(invite.group_id) })
       queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(invite.group_id) })
@@ -106,6 +106,20 @@ export const useRevokeInvite = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (token: string) => InvitesService.revokeInvite(token),
+    onSuccess: (invite) => {
+      queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(invite.group_id) })
+      queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(invite.group_id) })
+      queryClient.invalidateQueries({ queryKey: inviteKeys.mine })
+      queryClient.invalidateQueries({ queryKey: groupKeys.members(invite.group_id) })
+    },
+  })
+}
+
+// 🔹 Delete invite (soft delete)
+export const useDeleteInvite = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (token: string) => InvitesService.deleteInvite(token),
     onSuccess: (invite) => {
       queryClient.invalidateQueries({ queryKey: inviteKeys.byGroup(invite.group_id) })
       queryClient.invalidateQueries({ queryKey: inviteKeys.nonMembers(invite.group_id) })

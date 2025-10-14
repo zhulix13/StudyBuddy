@@ -60,7 +60,7 @@ export const QuickActionsCreateGroupModal = ({
     arrowPosition: 'left' as 'left' | 'top' 
   });
   
-  const [showPrivateInfo, setShowPrivateInfo] = useState(false);
+  const [showPrivateInfo, setShowPrivateInfo] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     subject: "",

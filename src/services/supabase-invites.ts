@@ -128,9 +128,7 @@ export class InvitesService {
     // Send email if this was email-based
     if (options?.email && options.groupName) {
       const appUrl = import.meta.env.VITE_APP_URL;
-      const inviteLink = `${
-        appUrl
-      }/invites/${token}`;
+      const inviteLink = `${appUrl}/invites/${token}`;
 
       const emailPayload = {
         to: options.email,
@@ -157,19 +155,20 @@ export class InvitesService {
       .from("group_invites")
       .select(
         `
-    *,
-    invited_profile:profiles!fk_invited_by_profiles(full_name, username, avatar_url),
-    study_groups(name, subject, avatar_url)
-  `
+        *,
+        invited_profile:profiles!fk_invited_by_profiles(full_name, username, avatar_url),
+        study_groups(name, subject, avatar_url)
+      `
       )
       .eq("group_id", groupId)
+      .is("deleted_at", null) // 🔹 Filter out deleted invites
       .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data ?? [];
   }
 
-  // 🔹 Get all invites for the logged-in user
+  // 🔹 Get all invites for the logged-in user (excluding deleted)
   static async getMyInvites() {
     const {
       data: { user },
@@ -182,15 +181,17 @@ export class InvitesService {
       .select(
         `
         *,
-        study_groups(name, avatar, subject)
+        study_groups(name, avatar_url, subject)
       `
       )
-      .or(`invitee_id.eq.${user.id},email.eq.${user.email ?? ""}`)
+      .eq("invitee_id", user.id)
+      .is("deleted_at", null) // 🔹 Filter out deleted invites
       .order("created_at", { ascending: false });
 
     if (error) throw error;
     return invites ?? [];
   }
+
   // 🔹 Validate invite (RPC)
   static async validateInvite(token: string) {
     const { data, error } = await supabase.rpc("validate_invite", {
@@ -222,10 +223,24 @@ export class InvitesService {
     return data;
   }
 
+  // 🔹 Revoke invite
   static async revokeInvite(token: string) {
     const { data, error } = await supabase
       .from("group_invites")
       .update({ status: "revoked" })
+      .eq("token", token)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // 🔹 Delete invite (soft delete)
+  static async deleteInvite(token: string) {
+    const { data, error } = await supabase
+      .from("group_invites")
+      .update({ deleted_at: new Date().toISOString() }) // 🔹 Fixed: Use ISO string instead of timestamp
       .eq("token", token)
       .select()
       .single();

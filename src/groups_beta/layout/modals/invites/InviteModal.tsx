@@ -47,6 +47,7 @@ interface GroupInvite {
   status: GroupInviteStatus
   created_at: string
   expires_at: string
+  deleted_at: string,
   invited_profile?: {
     full_name: string
     username: string
