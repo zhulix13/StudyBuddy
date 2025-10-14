@@ -223,7 +223,7 @@ const InvitesPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-1 sm:p-5 hover:shadow-lg transition-all duration-200"
+        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 hover:shadow-lg transition-all duration-200"
       >
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Group Avatar */}
@@ -394,7 +394,7 @@ const InvitesPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6 sm:py-8">
         {/* Search and Filter */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
