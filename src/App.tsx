@@ -18,16 +18,13 @@ import { ThemeProvider } from "@/context/ThemeContext";
 
 // New imports
 import DashboardLayout from "./pages/dashboard/layout";
-// import DashboardHome from "./pages/dashboard/components/Overview/dashboard";
-// import { Profile } from "./pages/dashboard/components/Profile/profile";
-// import SettingsPage from "./pages/dashboard/components/Settings/settings";
-// import NotificationsPage from "./pages/dashboard/components/Notifications/notifications";
 
 import { Notifications } from "./pages/dashboard";
-import {Profile }from "./pages/dashboard";
-import {DashboardOverview} from "./pages/dashboard";
-import {Settings} from "./pages/dashboard";
-import {MyInvites }from "./pages/dashboard";
+import { Profile } from "./pages/dashboard";
+import { DashboardOverview } from "./pages/dashboard";
+import { Settings } from "./pages/dashboard";
+import { MyInvites } from "./pages/dashboard";
+import { NotificationToast } from "./components/NotificationsToast";
 
 const App = () => {
   return (
@@ -51,7 +48,7 @@ const App = () => {
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardOverview />} />
                 <Route path="profile" element={<Profile />} />
-                
+
                 <Route path="invites" element={<MyInvites />} />
 
                 <Route path="settings" element={<Settings />} />
@@ -65,6 +62,7 @@ const App = () => {
               </Route>
             </Route>
           </Routes>
+          <NotificationToast />
         </Router>
       </ThemeProvider>
     </AuthProvider>
