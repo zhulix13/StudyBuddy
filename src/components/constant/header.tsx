@@ -24,6 +24,7 @@ import { NotificationsDropdown } from "@/components/NoticationsDropdown"
 import { useAuth } from "@/context/Authcontext"
 import {auth} from '@/services/supabase'
 import type { Profile } from "@/types/profile"
+import { useUnreadCount } from "@/hooks/useNotifications"
 
 interface AuthUser {
   user_metadata?: {
@@ -159,12 +160,13 @@ const MobileNavigation: React.FC<{
 // Main Header Component
 export const Header: React.FC = () => {
   const { user, profile } = useAuth()
-
+  const { data: unreadCount = 0 } = useUnreadCount()
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentPath, setCurrentPath] = useState("/")
 
+  
   const fullName = user?.user_metadata?.full_name
 
   // Update current path on mount and when location changes
@@ -251,7 +253,7 @@ export const Header: React.FC = () => {
     { path: "/discover", label: "Discover" },
   ]
 
-  return (
+  return(
     <>
       <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -289,7 +291,7 @@ export const Header: React.FC = () => {
                 <>
                   <ThemeToggle />
 
-                  {/* Notifications */}
+                  {/* Notifications - 🔥 UPDATED */}
                   <div className="relative dropdown-container">
                     <button
                       onClick={() => {
@@ -299,9 +301,16 @@ export const Header: React.FC = () => {
                       className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center px-1">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
                     </button>
-                    <NotificationsDropdown isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+                    <NotificationsDropdown 
+                      isOpen={isNotificationsOpen} 
+                      onClose={() => setIsNotificationsOpen(false)} 
+                    />
                   </div>
 
                   {/* Profile */}
@@ -321,11 +330,11 @@ export const Header: React.FC = () => {
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
-                          <span>{fullName?.charAt(0).toUpperCase()}</span>
+                          <span>{user?.user_metadata?.full_name?.charAt(0).toUpperCase()}</span>
                         )}
                       </div>
                       <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300 max-w-24 truncate">
-                        {profile?.username || fullName}
+                        {profile?.username || user?.user_metadata?.full_name}
                       </span>
                       <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
                     </button>

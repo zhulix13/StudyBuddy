@@ -1,6 +1,7 @@
-// services/supabase-comments.ts
+// services/supabase-comments.ts (UPDATED WITH NOTIFICATIONS)
 import { supabase } from './supabase'
 import type { Comment } from '@/types/comments'
+import { NotificationTriggers } from './notifications/trigger';
 
 class CommentsService {
   // Add a new comment (can be root or reply)
@@ -27,7 +28,7 @@ class CommentsService {
       .eq('id', user.id)
       .maybeSingle();
 
-    return {
+    const comment: Comment = {
       ...data,
       author: profile ? {
         id: profile.id,
@@ -41,6 +42,116 @@ class CommentsService {
         avatar_url: null
       }
     };
+
+    // 🔥 TRIGGER NOTIFICATIONS (fire and forget)
+    if (parentCommentId) {
+      // This is a reply to a comment
+      this.sendCommentReplyNotification(
+        parentCommentId, 
+        noteId,
+        user.id, 
+        content, 
+        profile
+      ).catch(err => {
+        console.error('Failed to send comment reply notification:', err);
+      });
+    } else {
+      // This is a new comment on a note
+      this.sendNoteCommentNotification(
+        noteId,
+        data.id,
+        user.id, 
+        content, 
+        profile
+      ).catch(err => {
+        console.error('Failed to send note comment notification:', err);
+      });
+    }
+    
+    return comment;
+  }
+
+  // 🔥 NEW: Send notification for new comment on note
+  private static async sendNoteCommentNotification(
+    noteId: string,
+    commentId: string,
+    commenterId: string,
+    commentContent: string,
+    commenterProfile: any
+  ) {
+    try {
+      // Fetch note owner and details
+      const { data: note, error: noteError } = await supabase
+        .from('notes')
+        .select('user_id, title')
+        .eq('id', noteId)
+        .single();
+      
+      if (noteError || !note) {
+        console.error('Note not found for notification:', noteError);
+        return;
+      }
+      
+      // Don't notify if user commented on their own note
+      if (note.user_id === commenterId) return;
+      
+      // Send notification
+      await NotificationTriggers.notifyNoteCommented(
+        note.user_id,
+        commenterId,
+        {
+          noteId,
+          noteTitle: note.title,
+          commentId,
+          commentPreview: commentContent.substring(0, 100),
+          actorName: commenterProfile?.full_name || 'Someone',
+          actorAvatar: commenterProfile?.avatar_url,
+        }
+      );
+    } catch (error) {
+      console.error('Error in sendNoteCommentNotification:', error);
+    }
+  }
+
+  // 🔥 NEW: Send notification for reply to comment
+  private static async sendCommentReplyNotification(
+    parentCommentId: string,
+    noteId: string,
+    replierId: string,
+    replyContent: string,
+    replierProfile: any
+  ) {
+    try {
+      // Fetch parent comment owner
+      const { data: parentComment, error: commentError } = await supabase
+        .from('comments')
+        .select('author_id')
+        .eq('id', parentCommentId)
+        .single();
+      
+      if (commentError || !parentComment) {
+        console.error('Parent comment not found for notification:', commentError);
+        return;
+      }
+      
+      // Don't notify if user replied to their own comment
+      if (parentComment.author_id === replierId) return;
+      
+      // Send notification
+      await NotificationTriggers.notifyCommentReplied(
+        parentComment.author_id,
+        replierId,
+        {
+          noteId,
+          commentId: parentCommentId,
+          replyPreview: replyContent.substring(0, 100),
+          actorName: replierProfile?.full_name || 'Someone',
+          actorAvatar: replierProfile?.avatar_url,
+        }
+      );
+    } catch (error) {
+      console.error('Error in sendCommentReplyNotification:', error);
+    }
   }
 
   // Get all comments for a note (matches old service behavior)

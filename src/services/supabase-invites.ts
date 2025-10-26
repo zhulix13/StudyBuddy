@@ -1,47 +1,11 @@
-// services/invitesService.ts
+// services/supabase-invites.ts (UPDATED WITH NOTIFICATIONS)
 import { supabase } from "./supabase";
 import { sendInviteViaEmail } from "./email/invite";
+import { NotificationTriggers } from "./notifications/trigger";
 
 export class InvitesService {
-  // ✅ Get all profiles not already in group OR already invited
-  static async getNonMembers(groupId: string) {
-    // 1. Get current members
-    const { data: members, error: memberError } = await supabase
-      .from("group_members")
-      .select("user_id")
-      .eq("group_id", groupId);
+  // ... (keep getNonMembers unchanged)
 
-    if (memberError) throw memberError;
-    const memberIds = members?.map((m) => m.user_id) ?? [];
-
-    // 2. Get users with pending invites (not expired)
-    const { data: invited, error: inviteError } = await supabase
-      .from("group_invites")
-      .select("invitee_id")
-      .eq("group_id", groupId)
-      .eq("status", "pending")
-      .gte("expires_at", new Date().toISOString());
-
-    if (inviteError) throw inviteError;
-    const invitedIds = invited?.map((i) => i.invitee_id).filter(Boolean) ?? [];
-
-    // 3. Exclude members + pending invitees
-    const excludeIds = [...memberIds, ...invitedIds];
-
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, full_name, username, avatar_url, email")
-      .not(
-        "id",
-        "in",
-        excludeIds.length ? `(${excludeIds.join(",")})` : "(NULL)"
-      );
-
-    if (profileError) throw profileError;
-    return profiles ?? [];
-  }
-
-  // Updated createInvite method
   static async createInvite(
     groupId: string,
     options: {
@@ -91,7 +55,7 @@ export class InvitesService {
         options.inviteeId ? "invitee_id" : "email",
         options.inviteeId ?? options.email
       )
-      .eq("status", "pending") // 👈 check only active/pending invites
+      .eq("status", "pending")
       .gte("expires_at", new Date().toISOString())
       .maybeSingle();
 
@@ -146,10 +110,24 @@ export class InvitesService {
       }
     }
 
+    // 🔥 TRIGGER NOTIFICATION (only for registered users, not emails)
+    if (options?.inviteeId) {
+      sendInviteNotification(
+        groupId,
+        options.inviteeId,
+        user.id,
+        token,
+        options.groupName
+      ).catch(err => {
+        console.error('Failed to send invite notification:', err);
+      });
+    }
+
     return { invite, warning: emailWarning };
   }
 
-  // 🔹 Get all invites for a group (admin only)
+  // ... (keep all other methods unchanged: getGroupInvites, getMyInvites, validateInvite, acceptInvite, declineInvite, revokeInvite, deleteInvite)
+
   static async getGroupInvites(groupId: string) {
     const { data, error } = await supabase
       .from("group_invites")
@@ -161,14 +139,13 @@ export class InvitesService {
       `
       )
       .eq("group_id", groupId)
-      .is("deleted_at", null) // 🔹 Filter out deleted invites
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data ?? [];
   }
 
-  // 🔹 Get all invites for the logged-in user (excluding deleted)
   static async getMyInvites() {
     const {
       data: { user },
@@ -176,7 +153,6 @@ export class InvitesService {
     } = await supabase.auth.getUser();
     if (authError || !user) throw authError ?? new Error("Not authenticated");
 
-    // First, let's try without the join to see if we get the invites
     const { data: invites, error } = await supabase
       .from("group_invites")
       .select("*")
@@ -189,7 +165,6 @@ export class InvitesService {
       throw error;
     }
 
-    // If we have invites, fetch the group details separately
     if (invites && invites.length > 0) {
       const groupIds = invites.map(inv => inv.group_id);
       const { data: groups, error: groupError } = await supabase
@@ -199,11 +174,9 @@ export class InvitesService {
 
       if (groupError) {
         console.error("Error fetching groups:", groupError);
-        // Return invites without group data if group fetch fails
         return invites;
       }
 
-      // Merge group data into invites
       const invitesWithGroups = invites.map(invite => ({
         ...invite,
         study_groups: groups?.find(g => g.id === invite.group_id) || null
@@ -215,7 +188,6 @@ export class InvitesService {
     return invites ?? [];
   }
 
-  // 🔹 Validate invite (RPC)
   static async validateInvite(token: string) {
     const { data, error } = await supabase.rpc("validate_invite", {
       p_token: token,
@@ -224,7 +196,6 @@ export class InvitesService {
     return data;
   }
 
-  // 🔹 Accept invite (RPC)
   static async acceptInvite(token: string) {
     const { data, error } = await supabase.rpc("accept_invite", {
       p_token: token,
@@ -233,7 +204,6 @@ export class InvitesService {
     return data;
   }
 
-  // 🔹 Decline invite
   static async declineInvite(token: string) {
     const { data, error } = await supabase
       .from("group_invites")
@@ -246,7 +216,6 @@ export class InvitesService {
     return data;
   }
 
-  // 🔹 Revoke invite
   static async revokeInvite(token: string) {
     const { data, error } = await supabase
       .from("group_invites")
@@ -259,16 +228,97 @@ export class InvitesService {
     return data;
   }
 
-  // 🔹 Delete invite (soft delete)
   static async deleteInvite(token: string) {
     const { data, error } = await supabase
       .from("group_invites")
-      .update({ deleted_at: new Date().toISOString() }) // 🔹 Fixed: Use ISO string instead of timestamp
+      .update({ deleted_at: new Date().toISOString() })
       .eq("token", token)
       .select()
       .single();
 
     if (error) throw error;
     return data;
+  }
+
+  static async getNonMembers(groupId: string) {
+    const { data: members, error: memberError } = await supabase
+      .from("group_members")
+      .select("user_id")
+      .eq("group_id", groupId);
+
+    if (memberError) throw memberError;
+    const memberIds = members?.map((m) => m.user_id) ?? [];
+
+    const { data: invited, error: inviteError } = await supabase
+      .from("group_invites")
+      .select("invitee_id")
+      .eq("group_id", groupId)
+      .eq("status", "pending")
+      .gte("expires_at", new Date().toISOString());
+
+    if (inviteError) throw inviteError;
+    const invitedIds = invited?.map((i) => i.invitee_id).filter(Boolean) ?? [];
+
+    const excludeIds = [...memberIds, ...invitedIds];
+
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, avatar_url, email")
+      .not(
+        "id",
+        "in",
+        excludeIds.length ? `(${excludeIds.join(",")})` : "(NULL)"
+      );
+
+    if (profileError) throw profileError;
+    return profiles ?? [];
+  }
+}
+
+// 🔥 NEW: Send notification for group invite (registered users only)
+async function sendInviteNotification(
+  groupId: string,
+  inviteeId: string,
+  inviterId: string,
+  inviteToken: string,
+  groupName?: string
+) {
+  try {
+    // Get inviter profile
+    const { data: inviterProfile } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url')
+      .eq('id', inviterId)
+      .single();
+
+    // Get group details if not provided
+    let finalGroupName = groupName;
+    let groupAvatar: string | undefined;
+
+    if (!finalGroupName) {
+      const { data: group } = await supabase
+        .from('study_groups')
+        .select('name, avatar_url')
+        .eq('id', groupId)
+        .single();
+
+      finalGroupName = group?.name || 'a group';
+      groupAvatar = group?.avatar_url;
+    }
+
+    await NotificationTriggers.notifyGroupInvite(
+      inviteeId,
+      inviterId,
+      {
+        groupId,
+        groupName: finalGroupName,
+        groupAvatar,
+        inviterName: inviterProfile?.full_name || 'Someone',
+        inviterAvatar: inviterProfile?.avatar_url,
+        inviteToken,
+      }
+    );
+  } catch (error) {
+    console.error('Error in sendInviteNotification:', error);
   }
 }
