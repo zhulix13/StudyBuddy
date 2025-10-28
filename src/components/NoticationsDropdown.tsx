@@ -12,6 +12,7 @@ import {
 } from "@/hooks/useNotifications"
 import { formatDistanceToNow } from "date-fns"
 import type { Notification } from "@/types/notifications"
+import { useNotificationNavigation } from "@/utils/nav-helper"
 
 interface NotificationsDropdownProps {
   isOpen: boolean
@@ -31,6 +32,7 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ is
 
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
+  const { navigateToNotification } = useNotificationNavigation();
 
   // Get first 5 notifications from first page
   const notifications = data?.pages[0]?.notifications.slice(0, 5) ?? [];
@@ -60,6 +62,10 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ is
     // Mark as read when clicked
     if (!notification.read) {
       markAsRead.mutate(notification.id);
+    }
+
+     if (notification.action_url) {
+      navigateToNotification(notification.action_url);
     }
     onClose();
   };

@@ -148,116 +148,118 @@ class NotificationsService {
   }
   
   // 🔹 Helper: Generate notification content
-  private static generateContent(
-    action: NotificationAction,
-    metadata: NotificationMetadata
-  ): { title: string; message: string; category: NotificationCategory; actionUrl?: string } {
-    const actorName = metadata.actor_name || 'Someone';
-    const targetTitle = metadata.target_title || 'your content';
-    const groupName = metadata.group_name || 'a group';
-    
-    const templates: Record<NotificationAction, { title: string; message: string; category: NotificationCategory; url?: string }> = {
-      // Social
-      note_liked: {
-        title: 'New like',
-        message: `${actorName} liked your note "${targetTitle}"`,
-        category: 'social',
-        url: `/notes/${metadata.target_id}`,
-      },
-      note_commented: {
-        title: 'New comment',
-        message: `${actorName} commented on "${targetTitle}"`,
-        category: 'social',
-        url: `/notes/${metadata.target_id}`,
-      },
 
-        comment_liked: {
+private static generateContent(
+  action: NotificationAction,
+  metadata: NotificationMetadata
+): { title: string; message: string; category: NotificationCategory; actionUrl?: string } {
+  const actorName = metadata.actor_name || 'Someone';
+  const targetTitle = metadata.target_title || 'your content';
+  const groupName = metadata.group_name || 'a group';
+  
+  const templates: Record<NotificationAction, { title: string; message: string; category: NotificationCategory; url?: string }> = {
+    // Social - Note related (opens group with notes tab and specific note)
+    note_liked: {
+      title: 'New like',
+      message: `${actorName} liked your note "${targetTitle}"`,
+      category: 'social',
+      url: `/groups/${metadata.group_id}?tab=notes&n=${metadata.target_id}&m=view`,
+    },
+    note_commented: {
+      title: 'New comment',
+      message: `${actorName} commented on "${targetTitle}"`,
+      category: 'social',
+      url: `/groups/${metadata.group_id}?tab=notes&n=${metadata.target_id}&m=view`,
+    },
+    comment_liked: {
       title: 'New like',
       message: `${actorName} liked your comment: "${targetTitle}"`,
       category: 'social',
-      url: `/notes/${metadata.note_id}#comment-${metadata.target_id}`,
+      url: `/groups/${metadata.group_id}?tab=notes&n=${metadata.note_id}&m=view`,
     },
-      comment_replied: {
-        title: 'New reply',
-        message: `${actorName} replied to your comment`,
-        category: 'social',
-        url: `/notes/${metadata.target_id}#comment-${metadata.target_id}`,
-      },
-      message_replied: {
-        title: 'New reply',
-        message: `${actorName} replied to your message in ${groupName}`,
-        category: 'social',
-        url: `/groups/${metadata.group_id}/chat`,
-      },
-      
-      // Group
-      group_joined: {
-        title: 'Welcome!',
-        message: `You joined ${groupName}. Start collaborating!`,
-        category: 'group',
-        url: `/groups/${metadata.group_id}`,
-      },
-      group_left: {
-        title: 'Group left',
-        message: `You left ${groupName}. You can rejoin if it's public.`,
-        category: 'group',
-        url: `/groups`,
-      },
-      member_joined: {
-        title: 'New member',
-        message: `${actorName} joined ${groupName}`,
-        category: 'group',
-        url: `/groups/${metadata.group_id}/members`,
-      },
-      group_invited: {
-        title: 'Group invitation',
-        message: `${actorName} invited you to join ${groupName}`,
-        category: 'invite',
-        url: `/invites`,
-      },
-      
-      // Content
-      note_created: {
-        title: 'New note',
-        message: `${actorName} posted "${targetTitle}" in ${groupName}`,
-        category: 'content',
-        url: `/notes/${metadata.target_id}`,
-      },
-      note_shared: {
-        title: 'Note shared',
-        message: `${actorName} shared a note in ${groupName}`,
-        category: 'content',
-        url: `/groups/${metadata.group_id}/chat`,
-      },
-      message_sent: {
-        title: 'New message',
-        message: `${actorName} sent a message in ${groupName}`,
-        category: 'content',
-        url: `/groups/${metadata.group_id}/chat`,
-      },
-      
-      // System
-      welcome: {
-        title: 'Welcome to StudyBuddy!',
-        message: 'Join groups, share notes, and collaborate with peers.',
-        category: 'system',
-        url: '/groups',
-      },
-      system_announcement: {
-        title: metadata.target_title || 'Announcement',
-        message: metadata.preview_text || 'Check out what\'s new',
-        category: 'system',
-      },
-    };
+    comment_replied: {
+      title: 'New reply',
+      message: `${actorName} replied to your comment`,
+      category: 'social',
+      url: `/groups/${metadata.group_id}?tab=notes&n=${metadata.note_id}&m=view`,
+    },
     
-    const template = templates[action];
-    return {
-      title: template.title,
-      message: template.message,
-      category: template.category,
-      actionUrl: template.url,
-    };
-  }
+    // Social - Message related (opens group with chat tab)
+    message_replied: {
+      title: 'New reply',
+      message: `${actorName} replied to your message in ${groupName}`,
+      category: 'social',
+      url: `/groups/${metadata.group_id}?tab=chat`,
+    },
+    
+    // Group
+    group_joined: {
+      title: 'Welcome!',
+      message: `You joined ${groupName}. Start collaborating!`,
+      category: 'group',
+      url: `/groups/${metadata.group_id}?tab=notes`,
+    },
+    group_left: {
+      title: 'Group left',
+      message: `You left ${groupName}. You can rejoin if it's public.`,
+      category: 'group',
+      url: `/groups`,
+    },
+    member_joined: {
+      title: 'New member',
+      message: `${actorName} joined ${groupName}`,
+      category: 'group',
+      url: `/groups/${metadata.group_id}?tab=notes`, // Can open members modal from here
+    },
+    group_invited: {
+      title: 'Group invitation',
+      message: `${actorName} invited you to join ${groupName}`,
+      category: 'invite',
+      url: `/dashboard/notifications`, // View invites in notifications page
+    },
+    
+    // Content
+    note_created: {
+      title: 'New note',
+      message: `${actorName} posted "${targetTitle}" in ${groupName}`,
+      category: 'content',
+      url: `/groups/${metadata.group_id}?tab=notes&n=${metadata.target_id}&m=view`,
+    },
+    note_shared: {
+      title: 'Note shared',
+      message: `${actorName} shared a note in ${groupName}`,
+      category: 'content',
+      url: `/groups/${metadata.group_id}?tab=chat`,
+    },
+    message_sent: {
+      title: 'New message',
+      message: `${actorName} sent a message in ${groupName}`,
+      category: 'content',
+      url: `/groups/${metadata.group_id}?tab=chat`,
+    },
+    
+    // System
+    welcome: {
+      title: 'Welcome to StudyBuddy!',
+      message: 'Join groups, share notes, and collaborate with peers.',
+      category: 'system',
+      url: '/groups',
+    },
+    system_announcement: {
+      title: metadata.target_title || 'Announcement',
+      message: metadata.preview_text || 'Check out what\'s new',
+      category: 'system',
+    },
+  };
+  
+  const template = templates[action];
+  return {
+    title: template.title,
+    message: template.message,
+    category: template.category,
+    actionUrl: template.url,
+  };
+}
 
   // 🔥 NEW: Get high-priority unread notifications
   static async getHighPriorityNotifications(userId: string) {

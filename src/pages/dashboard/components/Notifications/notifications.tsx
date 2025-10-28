@@ -8,9 +8,9 @@ import {
   useArchiveNotification 
 } from "@/hooks/useNotifications";
 import { useState } from "react";
-import type { NotificationCategory } from "@/types/notifications";
+import type { NotificationCategory, Notification } from "@/types/notifications"; 
 import { formatDistanceToNow } from "date-fns";
-import { Link } from "react-router-dom";
+import { useNotificationNavigation } from "@/utils/nav-helper"; 
 
 export default function NotificationsPage() {
   const [filterCategory, setFilterCategory] = useState<NotificationCategory | 'all'>('all');
@@ -32,9 +32,23 @@ export default function NotificationsPage() {
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
   const archiveNotification = useArchiveNotification();
+  const { navigateToNotification } = useNotificationNavigation(); // 🔥 ADD navigation helper
 
   const notifications = data?.pages.flatMap(page => page.notifications) ?? [];
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    if (!notification.read) {
+      markAsRead.mutate(notification.id);
+    }
+    
+    // Navigate using helper
+    if (notification.action_url) {
+      navigateToNotification(notification.action_url);
+    }
+  };
 
   const getNotificationIcon = (category: NotificationCategory) => {
     const icons = {
@@ -56,11 +70,13 @@ export default function NotificationsPage() {
     return colors[priority as keyof typeof colors] || colors.normal;
   };
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = (e: React.MouseEvent, notificationId: string) => {
+    e.stopPropagation(); // 🔥 Prevent triggering the notification click
     markAsRead.mutate(notificationId);
   };
 
-  const handleArchive = (notificationId: string) => {
+  const handleArchive = (e: React.MouseEvent, notificationId: string) => {
+    e.stopPropagation(); // 🔥 Prevent triggering the notification click
     archiveNotification.mutate(notificationId);
   };
 
@@ -152,7 +168,8 @@ export default function NotificationsPage() {
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 sm:p-6 border-l-4 transition-colors ${
+                onClick={() => handleNotificationClick(notification)} // 🔥 ADD click handler
+                className={`p-4 sm:p-6 border-l-4 transition-colors cursor-pointer ${
                   notification.read 
                     ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50' 
                     : getNotificationColor(notification.priority)
@@ -182,12 +199,9 @@ export default function NotificationsPage() {
                           {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                         </p>
                         {notification.action_url && (
-                          <Link
-                            to={notification.action_url}
-                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            View →
-                          </Link>
+                          <span className="text-xs text-blue-600 dark:text-blue-400">
+                            Click to view →
+                          </span>
                         )}
                       </div>
                     </div>
@@ -198,8 +212,9 @@ export default function NotificationsPage() {
                         variant="ghost" 
                         size="sm" 
                         className="p-2"
-                        onClick={() => handleMarkAsRead(notification.id)}
+                        onClick={(e) => handleMarkAsRead(e, notification.id)} // 🔥 ADD event parameter
                         disabled={markAsRead.isPending}
+                        title="Mark as read"
                       >
                         <Check className="w-4 h-4" />
                       </Button>
@@ -208,8 +223,9 @@ export default function NotificationsPage() {
                       variant="ghost" 
                       size="sm" 
                       className="p-2"
-                      onClick={() => handleArchive(notification.id)}
+                      onClick={(e) => handleArchive(e, notification.id)} // 🔥 ADD event parameter
                       disabled={archiveNotification.isPending}
+                      title="Archive"
                     >
                       <Archive className="w-4 h-4" />
                     </Button>
