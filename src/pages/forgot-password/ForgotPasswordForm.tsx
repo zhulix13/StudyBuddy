@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle, X, Lock, Eye, EyeOff } from 'lucide-react';
 import { auth } from '@/services/supabase';
 
-// Forgot Password Form Component
+
 const ForgotPasswordForm = ({ 
   formData, 
   setFormData, 
@@ -14,6 +14,17 @@ const ForgotPasswordForm = ({
   onSuccess,
   onBackToLogin 
 }: any) => {
+  const [countdown, setCountdown] = useState(0);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
@@ -66,6 +77,8 @@ const ForgotPasswordForm = ({
         return;
       }
 
+      // Start 15 second countdown
+      setCountdown(15);
       onSuccess();
       addNotification('success', 'Password reset email sent successfully!');
 
@@ -77,7 +90,7 @@ const ForgotPasswordForm = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && countdown === 0) {
       handleResetPassword();
     }
   };
@@ -112,7 +125,8 @@ const ForgotPasswordForm = ({
               value={formData.email}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className={`w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
+              disabled={countdown > 0}
+              className={`w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed ${
                 formErrors.email ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'
               }`}
               placeholder="Enter your email address"
@@ -129,11 +143,19 @@ const ForgotPasswordForm = ({
         <button
           type="button"
           onClick={handleResetPassword}
-          disabled={isLoading}
+          disabled={isLoading || countdown > 0}
           className="w-full py-3.5 bg-slate-900 dark:bg-slate-700 text-white font-medium rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Sending...' : 'Send reset link'}
+          {isLoading ? 'Sending...' : countdown > 0 ? `Wait ${countdown}s to resend` : 'Send reset link'}
         </button>
+
+        {countdown > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
+            <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
+              Email sent! You can request another link in {countdown} seconds
+            </p>
+          </div>
+        )}
 
         {/* Back to Login */}
         <button
