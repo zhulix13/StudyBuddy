@@ -216,14 +216,14 @@ const LoginForm = ({
         </div>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* Social Login */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => handleSocialAuth('google')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 font-medium text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 font-medium text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -243,17 +243,17 @@ const LoginForm = ({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            <span className="text-sm sm:text-base">Google</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleSocialAuth('github')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-slate-900 dark:bg-slate-800 text-white rounded-xl hover:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl hover:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             <Github className="w-5 h-5" />
-            Continue with GitHub
+            <span className="text-sm sm:text-base">GitHub</span>
           </button>
         </div>
 
@@ -416,7 +416,8 @@ export const LoginPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [pendingInvite, setPendingInvite] = useState<string | null>(null);
-const navigate = useNavigate();
+  const navigate = useNavigate();
+  
   // Check for pending invite
   useEffect(() => {
     const inviteToken = localStorage.getItem(INVITE_LS_KEY);
@@ -444,7 +445,7 @@ const navigate = useNavigate();
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
- const handleSuccessfulLogin = (user: any) => {
+  const handleSuccessfulLogin = (user: any) => {
     addNotification('success', 'Welcome back! Redirecting...');
     
     setTimeout(() => {
@@ -490,20 +491,20 @@ const navigate = useNavigate();
           />
           
           {/* Sign Up CTA at bottom */}
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-slate-600 dark:text-slate-400 mb-3">
-              Don't have an account?
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 text-center">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Don't have an account?{' '}
+              <a
+                href="/signup"
+                className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 underline font-medium"
+              >
+                Create Account
+              </a>
             </p>
-            <a
-              href="/signup"
-              className="inline-flex items-center justify-center px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 font-medium border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md"
-            >
-              Create Account
-            </a>
           </div>
 
           {/* Support Link */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-4 mb-4">
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Having trouble?{' '}
               <a

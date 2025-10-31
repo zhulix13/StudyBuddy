@@ -194,29 +194,29 @@ const SignUpForm = ({
   };
 
   return (
-    <div className="w-full mx-auto max-w-md space-y-6">
-      <div className="text-center space-y-4">
-        <div className="lg:hidden w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-800 dark:from-slate-700 dark:to-slate-900 rounded-2xl flex items-center justify-center mx-auto">
-          {pendingInvite ? <Users className="w-8 h-8 text-white" /> : <BookOpen className="w-8 h-8 text-white" />}
+    <div className="w-full mx-auto max-w-md space-y-4">
+      <div className="text-center space-y-3">
+        <div className="lg:hidden w-14 h-14 bg-gradient-to-br from-slate-600 to-slate-800 dark:from-slate-700 dark:to-slate-900 rounded-2xl flex items-center justify-center mx-auto">
+          {pendingInvite ? <Users className="w-7 h-7 text-white" /> : <BookOpen className="w-7 h-7 text-white" />}
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-serif">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-serif">
             {pendingInvite ? 'Join the study group' : 'Create your account'}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-3 font-light">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 font-light">
             Start your collaborative learning journey
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleEmailSignup} className="space-y-5">
+      <form onSubmit={handleEmailSignup} className="space-y-4">
         {/* Social Sign Up */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => handleSocialAuth('google')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 font-medium text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 font-medium text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -236,17 +236,17 @@ const SignUpForm = ({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            <span className="text-sm">Google</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleSocialAuth('github')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-slate-900 dark:bg-slate-800 text-white rounded-xl hover:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl hover:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             <Github className="w-5 h-5" />
-            Continue with GitHub
+            <span className="text-sm">GitHub</span>
           </button>
         </div>
 
@@ -254,17 +254,17 @@ const SignUpForm = ({
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
-              Or with email and password
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+              Or with email
             </span>
           </div>
         </div>
 
         {/* Form Fields */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Full Name
             </label>
             <div className="relative">
@@ -274,19 +274,19 @@ const SignUpForm = ({
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
+                className={`w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
                   formErrors.name ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'
                 }`}
                 placeholder="Enter your full name"
               />
             </div>
             {formErrors.name && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{formErrors.name}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.name}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Email Address
             </label>
             <div className="relative">
@@ -296,19 +296,19 @@ const SignUpForm = ({
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
+                className={`w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
                   formErrors.email ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'
                 }`}
                 placeholder="Enter your email"
               />
             </div>
             {formErrors.email && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{formErrors.email}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.email}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Password
             </label>
             <div className="relative">
@@ -318,7 +318,7 @@ const SignUpForm = ({
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-11 pr-12 py-3.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
+                className={`w-full pl-11 pr-12 py-2.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
                   formErrors.password ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'
                 }`}
                 placeholder="Create a password"
@@ -332,12 +332,12 @@ const SignUpForm = ({
               </button>
             </div>
             {formErrors.password && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{formErrors.password}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.password}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Confirm Password
             </label>
             <div className="relative">
@@ -347,7 +347,7 @@ const SignUpForm = ({
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className={`w-full pl-11 pr-12 py-3.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
+                className={`w-full pl-11 pr-12 py-2.5 bg-white dark:bg-slate-800 border rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-slate-100 ${
                   formErrors.confirmPassword ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'
                 }`}
                 placeholder="Confirm your password"
@@ -361,22 +361,22 @@ const SignUpForm = ({
               </button>
             </div>
             {formErrors.confirmPassword && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{formErrors.confirmPassword}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.confirmPassword}</p>
             )}
           </div>
 
           <div>
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2">
               <input
                 type="checkbox"
                 name="agreeToTerms"
                 checked={formData.agreeToTerms}
                 onChange={handleInputChange}
-                className={`mt-1 rounded border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 shadow-sm focus:ring-slate-500 dark:focus:ring-slate-400 bg-white dark:bg-slate-800 ${
+                className={`mt-0.5 rounded border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 shadow-sm focus:ring-slate-500 dark:focus:ring-slate-400 bg-white dark:bg-slate-800 ${
                   formErrors.agreeToTerms ? 'border-red-300 dark:border-red-700' : ''
                 }`}
               />
-              <span className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 I agree to the{" "}
                 <a
                   href="/terms"
@@ -398,14 +398,14 @@ const SignUpForm = ({
               </span>
             </div>
             {formErrors.agreeToTerms && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{formErrors.agreeToTerms}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.agreeToTerms}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 bg-slate-900 dark:bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-slate-900 dark:bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Creating account..." : (pendingInvite ? "Create Account & Join Group" : "Create Account")}
           </button>
@@ -528,7 +528,6 @@ export const SignupPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex overflow-y-auto">
       <style>{`
-        
         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
         }
@@ -540,8 +539,8 @@ export const SignupPage: React.FC = () => {
       />
       
       {/* Left Side - Sign Up Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 min-h-screen">
-        <div className="w-full mx-auto flex flex-col">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-12 min-h-screen">
+        <div className="w-full mx-auto flex flex-col py-4">
           <SignUpForm
             formData={formData}
             setFormData={setFormData}
@@ -554,17 +553,17 @@ export const SignupPage: React.FC = () => {
             handleSuccessfulSignup={handleSuccessfulSignup}
           />
           
-          {/* Login CTA at bottom - more conspicuous */}
-          <div className="mt-4 pt-2 border-t border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-slate-600 dark:text-slate-400 mb-3">
-              Already have an account?
+          {/* Login CTA at bottom - simple hypertext */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-slate-900 dark:text-slate-100 font-semibold hover:underline"
+              >
+                Login
+              </Link>
             </p>
-            <Link
-              to="/login"
-              className="inline-flex items-center justify-center px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 font-medium border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md"
-            >
-              Sign In Instead
-            </Link>
           </div>
         </div>
       </div>
